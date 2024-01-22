@@ -1,0 +1,24 @@
+<!----------------------------------------->
+<!-- Template for the login page section -->
+<!----------------------------------------->
+
+<div class="content center-x center-y" data-page="login_page">
+    <div class="login-container">
+        <!-- Login text boxes for connecting with SSH -->
+        <h1 class="title-navigator">Login to SSH</h1>
+        <div class="host-input">
+            <input type="url" name="host" placeholder="Host" class="textbox-navigator" id="ssh-host" required>
+            <input type="number" name="port" placeholder="Port" class="textbox-navigator" id="ssh-port" data-default="22" required>
+        </div>
+        <input type="text" name="username" placeholder="Username" class="textbox-navigator" id="ssh-username" required>
+
+        <div class="password-input">
+            <input type="password" name="password" placeholder="Password" class="textbox-navigator" id="ssh-password" required>
+            <input type="button" name="show-password" class="page-button show-password" id="ssh-show-password">
+        </div>
+
+        <input type="button" value="Login" class="page-button" id="ssh-login">
+    </div>
+    <div class="loading"></div>
+</div>
+<span class="error-message" id="error-message"></span>

@@ -1,0 +1,252 @@
+@font-face {
+    font-family: 'San Francisco';
+    font-weight: 400;
+    src: url('../assets/fonts/sf-pro.otf') format('opentype');
+}
+
+:root {
+    --theme-1: #323233;
+    --theme-2: #1b1b1b;
+    --theme-3: #4b4b4b;
+    --theme-4: #2358C9;
+    --theme-5: #404040;
+
+    --background-opacity: 0.98;
+
+    --tab-height: 30px;
+
+    --text-color: #fff;
+    --text-color-2: #777;
+    --input-box-width: 33vw;
+    --input-box-height: 5vh;
+    --navigator-padding: 10px;
+    --font: 'San Francisco', sans-serif;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+.content {
+    width: 100vw;
+    height: calc(100vh - var(--tab-height));
+    top: var(--tab-height);
+    display: flex;
+    flex-flow: column nowrap;
+    background-color: var(--theme-2);
+    opacity: var(--background-opacity);
+    background-image: url('../assets/login_background.jpeg');
+    background-size: cover;
+    background-position: center;
+}
+
+.login-container {
+    width: 50vw;
+    height: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--theme-1);
+    border-radius: 10px;
+    opacity: var(--background-opacity);
+}
+
+.login-container.loading {
+    visibility: hidden;
+}
+
+/** Loading animation **/
+.loading {
+    width: 65px;
+    height: 30px;
+    position: absolute;
+    display: block;
+    z-index: 5;
+    visibility: hidden;
+}
+.loading:before {
+    content: "";
+    position: absolute;
+    display: block;
+    border-radius: 50px;
+    box-shadow: 0 0 0 3px inset #fff;
+    animation: l3 1s infinite alternate;
+}
+@keyframes l3 {
+    0% {
+        inset: 0 35px 0 0;
+    }
+    50% {
+        inset: 0 0 0 0;
+    }
+    100% {
+        inset: 0 0 0 35px;
+    }
+}
+
+.title-navigator {
+    color: var(--text-color-2);
+    font-size: 2em;
+    font-family: var(--font);
+}
+
+.textbox-navigator {
+    display: inline-block;
+    color: var(--text-color);
+    background-color: var(--theme-3);
+    border: none;
+    width: var(--input-box-width);
+    height: var(--input-box-height);
+    margin: 5px 10px;
+    border-radius: 5px;
+    padding: var(--navigator-padding);
+}
+
+.textbox-navigator:focus {
+    outline: none;
+    background-color: var(--theme-2);
+}
+
+/** Styles for text-boxes when they're not empty **/
+.textbox-navigator::placeholder {
+    color: var(--text-color-2);
+}
+
+/** Make the port input box rectangular **/
+.host-input > #ssh-port {
+    height: var(--input-box-height);
+    width: var(--input-box-height);
+    margin-left: 0;
+}
+
+/** Remove the arrows on the port input box **/
+.host-input > #ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.host-input > #ssh-host {
+    width: calc(var(--input-box-width) - var(--input-box-height) - 25px);
+    margin-right: 0;
+}
+
+
+
+/** Login button **/
+.page-button {
+    width: var(--input-box-width);
+    height: var(--input-box-height);
+    color: var(--text-color-2);
+    margin: 5px 10px 30px;
+    border: none;
+    background-color: var(--theme-3);
+    cursor: pointer;
+}
+
+.show-password {
+    width: var(--input-box-height);
+    height: var(--input-box-height);
+    background-color: var(--theme-3);
+    border: none;
+    position: absolute;
+    padding: 20px;
+
+}
+
+.page-button:hover {
+    background-color: var(--theme-2);
+}
+
+.error-message {
+    position: absolute;
+    text-align: center;
+    top: 50px;
+    width: 100vw;
+    color: var(--theme-1);
+    background-color: rgba(0, 0, 0, 0.3);
+    font-family: var(--font);
+}
+
+.tab-container {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-evenly;
+}
+
+.tab {
+    background-color: var(--theme-1);
+    color: var(--text-color);
+    font-family: var(--font);
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    opacity: var(--background-opacity);
+    user-select: none;
+    cursor: pointer;
+}
+
+.tab.tab-active {
+    background-color: var(--theme-3);
+    opacity: 1;
+}
+
+.tab:after {
+    content: "";
+    width: 100%;
+    height: 3px;
+    background-color: var(--theme-4);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-in-out;
+
+}
+
+.tab:hover {
+    opacity: calc(0.95 * var(--background-opacity));
+}
+
+.add-tab {
+    width: calc(2 * var(--tab-height));
+    height: var(--tab-height);
+    background-color: var(--theme-3);
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    color: var(--text-color);
+    opacity: var(--background-opacity);
+}
+
+.add-tab:hover {
+    opacity: calc(0.95 * var(--background-opacity));
+}
+
+.inner-content {
+    width: 100vw;
+    height: calc(100vh - var(--tab-height));
+    top: var(--tab-height);
+    position: absolute;
+    background-color: var(--theme-2);
+    opacity: var(--background-opacity);
+    border: none;
+}
+
+.center-x {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+}
+
+.center-y {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+}
