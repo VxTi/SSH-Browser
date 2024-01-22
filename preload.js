@@ -3,11 +3,11 @@ const ipc = require('electron').ipcRenderer;
 const pages = {
     login_page: {
         onLoad: loadMain,
-        template_path: './pages/login_page.html'
+        template_path: 'login_page.html'
     },
     file_viewer: {
         onLoad: loadFileViewer,
-        template_path: './pages/file_viewer.html'
+        template_path: 'file_viewer.html'
     }
 }
 
@@ -142,11 +142,11 @@ async function loadFileViewer() {
                     prev.classList.add('selected');
                 }
         } else if (e.key === 'ArrowRight') {
-                let next = selected.nextElementSibling;
-                if (next) {
-                    selected.classList.remove('selected');
-                    next.classList.add('selected');
-                }
+            let next = selected.nextElementSibling;
+            if (next) {
+                selected.classList.remove('selected');
+                next.classList.add('selected');
+            }
         }
     };
 }
@@ -191,7 +191,7 @@ ipc.on('loginFailed', (event, args) => {
 ipc.on('loginSuccess', (event, args) => {
     localStorage['path'] = args[0];
     localStorage['files'] = args[1];
-    ipc.send('retrieveTemplate', ['fileViewer', pages.file_viewer.template_path]);
+    ipc.send('retrieveTemplate', ['file_viewer', pages.file_viewer.template_path]);
 })
 
 /**
@@ -271,11 +271,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     addTab();
     let page = document.querySelector('.inner-content').dataset.page;
-    if (page in pages) {
-        console.log("loading page " + page);
+
+    if (page in pages) // If the page is in the pages object, we load it
         ipc.send('retrieveTemplate', [page, pages[page].template_path]);
-    }
 
     // Add the 'add page' functionality
-    document.querySelector('.add-tab').onclick = addTab;
+    document.querySelector('.add-tab').onclick = () => addTab();
 })

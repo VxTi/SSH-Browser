@@ -18,6 +18,7 @@ const windowOptions = {
     transparent: true,
     movable: true,
     titleBarOverlay: true,
+    titleText: 'SSH Client',
     titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
         nodeIntegration: false, // is default value after Electron v5
@@ -102,23 +103,14 @@ ipcMain.on('attemptLogin', (event, args) => {
         password: args[2]
     }).then(async () => {
 
-        // Retrieve the path where the SSH client starts at
-        let path = await ssh.execCommand('pwd')
-            .then((result) => result.stdout = result.stdout.replace('\n', ''))
-            .catch((err) => window.webContents.send('loginFailed', err));
-
-        // If we've received a path, receive what files are present.
-        if (path !== null) {
-            await ssh.execCommand('pwd && ls')
-                .then((result) => {
-                    let directory = result.stdout.split('\n').shift();
-                    let files = result.stdout.split('\n').slice(1).join('\n');
-                    window.webContents.send('loginSuccess', [directory, files]);
-                }).catch((err) => {
-                    window.webContents.send('loginFailed', err);
-                });
-        }
-
+        await ssh.execCommand('pwd && ls')
+            .then((result) => {
+                let directory = result.stdout.split('\n').shift();
+                let files = result.stdout.split('\n').slice(1).join('\n');
+                window.webContents.send('loginSuccess', [directory, files]);
+            }).catch((err) => {
+                window.webContents.send('loginFailed', err);
+            });
     }).catch((err) => {
         window.webContents.send('loginFailed', err)
     })
@@ -176,7 +168,7 @@ ipcMain.on('addFile', (event, args) => {
  * args[1]: page template content
  */
 ipcMain.on('retrieveTemplate', (event, args) => {
-    fs.readFile(args[1], (err, data) => {
+    fs.readFile(path.join(app.getAppPath(), args[1]), (err, data) => {
         window.webContents.send('retrieveTemplateResponse', [args[0], err || data.toString()])
     })
 });

@@ -13,6 +13,8 @@
 
     --background-opacity: 0.98;
 
+    --default-rounding: 10px;
+
     --tab-height: 30px;
 
     --text-color: #fff;
@@ -49,7 +51,7 @@ html, body {
     justify-content: center;
     align-items: center;
     background-color: var(--theme-1);
-    border-radius: 10px;
+    border-radius: var(--default-rounding);
     opacity: var(--background-opacity);
 }
 
@@ -99,7 +101,7 @@ html, body {
     border: none;
     width: var(--input-box-width);
     height: var(--input-box-height);
-    margin: 5px 10px;
+    margin: 5px;
     border-radius: 5px;
     padding: var(--navigator-padding);
 }
@@ -142,6 +144,8 @@ html, body {
     margin: 5px 10px 30px;
     border: none;
     background-color: var(--theme-3);
+    padding: var(--navigator-padding);
+    border-radius: 5px;
     cursor: pointer;
 }
 

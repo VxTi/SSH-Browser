@@ -2,7 +2,7 @@
   "name": "ssh-viewer",
   "version": "1.0.0",
   "description": "A Simple SSH File Browser",
-  "main": "scripts/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron . --unhandled-rejections=strict"
@@ -10,12 +10,13 @@
   "author": "Luca Warmenhoven",
   "private": true,
   "dependencies": {
-    "electron": "^28.1.4",
     "menu": "^0.2.5",
     "node-ssh": "^13.1.0",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.5.0"
+    "@electron/rebuild": "^3.5.0",
+    "electron-packager": "^17.1.2",
+    "electron": "^28.1.4"
   }
 }
