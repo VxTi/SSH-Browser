@@ -11,7 +11,7 @@
     --theme-4: #2358C9;
     --theme-5: #404040;
 
-    --background-opacity: 0.98;
+    --background-opacity: 0.95;
 
     --default-rounding: 10px;
 
@@ -37,7 +37,6 @@ html, body {
     display: flex;
     flex-flow: column nowrap;
     background-color: var(--theme-2);
-    opacity: var(--background-opacity);
     background-image: url('../assets/login_background.jpeg');
     background-size: cover;
     background-position: center;
@@ -180,52 +179,39 @@ html, body {
 }
 
 .tab {
-    background-color: var(--theme-1);
+    background-color: var(--theme-5);
     color: var(--text-color);
     font-family: var(--font);
     width: 100%;
     text-align: center;
     display: flex;
-    flex-flow: column;
+    flex-flow: row nowrap;
     justify-content: center;
+    align-items: center;
     opacity: var(--background-opacity);
     user-select: none;
     cursor: pointer;
 }
 
 .tab.tab-active {
-    background-color: var(--theme-3);
+    background-color: var(--theme-5);
     opacity: 1;
 }
 
-.tab:after {
-    content: "";
-    width: 100%;
-    height: 3px;
-    background-color: var(--theme-4);
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    transform: scaleX(0);
-    transition: transform 0.3s ease-in-out;
-
-}
-
 .tab:hover {
-    opacity: calc(0.95 * var(--background-opacity));
+    background-color: var(--theme-3);
 }
 
 .add-tab {
-    width: calc(2 * var(--tab-height));
-    height: var(--tab-height);
+    display: block;
+    min-width: calc(var(--tab-height));
+    min-height: var(--tab-height);
     background-color: var(--theme-3);
     border: none;
     cursor: pointer;
-    text-align: center;
-    display: flex;
-    flex-flow: column;
-    justify-content: center;
-    color: var(--text-color);
+    background-image: url('../assets/add_icon.png');
+    background-size: cover;
+    background-position: center;
     opacity: var(--background-opacity);
 }
 
@@ -238,8 +224,6 @@ html, body {
     height: calc(100vh - var(--tab-height));
     top: var(--tab-height);
     position: absolute;
-    background-color: var(--theme-2);
-    opacity: var(--background-opacity);
     border: none;
 }
 

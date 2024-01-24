@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^3.5.0",
-    "electron-packager": "^17.1.2",
-    "electron": "^28.1.4"
+    "@types/ssh2": "^1.11.19",
+    "electron": "^28.1.4",
+    "electron-packager": "^17.1.2"
   }
 }

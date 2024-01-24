@@ -5,8 +5,9 @@
 <div class="content" data-page="file_viewer">
     <div class="action-container">
         <input type="text" name="filter" placeholder="Filter" id="file-filter">
-        <div class="action action-delete"></div>
-        <div class="action action-add"></div>
+        <div class="action action-refresh" id="action-refresh-file"></div>
+        <div class="action action-delete" id="action-delete-file"></div>
+        <div class="action action-add" id="action-add-file"></div>
     </div>
     <div class="file-section container">
         <div class="file-container container"></div>
@@ -18,5 +19,6 @@
                 <div class="arrow navigate-forward"></div>
             </div>
         </div>
+        <div class="process-loading"></div>
     </div>
 </div>

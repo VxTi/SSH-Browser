@@ -1,4 +1,6 @@
 const { app, BrowserWindow } = require('electron')
+const { dialog } = require('electron');
+
 const fs = require('fs')
 const path = require('node:path')
 const {NodeSSH} = require('node-ssh')
@@ -7,8 +9,10 @@ const { v4: uuidv4 } = require('uuidv4')
 const ipcMain = require('electron').ipcMain;
 
 
+let connection = null;
 
-const ssh = new NodeSSH()
+const sessionsFile = 'sessions.json';
+let sessionsPath = path.join(__dirname, sessionsFile);
 
  // E+OG3S3pUoksEX
 
@@ -28,28 +32,12 @@ const windowOptions = {
     }
 }
 
-const menuTemplate =[
-    {
-        label: 'Sample',
-        submenu: [
-            { label: 'About App', selector: 'orderFrontStandardAboutPanel:'},
-            {
-                label: 'Quit',
-                accelerator: 'CmdOrCtrl+Q',
-                click: function() {
-                    app.quit();
-                }
-            }
-        ]
-    }
-];
-
 let window;
 
 let _clog = console.log;
-console.log = function(...args) { _clog(...args); window.webContents.send('log', args); }
+console.log = function(...args) { _clog(...args); }
 
-function createWindow () {
+function createWindow() {
     window = new BrowserWindow({
         width: 800,
         height: 600,
@@ -66,6 +54,27 @@ function createWindow () {
     });
 
     //menu.setApplicationMenu(menu.buildFromTemplate(menuTemplate));
+
+    // Check for the existence of the sessions file.
+    // If it does not exist, create it.
+    if (!fs.existsSync(sessionsPath)) {
+        console.log("Creating file");
+        fs.writeFile(sessionsPath, JSON.stringify([]), (err) => {
+            if (err) throw err;
+        })
+        // It does exist, so we'll parse its contents.
+    } else {
+        fs.readFile(sessionsPath, (error, data) => {
+            if (error)
+                throw error;
+
+            let sessions = JSON.parse(data.toString());
+
+            if (sessions.length > 0) {
+                console.log(sessions);
+            }
+        })
+    }
 
     window.setWindowButtonVisibility(true);
     window.on('before-quit', () => {
@@ -87,38 +96,84 @@ app.on('activate', () => {
 })
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
+    if (process.platform !== 'darwin')
         app.quit()
+})
+
+
+/**
+ * Listener for uploading multiple files into the directory.
+ * This event listener accepts 'args' in the following format:
+ * args[0]: string   - Path to transfer to (remote)
+ * args[1]: string[] - Paths to the files to transfer (local)
+ */
+ipcMain.on('upload-files', async (event, args) => {
+    if (!args || args.length < 2)
+        throw new Error('Invalid arguments for event \'upload-files\', args expected as array, but received ' + typeof args);
+
+    if (connection != null && connection.ssh.isConnected()) {
+        let paths = args[1];
+        let destination = args[0];
+
+        await connection.ssh.putFiles(paths.map(path => {
+            return {local: path, remote: destination + '/' + path.split('/').pop()}
+        }))
+            .then(result => window.webContents.send('upload-files-response', [true]))
+            .catch(e => window.webContents.send('upload-files-response', [false, e?.message + ' - ' + e?.cause + ': ' + e?.stack]))
     }
 })
 
 /**
- * Event listener for attempting to log in to a new SSH session.
+ * Event listener for getting the connection status of the current SSH session.
+ * This listener returns a boolean when called with 'ipc.sendSync(...)'
  */
-ipcMain.on('attemptLogin', (event, args) => {
-    window.webContents.send('loginAttempt');
-    ssh.connect({
-        host: args[0],
-        username: args[1],
-        password: args[2]
-    }).then(async () => {
+ipcMain.on('connection-status', (event, args) => {
+    event.returnValue = getCurrentSession().isConnected();
+})
 
-        await ssh.execCommand('pwd && ls')
-            .then((result) => {
-                let directory = result.stdout.split('\n').shift();
-                let files = result.stdout.split('\n').slice(1).join('\n');
-                window.webContents.send('loginSuccess', [directory, files]);
-            }).catch((err) => {
-                window.webContents.send('loginFailed', err);
-            });
-    }).catch((err) => {
-        window.webContents.send('loginFailed', err)
-    })
+/**
+ * Event listener for attempting to log in to a new SSH session.
+ * Since we want a loading animation, we do this asynchronously.
+ */
+ipcMain.on('connect', (event, args) => {
+    connection = session(args[0], args[1], args[2]);
+
+    connection.ssh.connect({
+            host: connection.host,
+            username: connection.username,
+            password: connection.password,
+            port: connection.port,
+            tryKeyboard: true,
+
+            onKeyboardInteractive: (name, instructions, instructionsLang, prompts, finish) => {
+                finish([connection.password]);
+            }
+        })
+        .then(ssh => {
+            window.webContents.send('connection-response', [true])
+            updateSessions(connection);
+        })
+        .catch(err => window.webContents.send('connection-response', [false, err]));
+})
+
+/**
+ * Handler for selecting files from the OS's file manager.
+ * Upon completion, it fires another event named 'select-files-response'
+ */
+ipcMain.on('open-files', (event, args) => {
+    dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
+        .then(result => {
+
+            // Only send a response when the user has actually selected any files.
+            if (result.filePaths.length > 0)
+                window.webContents.send('open-files-response', result.filePaths)
+        })
+        .catch(err => window.webContents.send('open-files-response', err));
 })
 
 /**
  * Event handler for listing files in a provided path.
- * Path resides in 'args', which is a string literal.
+ * Path resides in 'args[0]', which is a string literal.
  * Path must be provided as an absolute; not relative.
  * If the query is successful, the response event will be called; 'listFilesResponse'.
  * If the query is unsuccessful, the error event will be called; 'listFilesError'.
@@ -136,24 +191,47 @@ ipcMain.on('listFiles', (event, args) => {
     // If this is the case, we move to the provided directory and list its files
     // We return the retrieved files in a 'listFilesResponse' event, with two arguments:
     // arg[0]: the absolute path of the directory
-    // arg[1]: the files in the directory
-    if (ssh.isConnected()) {
-        ssh.execCommand('cd ~ && cd ' + args[0] + ' && ls')
-            .then((result) => {
-                window.webContents.send('listFilesResponse', [args[0], result.stdout])
-            })
-            .catch((err) =>
-                window.webContents.send('listFilesError', err))
+    if (getCurrentSession().isConnected()) {
+        getCurrentSession().execCommand('cd ~ && cd ' + args[0] + ' && ls')
+            .then(result => event.returnValue = result.stdout)
+            .catch(err => event.returnValue = err);
+    }
+});
+
+/**
+ * Event handler for retrieving the current working directory.
+ * This returns a string with the result, when called with 'ipc.sendSync(...)'
+ */
+ipcMain.on('listDirectory', (event, args) => {
+    if (getCurrentSession().isConnected()) {
+        getCurrentSession().execCommand('pwd')
+            .then(result => event.returnValue = result.stdout)
+            .catch(err => event.returnValue = err);
     }
 })
 
 ipcMain.on('addFile', (event, args) => {
-    if (ssh.isConnected()) {
-        ssh.putFile(args[0], args[1])
-            .then((result) =>
-                window.webContents.send('addFileResponse', result))
-            .catch((err) =>
-                window.webContents.send('addFileResponse', err))
+    if (getCurrentSession().isConnected()) {
+        getCurrentSession().putFile(args[0], args[1])
+            .then(result => event.returnValue = result)
+            .catch(err => event.returnValue = err);
+    }
+})
+
+/**
+ * Event handler for 'delete-file' request.
+ * args must be an array
+ * args[0] must be directory
+ * args[1] must be file to delete.
+ */
+ipcMain.on('delete-file', (event, args) => {
+    if (getCurrentSession().isConnected()) {
+        console.error("Attempting to remove file: " + args[1] + " from directory: " + args[0]);
+
+        // Remove file.
+        getCurrentSession().execCommand(`cd ~ && cd ${args[0]} && rm -r '${args[1]}'`)
+            .then(result => window.webContents.send('delete-file-response', [true]))
+            .catch(err => window.webContents.send('delete-file-response', [false, err]));
     }
 })
 
@@ -168,24 +246,59 @@ ipcMain.on('addFile', (event, args) => {
  * args[1]: page template content
  */
 ipcMain.on('retrieveTemplate', (event, args) => {
-    fs.readFile(path.join(app.getAppPath(), args[1]), (err, data) => {
-        window.webContents.send('retrieveTemplateResponse', [args[0], err || data.toString()])
+    fs.readFile(path.join(app.getAppPath(), args[0]), (err, data) => {
+        event.returnValue = err || data.toString();
     })
 });
 
-/*
-function createSession() {
-    let uuid = uuidv4();
-    let session = new SSHSession(uuid, ssh);
-    ssh_sessions[`session_${uuid}`] = session;
-    return session;
+/**
+ * Method for retrieving the current SSH session.
+ * Currently returns the NodeSSH object.
+ * Future proofing for possible changes.
+ * @returns {NodeSSH} the current SSH session.
+ */
+function getCurrentSession() {
+    return connection.ssh;
 }
 
-/!**
- * Method for retrieving an SSH Session by its UUID.
- * @param {string} uuid The UUID of the SSH Session
- * @returns {*}
- *!/
-function getSession(uuid) {
-    return ssh_sessions[`session_${uuid}`];
-}*/
+/**
+ * Method for creating a new SSH session.
+ * @param {string} host The host for the SSH session. Can be either an IP address or a domain name.
+ * @param {string} username The username for the SSH session.
+ * @param {string} password The password for the SSH session.
+ * @param {number} port The port for the SSH session. Default is 22.
+ * @returns {{password, port, host, connect: (function(...[*]): *), username}}
+ */
+function session(host, username, password, port = 22) {
+    return {
+        ssh: new NodeSSH(),
+        port: port,
+        host: host,
+        username: username,
+        password: password,
+        privateKey: null,
+    }
+}
+
+function updateSessions(connection) {
+
+    fs.readFile(sessionsPath, (error, data) => {
+        if (error)
+            throw error;
+
+        let sessions = JSON.parse(data.toString());
+
+        sessions.push({
+            id: uuidv4(),
+            host: connection.host,
+            username: connection.username,
+            password: connection.password,
+            port: connection.port,
+            privateKey: connection.privateKey
+        });
+
+        fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) => {
+            if (err) throw err;
+        })
+    })
+}

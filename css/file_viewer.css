@@ -1,18 +1,21 @@
 :root {
     --file-selected-color: #363636;
-    --file-path-height: 35px;
+    --file-navigator-height: 35px;
     --file-path-font-size: 1rem;
     --file-element-size: 50px;
+    --file-navigator-action-margin: 6px;
 }
 
 
 .path-container {
     width: 100vw;
-    height: var(--file-path-height);
-    top: calc(100vh - var(--file-path-height) - var(--tab-height));
+    height: var(--file-navigator-height);
+    top: calc(100vh - var(--file-navigator-height) - var(--tab-height));
     position: absolute;
     display: flex;
     flex-flow: column nowrap;
+    background-color: var(--theme-2);
+    opacity: 1;
     justify-content: center;
     align-items: center;
 }
@@ -65,7 +68,7 @@
 
 .action-container {
     width: 100vw;
-    height: var(--file-path-height);
+    height: var(--file-navigator-height);
     display: flex;
     flex-flow: row nowrap;
     justify-content: flex-end;
@@ -75,17 +78,17 @@
 }
 
 .container {
-    opacity: var(--background-opacity);
+    opacity: 0.5;
 }
 
 .file-section {
     width: 100vw;
-    height: calc(100vh - var(--file-path-height) * 2 - var(--tab-height));
-    top: var(--file-path-height);
+    height: calc(100vh - var(--file-navigator-height) * 2 - var(--tab-height));
+    top: var(--file-navigator-height);
     display: flex;
     flex-flow: row wrap;
     align-content: flex-start;
-    background-color: var(--theme-2);
+    background-color: rgba(var(--theme-2), 0.0);
     overflow: hidden;
 }
 
@@ -192,7 +195,7 @@
     content: "";
     display: block;
     width: 1px;
-    height: var(--file-path-height);
+    height: var(--file-navigator-height);
     margin-left: 20px;
     background-color: var(--theme-5);
 }
@@ -210,12 +213,48 @@
     background-color: var(--theme-4);
 }
 
+/** Container for special actions, like filtering, creating and deleting files **/
+.action-container {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/** Action in the action container - Deletion  **/
 .action-delete {
     background-image: url('../assets/delete_icon.png');
-    display: block;
-    width: 20px;
-    height: 20px;
 }
+
+.action-add {
+    background-image: url('../assets/add_icon.png');
+}
+
+.action-refresh {
+    background-image: url('../assets/reload_icon.png');
+}
+
+/** Generic action class **/
+.action {
+    margin: calc(0.5 * var(--file-navigator-action-margin));
+    padding: calc(0.5 * var(--file-navigator-action-margin));
+    width: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
+    height: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
+    border-radius: var(--file-navigator-action-margin);
+    background-size: cover;
+    background-position: center;
+    display: block;
+}
+
+.action:hover {
+    cursor: pointer;
+    background-color: var(--theme-1);
+}
+
+.action:active {
+    background-color: var(--theme-3);
+}
+
 
 .file-directory {
     background-image: url('../assets/folder_icon.png');
@@ -235,4 +274,34 @@
     font-size: 1rem;
     padding: 0 10px;
     outline: none;
+}
+
+/* HTML: <div class="loader"></div> */
+.process-loading {
+    width: calc(var(--file-navigator-height) - 2 * var(--navigator-padding));
+    position: absolute;
+    aspect-ratio: 1;
+    display: grid;
+    border-radius: 50%;
+    background:
+            linear-gradient(0deg ,rgb(0 0 0/80%) 30%,#0000 0 70%,rgb(0 0 0/100%) 0) 50%/8% 100%,
+            linear-gradient(90deg,rgb(0 0 0/25%) 30%,#0000 0 70%,rgb(0 0 0/75% ) 0) 50%/100% 8%;
+    background-repeat: no-repeat;
+    animation: l23 1s infinite steps(12);
+}
+.process-loading::before,
+.process-loading::after {
+    content: "";
+    grid-area: 1/1;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0.915;
+    transform: rotate(30deg);
+}
+.process-loading::after {
+    opacity: 0.83;
+    transform: rotate(60deg);
+}
+@keyframes l23 {
+    100% {transform: rotate(1turn)}
 }
