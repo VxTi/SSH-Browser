@@ -5,15 +5,18 @@
 }
 
 :root {
-    --theme-1: #323233;
-    --theme-2: #1b1b1b;
-    --theme-3: #4b4b4b;
+    --theme-1: #22252A;
+    --theme-2: #282C33;
+    --theme-3: #292C33;
     --theme-4: #2358C9;
-    --theme-5: #404040;
+    --theme-5: #4D5052;
+
+    --border-1: #000;
+    --border-2: #343840;
 
     --background-opacity: 0.95;
 
-    --default-rounding: 10px;
+    --default-rounding: 5px;
 
     --navigator-height: 25px;
 
@@ -47,10 +50,7 @@ html, body {
     height: calc(100vh - var(--navigator-height));
     top: var(--navigator-height);
     z-index: 0;
-    background-color: var(--theme-2);
-    background-image: url('../assets/login_background.jpeg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--theme-1);
 }
 
 /** Loading animation **/
@@ -99,12 +99,12 @@ html, body {
 .input-box {
     display: inline-block;
     color: var(--text-color);
-    background-color: var(--theme-3);
+    background-color: var(--theme-2);
     border: none;
     width: var(--input-box-width);
     height: var(--input-box-height);
-    margin: 5px;
     border-radius: 5px;
+    margin: 5px 0;
     padding: var(--navigator-padding);
 }
 
@@ -127,14 +127,14 @@ html, body {
     margin-bottom: 10px;
     padding: 0 calc(2 * var(--navigator-padding));
     border: none;
-    background-color: var(--theme-3);
+    background-color: var(--theme-2);
     border-radius: 5px;
     cursor: pointer;
 }
 
 
 .page-button:hover {
-    background-color: var(--theme-2);
+    background-color: var(--theme-5);
 }
 
 .error-message {
@@ -182,4 +182,16 @@ html, body {
 
 .back-button:hover {
     scale: 0.95;
+}
+
+.container {
+    background-color: var(--theme-1);
+    border-radius: var(--default-rounding);
+    border: 1px solid var(--border-2);
+    outline: 1px solid var(--border-1);
+}
+
+.user-interact {
+    border: 1px solid var(--border-2);
+    border-radius: 0;
 }

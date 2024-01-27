@@ -26,9 +26,12 @@
     position: fixed;
     background-color: rgba(0, 0, 0, 0);
     cursor: pointer;
-    background-size: cover;
+    background-size: 75%;
     background-position: center;
+    background-repeat: no-repeat;
     z-index: 999;
+    transition: background-image 0.2s ease-in-out;
+    background-image: url('../assets/eye_opened.svg');
 }
 
 .password-input .input-box {
@@ -38,8 +41,6 @@
 /** Image for button for password visibility, hide password (image) **/
 .password-invisible { background-image: url('../assets/eye_closed.svg'); }
 
-/** Image for button for password visibility, show password (image) **/
-.password-visible { background-image: url('../assets/eye_opened.svg'); }
 
 /** Container for text input and toggle password button **/
 .password-input {

@@ -17,8 +17,8 @@ console.log = function(...args) { _clog(...args); }
 
 function createWindow() {
     window = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 900,
+        height: 700,
         transparent: true,
         movable: true,
         titleText: 'SSH Client',
@@ -109,7 +109,7 @@ function connectionStatus() {
 
 async function sshConnect(host, username, password, port = 22, privateKey = null) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (connectionStatus() && (connection.host === host && connection.username === username && connection.port === port)) {
             console.log("Already connected");
             return resolve();
         }

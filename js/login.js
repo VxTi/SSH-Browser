@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let show_pass = document.getElementById("ssh-show-password");
     show_pass.addEventListener('click', () => {
         password.type = password.type === 'password' ? 'text' : 'password';
-        show_pass.classList.toggle('password-visible');
         show_pass.classList.toggle('password-invisible');
     });
 

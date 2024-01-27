@@ -2,16 +2,16 @@
 :root {
     --session-width: 120px;
     --session-height: 50px;
-    --session-margin: 30px 10px;
+    --session-margin: 15px 5px;
     --session-rounding: 10px;
 }
 
 .session-container {
     display: flex;
     flex-flow: column wrap;
-    background-color: var(--theme-3);
-    opacity: var(--background-opacity);
-    border-radius: var(--default-rounding);
+    width: 50vw;
+    max-width: 75vw;
+    min-width: 200px;
 }
 
 .session-content {
@@ -26,19 +26,19 @@
 .session-element {
     width: var(--session-width);
     height: var(--session-height);
-    border-radius: var(--default-rounding);
+    border-radius: 3px;
     background-color: var(--theme-1);
     margin: var(--session-margin);
     display: flex;
     flex-flow: column wrap;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    border: 1px solid transparent;
-    transition: scale 0.2s ease-in-out;
+    /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);*/
+    border: 1px solid var(--border-2);
     text-align: center;
+    cursor: pointer;
+    user-select: none;
 }
 
 .session-element:hover {
-    scale: 0.98;
     border-color: var(--text-color-2);
 }
 
@@ -51,9 +51,8 @@
 .session-title {
     color: white;
     font-family: var(--font);
-    font-size: 1rem;
+    font-size: 1.3rem;
     text-align: center;
-    margin: 0;
 }
 
 .add-session {
@@ -61,4 +60,21 @@
     background-size: 50%;
     background-position: center;
     background-repeat: no-repeat;
+}
+.delete-button {
+    --delete-pos-x: 0;
+    --delete-pos-y: 0;
+    width: calc(var(--input-box-width) * 0.5);
+    height: var(--input-box-height);
+    background-color: var(--theme-2);
+    color: white;
+    position: absolute;
+    left: var(--delete-pos-x);
+    top: var(--delete-pos-y);
+    visibility: hidden;
+    display: block;
+    user-select: none;
+    cursor: pointer;
+    font-family: var(--font);
+    text-align: center;
 }

@@ -11,24 +11,25 @@
 <body>
     <div class="navigator"></div>
     <div class="content center-x center-y">
-        <div class="login-container">
+        <div class="login-container container">
             <!-- Login text boxes for connecting with SSH -->
             <div class="title-container">
                 <div class="back-button" id="ssh-back-button"></div>
                 <h1 class="title-text">Login to SSH</h1>
             </div>
             <div class="host-input">
-                <input type="url" name="host" placeholder="Host" class="input-box" id="ssh-host" required>
-                <input type="number" name="port" placeholder="Port" class="input-box" id="ssh-port" data-default="22" required>
+                <input type="url" name="host" placeholder="Host" class="input-box user-interact" id="ssh-host" required>
+                <input type="number" name="port" placeholder="Port" class="input-box user-interact" id="ssh-port" data-default="22" required>
             </div>
-            <input type="text" name="username" placeholder="Username" class="input-box" id="ssh-username" required>
+            <input type="text" name="username" placeholder="Username" class="input-box user-interact" id="ssh-username" required>
 
+            <!-- Container for password and show password button-->
             <div class="password-input">
-                <input type="password" name="password" placeholder="Password" class="input-box" id="ssh-password" required>
+                <input type="password" name="password" placeholder="Password" class="input-box user-interact" id="ssh-password" required>
                 <input type="button" name="show-password" class="show-password password-invisible" id="ssh-show-password">
             </div>
 
-            <input type="button" value="Login" class="page-button" id="ssh-login">
+            <input type="button" value="Login" class="page-button user-interact" id="ssh-login">
         </div>
         <div class="loading"></div>
     </div>
