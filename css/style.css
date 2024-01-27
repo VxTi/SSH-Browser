@@ -15,14 +15,18 @@
 
     --default-rounding: 10px;
 
-    --tab-height: 30px;
+    --navigator-height: 25px;
 
     --text-color: #fff;
-    --text-color-2: #777;
+    --text-color-2: #ccc;
     --input-box-width: 33vw;
     --input-box-height: 5vh;
     --navigator-padding: 10px;
     --font: 'San Francisco', sans-serif;
+
+    --back-button-size: 30px;
+    --back-button-padding: 3px;
+    --back-button-margin: 15px;
 }
 
 html, body {
@@ -30,32 +34,23 @@ html, body {
     padding: 0;
 }
 
+.navigator {
+    width: 100vw;
+    height: var(--navigator-height);
+    background-color: var(--theme-1);
+    z-index: -1;
+    border-radius: var(--default-rounding) var(--default-rounding) 0 0;
+}
+
 .content {
     width: 100vw;
-    height: calc(100vh - var(--tab-height));
-    top: var(--tab-height);
-    display: flex;
-    flex-flow: column nowrap;
+    height: calc(100vh - var(--navigator-height));
+    top: var(--navigator-height);
+    z-index: 0;
     background-color: var(--theme-2);
     background-image: url('../assets/login_background.jpeg');
     background-size: cover;
     background-position: center;
-}
-
-.login-container {
-    width: 50vw;
-    height: auto;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--theme-1);
-    border-radius: var(--default-rounding);
-    opacity: var(--background-opacity);
-}
-
-.login-container.loading {
-    visibility: hidden;
 }
 
 /** Loading animation **/
@@ -87,13 +82,21 @@ html, body {
     }
 }
 
-.title-navigator {
+.title-text {
     color: var(--text-color-2);
     font-size: 2em;
     font-family: var(--font);
+    text-align: center;
 }
 
-.textbox-navigator {
+.title-container {
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+}
+
+.input-box {
     display: inline-block;
     color: var(--text-color);
     background-color: var(--theme-3);
@@ -105,58 +108,30 @@ html, body {
     padding: var(--navigator-padding);
 }
 
-.textbox-navigator:focus {
+.input-box:focus {
     outline: none;
     background-color: var(--theme-2);
 }
 
 /** Styles for text-boxes when they're not empty **/
-.textbox-navigator::placeholder {
+.input-box::placeholder {
     color: var(--text-color-2);
 }
-
-/** Make the port input box rectangular **/
-.host-input > #ssh-port {
-    height: var(--input-box-height);
-    width: var(--input-box-height);
-    margin-left: 0;
-}
-
-/** Remove the arrows on the port input box **/
-.host-input > #ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.host-input > #ssh-host {
-    width: calc(var(--input-box-width) - var(--input-box-height) - 25px);
-    margin-right: 0;
-}
-
-
 
 /** Login button **/
 .page-button {
     width: var(--input-box-width);
     height: var(--input-box-height);
     color: var(--text-color-2);
-    margin: 5px 10px 30px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 0 calc(2 * var(--navigator-padding));
     border: none;
     background-color: var(--theme-3);
-    padding: var(--navigator-padding);
     border-radius: 5px;
     cursor: pointer;
 }
 
-.show-password {
-    width: var(--input-box-height);
-    height: var(--input-box-height);
-    background-color: var(--theme-3);
-    border: none;
-    position: absolute;
-    padding: 20px;
-
-}
 
 .page-button:hover {
     background-color: var(--theme-2);
@@ -172,59 +147,10 @@ html, body {
     font-family: var(--font);
 }
 
-.tab-container {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-evenly;
-}
-
-.tab {
-    background-color: var(--theme-5);
-    color: var(--text-color);
-    font-family: var(--font);
-    width: 100%;
-    text-align: center;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-    align-items: center;
-    opacity: var(--background-opacity);
-    user-select: none;
-    cursor: pointer;
-}
-
-.tab.tab-active {
-    background-color: var(--theme-5);
-    opacity: 1;
-}
-
-.tab:hover {
-    background-color: var(--theme-3);
-}
-
-.add-tab {
-    display: block;
-    min-width: calc(var(--tab-height));
-    min-height: var(--tab-height);
-    background-color: var(--theme-3);
-    border: none;
-    cursor: pointer;
-    background-image: url('../assets/add_icon.png');
-    background-size: cover;
-    background-position: center;
-    opacity: var(--background-opacity);
-}
-
-.add-tab:hover {
-    opacity: calc(0.95 * var(--background-opacity));
-}
-
 .inner-content {
     width: 100vw;
-    height: calc(100vh - var(--tab-height));
-    top: var(--tab-height);
-    position: absolute;
-    border: none;
+    height: calc(100vh - var(--navigator-height));
+    top: var(--navigator-height);
 }
 
 .center-x {
@@ -237,4 +163,23 @@ html, body {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
+}
+
+.back-button {
+    width: var(--back-button-size);
+    height: var(--back-button-size);
+    margin: var(--back-button-margin);
+    padding: var(--back-button-padding);
+    position: relative;
+    cursor: pointer;
+    background-size: 80%;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 999;
+    background-image: url('../assets/left_arrow.png');
+    transition: scale 0.2s ease-in-out;
+}
+
+.back-button:hover {
+    scale: 0.95;
 }

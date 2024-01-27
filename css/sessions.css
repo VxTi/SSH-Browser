@@ -1,0 +1,64 @@
+
+:root {
+    --session-width: 120px;
+    --session-height: 50px;
+    --session-margin: 30px 10px;
+    --session-rounding: 10px;
+}
+
+.session-container {
+    display: flex;
+    flex-flow: column wrap;
+    background-color: var(--theme-3);
+    opacity: var(--background-opacity);
+    border-radius: var(--default-rounding);
+}
+
+.session-content {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-content: center;
+    padding: 10px;
+
+}
+
+.session-element {
+    width: var(--session-width);
+    height: var(--session-height);
+    border-radius: var(--default-rounding);
+    background-color: var(--theme-1);
+    margin: var(--session-margin);
+    display: flex;
+    flex-flow: column wrap;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid transparent;
+    transition: scale 0.2s ease-in-out;
+    text-align: center;
+}
+
+.session-element:hover {
+    scale: 0.98;
+    border-color: var(--text-color-2);
+}
+
+.session-name {
+    color: var(--text-color-2);
+    text-align: center;
+    width: auto;
+    font-size: 1rem;
+}
+.session-title {
+    color: white;
+    font-family: var(--font);
+    font-size: 1rem;
+    text-align: center;
+    margin: 0;
+}
+
+.add-session {
+    background-image: url("../assets/add_icon.png");
+    background-size: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
+}

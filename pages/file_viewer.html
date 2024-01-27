@@ -1,24 +1,36 @@
-<!------------------------------------------>
-<!-- Template for the file viewer section -->
-<!------------------------------------------>
-
-<div class="content" data-page="file_viewer">
-    <div class="action-container">
-        <input type="text" name="filter" placeholder="Filter" id="file-filter">
-        <div class="action action-refresh" id="action-refresh-file"></div>
-        <div class="action action-delete" id="action-delete-file"></div>
-        <div class="action action-add" id="action-add-file"></div>
-    </div>
-    <div class="file-section container">
-        <div class="file-container container"></div>
-    </div>
-    <div class="path-container container">
-        <div class="path-section">
-            <div class="navigate-arrows">
-                <div class="arrow navigate-back"></div>
-                <div class="arrow navigate-forward"></div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSH Browser</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/file_viewer.css">
+    <link rel="stylesheet" href="../css/loading_spinner.css">
+    <script src="../js/file_viewer.js"></script>
+    <script src="../js/loading_spinner.js"></script>
+</head>
+<body>
+    <div class="navigator"></div>
+    <div class="content">
+        <div class="action-container">
+            <div class="back-button" id="back-main"></div>
+            <input type="text" name="filter" placeholder="Filter" id="file-filter">
+            <div class="action action-refresh" id="action-refresh-file"></div>
+            <div class="action action-delete" id="action-delete-file"></div>
+            <div class="action action-add" id="action-add-file"></div>
         </div>
-        <div class="process-loading"></div>
+        <div class="file-section container">
+            <div class="file-container container"></div>
+        </div>
+        <div class="path-container container">
+            <div class="path-section">
+                <div class="navigate-arrows">
+                    <div class="arrow navigate-back"></div>
+                    <div class="arrow navigate-forward"></div>
+                </div>
+            </div>
+            <div class="process-loading"></div>
+        </div>
     </div>
-</div>
+</body>

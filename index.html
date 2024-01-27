@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SSH Browser</title>
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/file_viewer.css">
-</head>
-<body>
-    <div class="tab-container">
-        <div class="add-tab"></div>
-    </div>
-    <div data-page="login_page" class="inner-content"></div>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>SSH Browser</title>
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/sessions.css">
+        <script src="js/sessions.js"></script>
+    </head>
+    <body>
+        <div class="navigator"></div>
+        <div class="content center-x center-y" data-page="select_session">
+            <div class="session-container">
+                <p class="session-title">Select a session</p>
+                <div class="session-content"></div>
+            </div>
+        </div>
+    </body>
 </html>

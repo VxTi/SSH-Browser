@@ -10,8 +10,7 @@
 .path-container {
     width: 100vw;
     height: var(--file-navigator-height);
-    top: calc(100vh - var(--file-navigator-height) - var(--tab-height));
-    position: absolute;
+    position: relative;
     display: flex;
     flex-flow: column nowrap;
     background-color: var(--theme-2);
@@ -77,13 +76,9 @@
     border-bottom: 1px solid var(--theme-5);
 }
 
-.container {
-    opacity: 0.5;
-}
-
 .file-section {
     width: 100vw;
-    height: calc(100vh - var(--file-navigator-height) * 2 - var(--tab-height));
+    height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
     top: var(--file-navigator-height);
     display: flex;
     flex-flow: row wrap;
@@ -172,7 +167,10 @@
     z-index: 99;
 }
 
-
+.arrow:hover {
+    cursor: pointer;
+    background-color: var(--theme-4);
+}
 
 .navigate-back {
     background-color: var(--theme-5);
@@ -278,30 +276,11 @@
 
 /* HTML: <div class="loader"></div> */
 .process-loading {
-    width: calc(var(--file-navigator-height) - 2 * var(--navigator-padding));
-    position: absolute;
-    aspect-ratio: 1;
-    display: grid;
-    border-radius: 50%;
-    background:
-            linear-gradient(0deg ,rgb(0 0 0/80%) 30%,#0000 0 70%,rgb(0 0 0/100%) 0) 50%/8% 100%,
-            linear-gradient(90deg,rgb(0 0 0/25%) 30%,#0000 0 70%,rgb(0 0 0/75% ) 0) 50%/100% 8%;
-    background-repeat: no-repeat;
-    animation: l23 1s infinite steps(12);
-}
-.process-loading::before,
-.process-loading::after {
-    content: "";
-    grid-area: 1/1;
-    border-radius: 50%;
-    background: inherit;
-    opacity: 0.915;
-    transform: rotate(30deg);
-}
-.process-loading::after {
-    opacity: 0.83;
-    transform: rotate(60deg);
-}
-@keyframes l23 {
-    100% {transform: rotate(1turn)}
+    display: block;
+    width: var(--file-navigator-height);
+    height: var(--file-navigator-height);
+    font-size: 1.9rem;
+    position: relative;
+    align-self: flex-end;
+    justify-self: center;
 }

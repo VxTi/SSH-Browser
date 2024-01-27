@@ -1,24 +1,37 @@
-<!----------------------------------------->
-<!-- Template for the login page section -->
-<!----------------------------------------->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSH Browser</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/login_page.css">
+    <script src="../js/login.js"></script>
+</head>
+<body>
+    <div class="navigator"></div>
+    <div class="content center-x center-y">
+        <div class="login-container">
+            <!-- Login text boxes for connecting with SSH -->
+            <div class="title-container">
+                <div class="back-button" id="ssh-back-button"></div>
+                <h1 class="title-text">Login to SSH</h1>
+            </div>
+            <div class="host-input">
+                <input type="url" name="host" placeholder="Host" class="input-box" id="ssh-host" required>
+                <input type="number" name="port" placeholder="Port" class="input-box" id="ssh-port" data-default="22" required>
+            </div>
+            <input type="text" name="username" placeholder="Username" class="input-box" id="ssh-username" required>
 
-<div class="content center-x center-y" data-page="login_page">
-    <div class="login-container">
-        <!-- Login text boxes for connecting with SSH -->
-        <h1 class="title-navigator">Login to SSH</h1>
-        <div class="host-input">
-            <input type="url" name="host" placeholder="Host" class="textbox-navigator" id="ssh-host" required>
-            <input type="number" name="port" placeholder="Port" class="textbox-navigator" id="ssh-port" data-default="22" required>
+            <div class="password-input">
+                <input type="password" name="password" placeholder="Password" class="input-box" id="ssh-password" required>
+                <input type="button" name="show-password" class="show-password password-invisible" id="ssh-show-password">
+            </div>
+
+            <input type="button" value="Login" class="page-button" id="ssh-login">
         </div>
-        <input type="text" name="username" placeholder="Username" class="textbox-navigator" id="ssh-username" required>
-
-        <div class="password-input">
-            <input type="password" name="password" placeholder="Password" class="textbox-navigator" id="ssh-password" required>
-            <input type="button" name="show-password" class="page-button show-password" id="ssh-show-password">
-        </div>
-
-        <input type="button" value="Login" class="page-button" id="ssh-login">
+        <div class="loading"></div>
     </div>
-    <div class="loading"></div>
-</div>
-<span class="error-message" id="error-message"></span>
+    <span class="error-message" id="error-message"></span>
+</body>
+</html>
