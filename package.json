@@ -4,6 +4,9 @@
   "description": "A Simple SSH File Browser",
   "main": "index.js",
   "scripts": {
+    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/app_icon.ico --prune=true --out=release-builds",
+    "build_win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=assets/app_icon.ico --prune=true --out=release-builds",
+    "build_all": "electron-packager . --overwrite --platform=all --arch=all --icon=assets/app_icon.ico --prune=true --out=release-builds",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron . --unhandled-rejections=strict"
   },

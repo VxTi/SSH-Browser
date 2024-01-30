@@ -1,0 +1,115 @@
+
+:root {
+    --file-column-height: 30px;
+}
+
+/* Container holding the file elements */
+.file-container {
+    width: 100%;
+    height: 100%;
+    background-color: var(--theme-2);
+    overflow: scroll;
+    display: flex;
+}
+
+/* Change the direction of flow when in column view to top to bottom. */
+.file-container.file-view-column {
+    flex-direction: column;
+}
+
+.file-container.file-view-icons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+
+
+/* Styles for a generic file displaying in the file viewer */
+.file {
+    --indent: 1;
+    --indent-size: 20px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    width: var(--file-element-size);
+    height: var(--file-element-size);
+    color: var(--text-color);
+    font-family: var(--font);
+    border-radius: 10px;
+}
+
+/* Class for file icon in file element */
+.file-icon {
+    width: var(--file-element-size);
+    height: var(--file-element-size);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+/* Background image for directory */
+.file-directory { background-image: url('../assets/folder_icon.png'); }
+
+/* Background image for executable file */
+.file-executable { background-image: url('../assets/executable_icon.png'); }
+
+/* Background image for normal file */
+.file-ordinary { background-image: url('../assets/file_icon.png'); }
+
+.hidden {
+    display: none;
+}
+
+/* Selected file surrounding */
+.file.selected {
+    border-radius: 10px;
+    background-color: var(--file-selected-color);
+}
+
+
+/* When file has file-column, we render it from left to right per file */
+.file.r-columns {
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    border-radius: 0;
+    height: var(--file-column-height);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: calc(var(--indent) * var(--indent-size));
+}
+
+.file.r-columns:hover {
+    background-color: var(--theme-1);
+}
+
+/** Styles for COLUMN rendering.  **/
+.file.r-columns > .file-icon {
+    width: var(--file-column-height);
+    height: var(--file-column-height);
+    background-size: 80%;
+}
+
+.file.r-columns > .file-name {
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 30px;
+}
+
+
+/** Styles for ICON rendering.  **/
+.file.r-icons {
+    flex-flow: row wrap;
+    justify-content: center;
+    margin: 10px;
+    font-size: 0.7rem;
+    align-items: center;
+}
+
+.file.r-icons > .file-icon {
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    width: var(--file-element-size);
+    height: var(--file-element-size);
+}

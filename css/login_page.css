@@ -7,6 +7,7 @@
     width: 50vw;
     height: auto;
     display: flex;
+    min-width: calc(var(--input-box-width) + 20px);
     flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
@@ -32,6 +33,21 @@
     z-index: 999;
     transition: background-image 0.2s ease-in-out;
     background-image: url('../assets/eye_opened.svg');
+}
+
+.select-private-key {
+    width: var(--input-box-height);
+    height: var(--input-box-height);
+    transform: translateX(calc(var(--input-box-width) / 2 - var(--input-box-height) / 2));
+    border: none;
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    z-index: 999;
+    background-size: 75%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url('../assets/three_dots_icon.png');
 }
 
 .password-input .input-box {
@@ -62,11 +78,18 @@
 .host-input > #ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+    border-left: none;
 }
 
 .host-input > #ssh-host {
-    width: calc(var(--input-box-width) - var(--input-box-height) - 25px);
+    width: calc(var(--input-box-width) - var(--input-box-height) - 21px);
     margin-right: 0;
+    border-right: none;
+}
+
+.host-input {
+    display: flex;
+    flex-flow: row nowrap;
 }
 
 .title-text {

@@ -31,9 +31,8 @@
     margin: var(--session-margin);
     display: flex;
     flex-flow: column wrap;
-    /*box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);*/
-    border: 1px solid var(--border-2);
-    text-align: center;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     user-select: none;
 }
@@ -45,11 +44,12 @@
 .session-name {
     color: var(--text-color-2);
     text-align: center;
+    font-family: var(--font);
     width: auto;
     font-size: 1rem;
 }
 .session-title {
-    color: white;
+    color: var(--text-color);
     font-family: var(--font);
     font-size: 1.3rem;
     text-align: center;

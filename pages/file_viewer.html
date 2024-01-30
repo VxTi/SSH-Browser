@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/file_viewer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
+    <link rel="stylesheet" href="../css/file_viewer_items.css">
+    <script src="../js/file_viewer_loader.js"></script>
     <script src="../js/file_viewer.js"></script>
     <script src="../js/loading_spinner.js"></script>
 </head>
@@ -16,12 +18,30 @@
         <div class="action-container">
             <div class="back-button" id="back-main"></div>
             <input type="text" name="filter" placeholder="Filter" id="file-filter">
-            <div class="action action-refresh" id="action-refresh-file"></div>
+            <div class="action action-add-dir" id="action-add-dir"></div>
+            <div class="action action-refresh" id="action-refresh"></div>
             <div class="action action-delete" id="action-delete-file"></div>
             <div class="action action-add" id="action-add-file"></div>
         </div>
         <div class="file-section">
-            <div class="file-container"></div>
+            <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
+
+            <!-- Container displaying file contents -->
+            <div class="file-container" data-view-type="icons"></div>
+
+            <div class="file-information">
+                <div class="file-information-resize" title="Double click to minimize"></div> <!-- Resize bar -->
+                <div class="grid grid-v-2">
+                    <div class="file-info-preview"></div>
+                    <div class="flex f-nowrap f-column f-m-center">
+                        <div class="file-info file-info-title al-s-c" id="file-info-title"></div>
+                        <div class="file-info file-info-date-modified">Date modified: <span id="file-info-modified"></span></div>
+                        <div class="file-info file-info-created-by">Created by <span id="file-info-owner"></span></div>
+                        <div class="file-info file-info-size">Size: <span id="file-info-size"></span></div>
+                        <div class="file-info file-info-permissions">Permissions: <span id="file-info-permissions"></span></div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="path-container">
             <div class="path-section">

@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         show_pass.classList.toggle('password-invisible');
     });
 
-    //E+OG3S3pUoksEX
-
     document.getElementById('ssh-back-button').onclick = () => window.location.href = '../index.html';
 
     // Add the login functionality
@@ -31,7 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 document.querySelector('.login-container').style.visibility = 'visible';
                 document.querySelector('.loading').style.visibility = 'hidden';
-                console.log(err);
+                let errorContainer = document.querySelector('.login-error');
+                errorContainer.style.visibility = 'visible';
+                errorContainer.innerText = err.message;
+                setTimeout(() => {
+                    errorContainer.style.visibility = 'hidden';
+                }, 5000);
             });
     }
 })

@@ -1,9 +1,15 @@
 :root {
     --file-selected-color: #363636;
-    --file-navigator-height: 35px;
+    --file-navigator-height: 45px;
     --file-path-font-size: 1rem;
     --file-element-size: 50px;
     --file-navigator-action-margin: 6px;
+
+    --file-information-max-width: 200px;
+    --file-information-min-width: 10px;
+    --file-information-width: 100px;
+
+    --file-container-height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
 }
 
 
@@ -17,6 +23,7 @@
     opacity: 1;
     justify-content: center;
     align-items: center;
+    user-select: none;
 }
 
 .path-section {
@@ -72,84 +79,26 @@
     flex-flow: row nowrap;
     justify-content: flex-end;
     align-items: center;
-    background-color: var(--theme-2);
+    background-color: var(--theme-1);
     border-bottom: 1px solid var(--theme-5);
 }
 
 .file-section {
     width: 100vw;
-    height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
+    height: var(--file-container-height);
     top: var(--file-navigator-height);
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: row nowrap;
     align-content: flex-start;
     background-color: rgba(var(--theme-2), 0.0);
     overflow: hidden;
 }
 
-.file-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-flow: row wrap;
-    align-content: flex-start;
-    background-color: var(--theme-2);
-    overflow: scroll;
-}
-
-
-/* Styles for a generic file displaying in the file viewer */
-.file {
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
-    width: var(--file-element-size);
-    height: var(--file-element-size);
-    border-radius: 10px;
-    margin: 10px;
-    background-position: center;
-    background-size: cover;
-}
-
-.hidden {
-    display: none;
-}
-
-/* Styles for the file name underneath the file */
-.file > .file-name {
-
-    top: 70%;
-    display: flex;
-    position: relative;
-    flex-flow: row nowrap;
-    justify-content: center;
-    align-items: flex-end;
-    color: var(--text-color);
-    margin: 0;
-    padding: 0 3px;
-    font-size: 0.65rem;
-    font-family: var(--font);
-    user-select: none;
-    word-wrap: break-word;
-}
-
-/* Selected file surrounding */
-.file.selected {
-    border-radius: 10px;
-    background-color: var(--file-selected-color);
-}
-
-/* Selected file name*/
-.file.selected > .file-name {
-    position: relative;
-    border-radius: 4px;
-    background-color: rgba(37, 88, 255, 0.5);
-}
 
 .arrow {
     background-color: var(--theme-5);
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     transform: rotate(45deg);
     z-index: 2;
 }
@@ -220,17 +169,13 @@
 }
 
 /** Action in the action container - Deletion  **/
-.action-delete {
-    background-image: url('../assets/delete_icon.png');
-}
+.action-delete { background-image: url('../assets/delete_icon.png'); }
 
-.action-add {
-    background-image: url('../assets/add_icon.png');
-}
+.action-add { background-image: url('../assets/add_icon.png'); }
 
-.action-refresh {
-    background-image: url('../assets/reload_icon.png');
-}
+.action-refresh { background-image: url('../assets/reload_icon.png'); }
+
+.action-add-dir { background-image: url('../assets/add_dir_icon.png'); }
 
 /** Generic action class **/
 .action {
@@ -239,8 +184,9 @@
     width: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
     height: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
     border-radius: var(--file-navigator-action-margin);
-    background-size: cover;
+    background-size: 100%;
     background-position: center;
+    background-repeat: no-repeat;
     display: block;
 }
 
@@ -254,18 +200,11 @@
 }
 
 
-.file-directory {
-    background-image: url('../assets/folder_icon.png');
-}
-
-.file-ordinary {
-    background-image: url('../assets/file_icon.png');
-}
 
 #file-filter {
     width: 100%;
     height: 100%;
-    background-color: var(--theme-2);
+    background-color: var(--theme-1);
     border: none;
     color: var(--text-color);
     font-family: var(--font);
@@ -274,7 +213,6 @@
     outline: none;
 }
 
-/* HTML: <div class="loader"></div> */
 .process-loading {
     display: block;
     width: var(--file-navigator-height);
@@ -283,4 +221,70 @@
     position: relative;
     align-self: flex-end;
     justify-self: center;
+    margin-bottom: 15px;
+}
+
+.file-information {
+    width: calc(var(--file-information-width));
+    height: var(--file-container-height);
+    max-width: var(--file-information-max-width);
+    min-width: var(--file-information-min-width);
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: var(--theme-1);
+    border-left: 1px solid var(--border-1);
+    box-shadow: 1px 0 0 var(--border-2) inset;
+    z-index: 0;
+    word-wrap: break-word;
+    overflow: hidden;
+    visibility: visible;
+}
+
+.file-information.active {
+    visibility: visible;
+}
+
+.file-information-resize {
+    min-width: 10px;
+    height: var(--file-container-height);
+    display: block;
+    cursor: ew-resize;
+}
+
+.file-information-resize:active + .file-information {
+    border-top-color: var(--theme-5);
+}
+
+.file-info {
+    color: var(--text-color);
+    font-family: var(--font);
+    font-size: 0.8rem;
+    user-select: none;
+    margin: 0 10px;
+    word-wrap: break-word;
+}
+
+.file-info-preview {
+    width: 50px;
+    height: 50px;
+    margin: 10px 50px;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.file-rename {
+    width: 100%;
+    height: 100%;
+    background-color: var(--theme-4);
+    border: none;
+    color: var(--text-color);
+    font-family: var(--font);
+    font-size: 1rem;
+    padding: 0 10px;
+    outline: none;
+    display: none;
 }

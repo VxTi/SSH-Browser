@@ -18,21 +18,26 @@
                 <h1 class="title-text">Login to SSH</h1>
             </div>
             <div class="host-input">
-                <input type="url" name="host" placeholder="Host" class="input-box user-interact" id="ssh-host" required>
-                <input type="number" name="port" placeholder="Port" class="input-box user-interact" id="ssh-port" data-default="22" required>
+                <input type="url" name="host" placeholder="Host" class="input-box user-interact" id="ssh-host" title="Remote address to connect to">
+                <input type="number" name="port" placeholder="Port" class="input-box user-interact" id="ssh-port" data-default="22" title="Port of the remote address (optional)">
             </div>
-            <input type="text" name="username" placeholder="Username" class="input-box user-interact" id="ssh-username" required>
+            <input type="text" name="username" placeholder="Username" class="input-box user-interact" id="ssh-username" title="Username for the remote host">
 
             <!-- Container for password and show password button-->
-            <div class="password-input">
-                <input type="password" name="password" placeholder="Password" class="input-box user-interact" id="ssh-password" required>
-                <input type="button" name="show-password" class="show-password password-invisible" id="ssh-show-password">
+            <div class="flex f-nowrap f-row f-d-center f-m-center">
+                <input type="password" name="password" placeholder="Password" class="input-box user-interact" id="ssh-password" title="Password authentication">
+                <input type="button" name="show-password" class="show-password password-invisible" title="Toggle password visibility" id="ssh-show-password">
             </div>
 
+            <div class="flex f-nowrap f-row f-d-center f-m-center">
+                <input type="text" name="private-key" placeholder="Private Key (optional)" class="input-box user-interact" id="ssh-private-key" title="Private key for the remote host">
+                <div class="select-private-key" title="Pick file containing private key"></div>
+            </div>
+            <input type="text" name="passphrase" placeholder="Passphrase (optional)" class="input-box user-interact" id="ssh-passphrase" title="Personal passphrase">
             <input type="button" value="Login" class="page-button user-interact" id="ssh-login">
         </div>
         <div class="loading"></div>
     </div>
-    <span class="error-message" id="error-message"></span>
+    <span class="error-message container" id="error-message">test</span>
 </body>
 </html>

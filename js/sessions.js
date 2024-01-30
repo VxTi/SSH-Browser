@@ -1,9 +1,9 @@
 let delete_button;
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     delete_button = document.querySelector('.delete-button');
     document.onclick = () => delete_button.style.visibility = 'hidden';
 
-    await window.ssh.sessions.get()
+    window.ssh.sessions.get()
         .then(results => {
             results.forEach(session => addSession(session));
             let addSessionElement = document.createElement('div');
@@ -36,8 +36,11 @@ function addSession(session) {
     session_element.appendChild(session_name);
 
     session_element.onclick = () => {
+        document.querySelector('.session-container').style.visibility = 'hidden';
+        document.querySelector('.loading').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey)
-            .then(_ => window.location.href = './pages/file_viewer.html');
+            .then(_ => window.location.href = './pages/file_viewer.html')
+            .catch(e => document.querySelector('.session-container').style.visibility = 'visible');
     }
 
     session_element.onmousedown = (event) => {

@@ -23,7 +23,7 @@ function createWindow() {
         movable: true,
         titleText: 'SSH Client',
         titleBarOverlay: true,
-        titleBarStyle: 'customButtonsOnHover',
+        titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: false, // is default value after Electron v5
             contextIsolation: true, // protect against prototype pollution
@@ -56,17 +56,48 @@ app.on('window-all-closed', () => {
         app.quit()
 })
 
-ipcMain.handle('open-files', async (event, args) => openFiles());
-ipcMain.handle('list-files', async (event, args) => listFiles(args));
-ipcMain.handle('list-directory', async (event, args) => listDirectory(args));
-ipcMain.handle('add-files', async (event, args) => addFiles(args[0], args[1]));
-ipcMain.handle('delete-file', async (event, args) => deleteFile(args[0], args[1]));
-ipcMain.handle('retrieve-sessions', retrieveSessions);
-ipcMain.handle('connection-status', connectionStatus)
-ipcMain.handle('connect', async (event, args) => sshConnect(args[0], args[1], args[2], args[3], args[4]))
-ipcMain.handle('upload-files', async (event, args) => uploadFiles(args[0], args[1]))
-ipcMain.handle('create-directory', async (event, args) => createDirectory(args[0], args[1]));
+/** Event handler for the 'select files' dialog menu **/
+ipcMain.handle('open-files', async () => openFiles());
 
+/** Event handler for listing files on the remote server **/
+ipcMain.handle('list-files', async (_, directory) => listFiles(directory));
+
+/** Event handler for listing the current working directory on the remote server **/
+ipcMain.handle('list-directory', async () => listDirectory());
+
+/** Event handler for deleting files on the remote server **/
+ipcMain.handle('delete-file', async (_, directory, fileName) => deleteFile(directory, fileName));
+
+/** Event handler for retrieving the successful sessions in sessions.json **/
+ipcMain.handle('retrieve-sessions', retrieveSessions);
+
+/** Event handler for retrieving the status of the current SSH connection **/
+ipcMain.handle('connection-status', connectionStatus)
+
+/** Event handler for attempting to connect to a remote server **/
+ipcMain.handle('connect', async (_, ...args) => sshConnect(...args))
+
+/** Event handler for uploading multiple files **/
+ipcMain.handle('upload-files', async (_, directory, files) => uploadFiles(directory, files))
+
+/** Event handler for creating a directory on the remote server **/
+ipcMain.handle('create-directory', async (_, directory, title) => createDirectory(directory, title));
+
+ipcMain.handle('get-file-info', async (_, directory, file) => getFileInfo(directory, file));
+
+/** Event handler for resizing the main window **/
+ipcMain.on('window-resize', (_, width, height) => window.setSize(width, height))
+
+/** Event handler for minimizing the main window **/
+ipcMain.on('window-minimize', () => window.minimize());
+
+ipcMain.on('current-session', (event) => {
+    event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
+})
+
+ipcMain.on('log', (_, args) => {
+    console.log(args);
+});
 
 /**
  * Method for creating a directory on the remote server.
@@ -79,6 +110,16 @@ async function createDirectory(directory, name) {
         if (connectionStatus()) {
             getCurrentSession().execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
+                .catch(err => reject(err));
+        } else reject('Not connected');
+    })
+}
+
+async function getFileInfo(directory, file) {
+    return new Promise((resolve, reject) => {
+        if (connectionStatus()) {
+            getCurrentSession().execCommand(`cd ~ && cd ${directory} && ls -l -d ${file}`)
+                .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
         } else reject('Not connected');
     })
@@ -196,27 +237,6 @@ async function deleteFile(directory, file) {
 
             // Remove file.
             return getCurrentSession().execCommand(`cd ~ && cd ${directory} && rm -r '${file}'`)
-                .then(result => resolve())
-                .catch(err => reject(err));
-        } else reject('Not connected');
-    });
-}
-
-/**
- * Method for adding files to the remote server.
- * @param {string} directory The directory in which to add the files.
- * @param {string[]} files The files to add to the remote server.
- * @returns {Promise<*>} Promise resolves when files transferred, rejects when an error occurs.
- */
-async function addFiles(directory, files) {
-    return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
-            console.error("Attempting to add files: " + files + " to directory: " + directory);
-
-            // Add files.
-            return getCurrentSession().putFiles(files.map(path => {
-                return {local: path, remote: directory + '/' + path.split('/').pop()}
-            }))
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');

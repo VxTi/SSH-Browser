@@ -14,16 +14,17 @@
     --border-1: #000;
     --border-2: #343840;
 
+    --text-color: #fff;
+    --text-color-2: #ccc;
+
     --background-opacity: 0.95;
 
     --default-rounding: 5px;
 
-    --navigator-height: 25px;
+    --navigator-height: 35px;
 
-    --text-color: #fff;
-    --text-color-2: #ccc;
-    --input-box-width: 33vw;
-    --input-box-height: 5vh;
+    --input-box-width: 300px;
+    --input-box-height: 30px;
     --navigator-padding: 10px;
     --font: 'San Francisco', sans-serif;
 
@@ -32,9 +33,32 @@
     --back-button-margin: 15px;
 }
 
+html[data-theme="light"] {
+    --theme-1: #dddddd;
+    --theme-2: #a0a0a0;
+    --theme-3: #909090;
+    --theme-4: #2358C9;
+    --theme-5: #b0b0b0;
+
+    --border-2: #000;
+    --border-1: #999;
+
+    --text-color: #111;
+    --text-color-2: #777;
+
+}
+
 html, body {
     margin: 0;
     padding: 0;
+    overflow: hidden;
+}
+
+body {
+    border-radius: var(--default-rounding);
+    background-color: var(--theme-1);
+    outline: 1px solid var(--border-1);
+    border: 1px solid var(--border-2);
 }
 
 .navigator {
@@ -43,6 +67,8 @@ html, body {
     background-color: var(--theme-1);
     z-index: -1;
     border-radius: var(--default-rounding) var(--default-rounding) 0 0;
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
 }
 
 .content {
@@ -59,7 +85,7 @@ html, body {
     height: 30px;
     position: absolute;
     display: block;
-    z-index: 5;
+    z-index: 999;
     visibility: hidden;
 }
 .loading:before {
@@ -120,18 +146,14 @@ html, body {
 
 /** Login button **/
 .page-button {
-    width: var(--input-box-width);
+    width: calc(var(--input-box-width) + 2 * var(--navigator-padding));
     height: var(--input-box-height);
     color: var(--text-color-2);
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 0 calc(2 * var(--navigator-padding));
-    border: none;
+    margin: 5px 0 15px;
     background-color: var(--theme-2);
     border-radius: 5px;
     cursor: pointer;
 }
-
 
 .page-button:hover {
     background-color: var(--theme-5);
@@ -141,16 +163,43 @@ html, body {
     position: absolute;
     text-align: center;
     top: 50px;
-    width: 100vw;
-    color: var(--theme-1);
-    background-color: rgba(0, 0, 0, 0.3);
+    width: 50vw;
+    margin: 0 25vw;
+    padding: 20px 0;
+    border-radius: var(--default-rounding);
+    color: #800;
     font-family: var(--font);
+    visibility: hidden
 }
 
 .inner-content {
     width: 100vw;
     height: calc(100vh - var(--navigator-height));
     top: var(--navigator-height);
+}
+
+.flex {
+    display: flex;
+}
+
+.f-row {
+    flex-flow: row;
+}
+
+.f-column {
+    flex-flow: column;
+}
+
+.f-nowrap {
+    flex-wrap: nowrap;
+}
+
+.f-m-center {
+    justify-content: center;
+}
+
+.f-d-center {
+    align-items: center;
 }
 
 .center-x {
@@ -163,6 +212,22 @@ html, body {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
+}
+
+.grid {
+    display: grid;
+}
+
+.grid-h-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-v-2 {
+    grid-template-rows: 1fr 1fr;
+}
+
+.al-s-c {
+    align-self: center;
 }
 
 .back-button {
