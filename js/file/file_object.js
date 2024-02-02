@@ -1,15 +1,30 @@
+/**
+ * Class for representing a file on the server.
+ * @class File
+ */
 class File {
-    #loaded = false;
-    #permissions = undefined;
-    #owner = 'root';
-    #lastModified = undefined;
-    #fileSize = 0;
-    #exists = true;
-    #refElement = undefined;
+    #loaded = false;            // Whether the file info has been loaded
+    /** @type FilePermissions */
+    #permissions = undefined;   // Permissions of the file, eg 'rwxr-xr-x'
+    #owner = 'root';            // Owner of the file
+    /** @type Date */
+    #lastModified = undefined;  // Last modified date of the file
+    #fileSize = 0;              // Size of the file in bytes
+    #exists = true;             // Whether the file exists on the server
+    /** @type HTMLElement */
+    #refElement = undefined;    // Reference element of the file
 
-    constructor(fileName, path) {
+    /**
+     * Constructor for the File class.
+     * @param {string} fileName Name of the file
+     * @param {string} path Path of the file
+     * @param {boolean} loadOnCreate Whether to load the file info on creation
+     */
+    constructor(fileName, path, loadOnCreate = false) {
         this.fileName = fileName;
         this.path = path;
+        this.#permissions = new FilePermissions(this);
+        if (loadOnCreate) this.load();
     }
 
     /**
@@ -61,6 +76,20 @@ class File {
     get permissions() { return this.#permissions; }
 
     /**
+     * Getting a readable version of the file permissions.
+     * @param {string} accessor Who is accessing the file
+     * @param {boolean} forceLoad Whether to force load the file info
+     */
+    readablePermissions(accessor = this.#owner, forceLoad = false) {
+        if (!this.loaded) {
+            if (forceLoad)
+                this.load();
+            else
+                return 'Permissions not loaded yet.';
+        }
+    }
+
+    /**
      * Getter for isDirectory.
      * @returns {boolean}
      */
@@ -82,16 +111,19 @@ class File {
      * Method for loading the file info.
      * @param {boolean} force Whether to force load the file info.
      */
-    load(force = false) {
+    async load(force = false) {
+        // If the data has already been loaded,
+        // and we're not forcing a reload, return
         if (this.loaded && !force)
             return;
 
-        window.ssh.getFileInfo(this.path, this.fileName)
+        // Load the file info
+        await window.ssh.getFileInfo(this.path, this.fileName)
             .then(info => {
                 this.#fileSize = info.fileSize;
                 this.#lastModified = info.lastModified;
                 this.#owner = info.owner;
-                this.#permissions = info.permissions;
+                this.#permissions.update(info.permissions);
                 this.#loaded = true;
             });
     }

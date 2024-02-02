@@ -362,10 +362,6 @@ function selectFiles(files, directory = current_directory) {
 
             let file = getFile(directory, files[0]);
 
-            if (file.permissions === undefined) {
-
-            }
-
             busy(true);
             window.ssh.getFileInfo(directory, files[0])
                 .then(result => {
