@@ -1,42 +1,56 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 
+/**
+ * Methods for interacting with the SSH connection.
+ */
 contextBridge.exposeInMainWorld('ssh',  {
-    connected: async () => {
-        return ipcRenderer.invoke('connection-status')
-    },
+    connected: async () => ipcRenderer.invoke('connection-status'),
+    /** @param {string} host
+     *  @param {string} username
+     *  @param {string} password
+     *  @param {number} port
+     *  @param {string} privateKey */
     connect: async (host, username, password, port = 22, privateKey = null) => {
         return ipcRenderer.invoke('connect', host, username, password, port, privateKey)
     },
-    uploadFile: async (directory, files) => {
+    /** @param {string} directory
+     *  @param {string[]} files */
+    uploadFiles: async (directory, files) => {
         return ipcRenderer.invoke('upload-files', directory, files)
     },
+    /** @param {string} directory
+     *  @param {string} file */
     deleteFile: async (directory, file) => {
         return ipcRenderer.invoke('delete-file', directory, file)
     },
-    selectFiles: async () => {
-        return ipcRenderer.invoke('open-files')
-    },
-    listFiles: async (directory) => {
-        return ipcRenderer.invoke('list-files', directory)
-    },
+
+    selectFiles: async () => ipcRenderer.invoke('open-files'),
+
+    /** @param {string} directory */
+    listFiles: async (directory) => ipcRenderer.invoke('list-files', directory),
+
+    /** @param {string} directory
+     *  @param {string} file
+     *  @param {string} newName */
     renameFile: async (directory, file, newName) => {
         return ipcRenderer.invoke('rename-file', directory, file, newName)
     },
-    currentDirectory: async () => {
-        return ipcRenderer.invoke('list-directory')
-    },
-    getFileInfo: async (directory, file) => {
-        return ipcRenderer.invoke('get-file-info', directory, file)
-    },
+
+    currentDirectory: async () => ipcRenderer.invoke('list-directory'),
+
+    /** @param {string} directory
+     *  @param {string} file */
+    getFileInfo: async (directory, file) => ipcRenderer.invoke('get-file-info', directory, file),
+
     sessions: {
-        get: async () => {
-            return ipcRenderer.invoke('retrieve-sessions')
-        },
-        currentSession: () => {
-            return ipcRenderer.sendSync('current-session');
-        }
+        get: async () => ipcRenderer.invoke('retrieve-sessions'),
+        currentSession: () => ipcRenderer.sendSync('current-session')
     }
 })
+
+contextBridge.exposeInMainWorld('events', {
+    on: (event, callback) => ipcRenderer.on(event, (e, args) => callback(args))
+});
 
 /**
  * Methods for controlling the window.
@@ -48,15 +62,20 @@ contextBridge.exposeInMainWorld('frame', {
     maximize: () => {
         ipcRenderer.send('window-maximize')
     },
+    /** @param {number} x
+     *  @param {number} y */
     resize: (x, y) => {
         ipcRenderer.send('window-resize', x, y)
     },
+    /** @param {boolean} state */
     resizable: (state) => {
         ipcRenderer.send('window-resizable', state)
     },
 });
 
 contextBridge.exposeInMainWorld('logger', {
+    /** @param {string} message
+     *  @param {...any} args */
     log: (message, ...args) => {
         ipcRenderer.send('log', message, args);
     }

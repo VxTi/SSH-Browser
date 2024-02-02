@@ -35,14 +35,16 @@ function createWindow() {
         titleBarOverlay: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
-            nodeIntegration: false, // is default value after Electron v5
-            contextIsolation: true, // protect against prototype pollution
-            enableRemoteModule: false, // turn off remote
-            preload: path.join(__dirname, "preload.js") // use a preload script
+            nodeIntegration: true,
+            contextIsolation: true,
+            enableRemoteModule: true,
+            preload: path.join(__dirname, "preload.js")
         }
     });
+
+    // Show the window buttons on macOS
     if (OS.isMac)
-        window.setWindowButtonVisibility(true); // Show the window buttons on macOS
+        window.setWindowButtonVisibility(true);
 
     window.loadFile('./index.html')
         .catch((err) => console.error(err));
@@ -111,9 +113,7 @@ ipcMain.on('current-session', (event) => {
     event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
 })
 
-ipcMain.on('log', (_, args) => {
-    console.log(args);
-});
+ipcMain.on('log', (_, args) => console.log(args));
 
 /**
  * Method for creating a directory on the remote server.
@@ -124,7 +124,7 @@ ipcMain.on('log', (_, args) => {
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            getCurrentSession().execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
+            connection.ssh.execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -141,7 +141,7 @@ async function createDirectory(directory, name) {
 async function renameFile(directory, file, newName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            getCurrentSession().execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
+            connection.ssh.execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -151,20 +151,20 @@ async function renameFile(directory, file, newName) {
 /**
  * Method for retrieving file info from the remote server.
  * @param {string} directory The directory in which the file is located.
- * @param {string} file The name of the file.
+ * @param {string} fileName The name of the file.
  * @returns {Promise<{permissions: string, owner: string, fileSize: number, lastModified: Date} | Error>}
  */
-async function getFileInfo(directory, file) {
+async function getFileInfo(directory, fileName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            getCurrentSession().execCommand(`cd ~ && cd ${directory} && ls -l -d ${file}`)
+            connection.ssh.execCommand(`cd ~ && cd ${directory} && ls -l -d '${fileName}'`)
                 .then(result => {
                     let arguments = result.stdout.split(' ');
                     resolve({
                         permissions: arguments[0],
                         owner: arguments[2],
                         fileSize: parseInt(arguments[4]),
-                        lastModified: new Date(arguments.slice(5, 8).join(' ')),
+                        lastModified: arguments[6] + ' ' + arguments[5] + ', ' + arguments[7]
                     })
                 })
                 .catch(err => reject(err));
@@ -180,11 +180,21 @@ async function getFileInfo(directory, file) {
  */
 async function uploadFiles(directory, files) {
     return new Promise((resolve, reject) => {
+        if (files.length === 0)
+            return resolve('No files to upload');
         if (sshConnected()) {
             connection.ssh.putFiles(files.map(path => {
                 return {local: path, remote: directory + '/' + path.split('/').pop()}
-            }))
-                .then(result => resolve(true))
+            }),  {
+                concurrency: 2,
+                transferOptions: {
+                    step: (transfer_count, chunk, total) => {
+                        console.log(100 * transfer_count / total);
+                        mainWindow.webContents.send('file-transfer-progress', {progress: 100 * transfer_count / total, finished: transfer_count === total});
+                    }
+                }
+            })
+                .then(_ => resolve(true))
                 .catch(e => reject(e))
         } else resolve('Not connected');
     })
@@ -201,12 +211,9 @@ function sshConnected() {
 
 async function sshConnect(host, username, password, port = 22, privateKey = null) {
     return new Promise((resolve, reject) => {
-        if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port)) {
-            console.log("Already connected");
+        if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port))
             return resolve();
-        }
 
-        console.log("Attempting to connect to " + host + ":" + port + " with username " + username + " and password " + password);
         connection = session(host, username, password, port, privateKey);
         connection.ssh.connect({
             host: connection.host,
@@ -243,7 +250,6 @@ async function openFiles() {
     })
 }
 
-
 /**
  * Method to list the files in a directory.
  * @param {string} directory The directory in which to list the files.
@@ -263,24 +269,29 @@ async function listFiles(directory) {
         // We return the retrieved files in a 'listFilesResponse' event, with two arguments:
         // arg[0]: the absolute path of the directory
         if (sshConnected()) {
-            return currentSession().ssh.execCommand(`cd ~ && cd ${directory} && ls`)
+            return connection.ssh.execCommand(`cd ~ && cd ${directory} && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
         } else reject('Not connected');
     });
-
 }
 
 async function listDirectory() {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            getCurrentSession().execCommand('pwd')
+            connection.ssh.execCommand('pwd')
                 .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
         } else reject('Not connected')
     })
 }
 
+/**
+ * Method for deleting a file from the remote server.
+ * @param {string} directory The directory in which the file is located.
+ * @param {string} file The name of the file to delete.
+ * @returns {Promise<void | Error>} Resolved promise when file deletion is successful; rejected promise when an error occurs.
+ */
 async function deleteFile(directory, file) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {

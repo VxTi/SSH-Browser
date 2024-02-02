@@ -1,5 +1,5 @@
 :root {
-    --file-selected-color: #363636;
+    --file-selected-color: #656565;
     --file-navigator-height: 45px;
     --file-path-font-size: 1rem;
     --file-element-size: 50px;
@@ -30,6 +30,7 @@
     width: 100%;
     height: 100%;
     display: flex;
+    position: absolute;
     flex-flow: row nowrap;
     justify-content: flex-start;
     align-items: center;
@@ -112,7 +113,7 @@
     left: -1%;
     top: -1%;
     transform: translateX(28%);
-    background-color: var(--theme-2);
+    background-color: var(--theme-3);
     z-index: 99;
 }
 
@@ -218,10 +219,9 @@
     width: var(--file-navigator-height);
     height: var(--file-navigator-height);
     font-size: 1.9rem;
-    position: relative;
+    position: absolute;
     align-self: flex-end;
     justify-self: center;
-    margin-bottom: 15px;
 }
 
 .file-information {
@@ -322,4 +322,27 @@
 
 .context-menu-item:hover {
     background-color: var(--theme-5);
+}
+
+.file-transfer-progress {
+    --progress: 0;
+    position: absolute;
+    align-self: flex-end;
+    margin-right: 50px;
+    display: block;
+    visibility: hidden;
+    width: 80px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--theme-5);
+}
+
+.file-transfer-progress:after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: calc(var(--progress) * 1%);
+    height: 100%;
+    border-radius: 3px;
+    background-color: var(--theme-4);
 }

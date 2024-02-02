@@ -7,7 +7,7 @@ class File {
     /** @type FilePermissions */
     #permissions = undefined;   // Permissions of the file, eg 'rwxr-xr-x'
     #owner = 'root';            // Owner of the file
-    /** @type Date */
+    /** @type String */
     #lastModified = undefined;  // Last modified date of the file
     #fileSize = 0;              // Size of the file in bytes
     #exists = true;             // Whether the file exists on the server
@@ -21,10 +21,10 @@ class File {
      * @param {boolean} loadOnCreate Whether to load the file info on creation
      */
     constructor(fileName, path, loadOnCreate = false) {
-        this.fileName = fileName;
+        this.name = fileName;
         this.path = path;
         this.#permissions = new FilePermissions(this);
-        if (loadOnCreate) this.load();
+        if (loadOnCreate) this.loadInfo();
     }
 
     /**
@@ -51,7 +51,7 @@ class File {
         let suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
         for (let i = 0; i < suffixes.length; i++) {
             if (this.#fileSize < 1024)
-                return `${this.#fileSize.toFixed(2)} ${suffixes[i]}`;
+                return `${this.#fileSize.toFixed(1)} ${suffixes[i]}`;
 
             this.#fileSize /= 1024;
         }
@@ -71,7 +71,7 @@ class File {
 
     /**
      * Getter for permissions of the file.
-     * @returns {string}
+     * @returns {FilePermissions}
      */
     get permissions() { return this.#permissions; }
 
@@ -83,7 +83,7 @@ class File {
     readablePermissions(accessor = this.#owner, forceLoad = false) {
         if (!this.loaded) {
             if (forceLoad)
-                this.load();
+                this.loadInfo();
             else
                 return 'Permissions not loaded yet.';
         }
@@ -93,7 +93,7 @@ class File {
      * Getter for isDirectory.
      * @returns {boolean}
      */
-    get directory() { return this.fileName.indexOf('.') < 0; }
+    get directory() { return this.name.indexOf('.') < 0; }
 
     /**
      * Getter for whether the file info has loaded.
@@ -111,14 +111,14 @@ class File {
      * Method for loading the file info.
      * @param {boolean} force Whether to force load the file info.
      */
-    async load(force = false) {
+    async loadInfo(force = false) {
         // If the data has already been loaded,
         // and we're not forcing a reload, return
         if (this.loaded && !force)
             return;
 
         // Load the file info
-        await window.ssh.getFileInfo(this.path, this.fileName)
+        await window.ssh.getFileInfo(this.path, this.name)
             .then(info => {
                 this.#fileSize = info.fileSize;
                 this.#lastModified = info.lastModified;
@@ -134,7 +134,7 @@ class File {
     delete() {
         if (!this.exists)
             return;
-        window.ssh.deleteFile(this.path, this.fileName);
+        window.ssh.deleteFile(this.path, this.name);
         this.#exists = false;
     }
 
@@ -145,8 +145,8 @@ class File {
     rename(newName) {
         if (!this.exists)
             return;
-        window.ssh.renameFile(this.path, this.fileName, newName)
-            .then(() => this.fileName = newName)
+        window.ssh.renameFile(this.path, this.name, newName)
+            .then(() => this.name = newName)
     }
 
 }

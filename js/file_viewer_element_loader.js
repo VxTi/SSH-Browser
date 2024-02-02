@@ -1,12 +1,22 @@
 let busy = (state) => { document.querySelector('.process-loading').style.visibility = state ? 'visible' : 'hidden' }
 
+let currentUser = undefined
+
+let navigateHistory = {
+    forward: [],
+    backward: []
+}
+
 /**
  * Loading in the functionality of the file viewer.
- * All files that are loaded are stored in a 'files' variable in local storage.
+ * All files that are loaded are cached in the 'file_map' object.
  * These are then converted into elements visible on the screen.
  * All previously visible files will be removed upon calling this function.
  */
 function loadFileViewer() {
+
+    if (currentUser === undefined)
+        currentUser = window.ssh.sessions.currentSession().username;
 
     let path_segments = current_directory.split('/') || [];
 
@@ -29,7 +39,9 @@ function loadFileViewer() {
         directory.innerHTML = seg;
 
         directory.addEventListener('click', () => {
-            // If it's the same directory, we don't have to perform another query.
+
+            // If we click on the path segment, first check whether we're already on that path.
+            // If not, load its contents.
             if (current_directory !== directory.dataset.path) {
 
                 busy(true);
@@ -65,7 +77,7 @@ function loadFileViewer() {
     filter.addEventListener('input', () => {
         document.querySelectorAll('.file')
             .forEach(file =>
-                file.classList.toggle('hidden', file.dataset.path.indexOf(filter.value) < 0));
+                file.classList.toggle('hidden', file.dataset.name.indexOf(filter.value) < 0));
     })
 
     /**
@@ -86,14 +98,15 @@ function loadFileViewer() {
      */
     document.getElementById('action-add-file')
         .addEventListener('click', () => {
-        window.ssh.selectFiles()
-            .then(files => {
-                if (files.length > 0)
-                    busy(true);
-                window.ssh.upload(current_directory, files)
-                    .then(_ => {
-                        console.log(files);
-                    }).finally(_ => busy(false));
+
+            busy(true);
+            window.ssh.selectFiles()
+                .then(files => {
+                    if (files.length < 1)
+                        return;
+                    window.ssh.uploadFiles(current_directory, files)
+                        .finally(_ => busy(false));
+
             })
     });
 
@@ -102,24 +115,29 @@ function loadFileViewer() {
      */
     document.getElementById('action-delete-file')
         .addEventListener('click', () => {
-        let selected = document.querySelectorAll('.file.selected');
+        let selected = [...document.querySelectorAll('.file.selected')];
         if (selected.length === 0)
             return;
 
         busy(true);
 
         // Remove all selected files from the server
-        Promise.all(selected.map(file => window.ssh.deleteFile(current_directory, file.dataset.name)))
+        Promise.all(selected.map(file => window.ssh.deleteFile(file.dataset.path, file.dataset.name)))
             .then(_ => {
                 // Remove previously selected files from the file viewer
                 selected.forEach(e => e.remove());
+
+                // Retrieve files and filter out the deleted ones.
                 let files = getFiles(current_directory);
+                files.forEach((file, i) => {
+                    if (selected.find(e => e.dataset.name === file.name))
+                        files.splice(i, 1);
 
-                // Remove all selected files from the file map
-                files = files.filter(f => !selected.map(e => e.dataset.name).includes(f.fileName));
+                });
 
-                // Update the file map with remaining files.
-                storeFiles(current_directory, files.join('\n'));
+                // Update the file map
+                file_map[current_directory] = files;
+
             })
             .finally(_ => busy(false));
     });
@@ -157,19 +175,22 @@ function loadFileViewer() {
         e.stopImmediatePropagation();
     });
 
+    // Drag 'n drop files to the file viewer
+    // This will upload the files to the server.
     document.addEventListener('drop', (event) => {
         event.preventDefault();
         event.stopImmediatePropagation();
 
+        /** @type {string[]} */
         let pathArr = [];
         for (const f of event.dataTransfer.files)
             pathArr.push(f.path);
 
         busy(true);
-        window.ssh.uploadFile(current_directory, pathArr)
+        window.ssh.uploadFiles(current_directory, pathArr)
             .then(_ => {
-                let newFiles = pathArr.map(p => p.substring(p.lastIndexOf('/') + 1)).join('\n');
-                storeFiles(current_directory, file_map.get(current_directory) + '\n' + newFiles);
+                // get current files in current_directory, map paths to file objects and add to file_map
+                getFiles(current_directory).push(...pathArr.map(p => new File(p.substring(p.lastIndexOf('/') + 1), p)));
                 loadFileElements(current_directory, true);
             })
             .finally(_ => busy(false));
@@ -186,48 +207,38 @@ function loadFileElements(directory = current_directory, clearOld = true, indent
     if (clearOld)
         document.querySelectorAll('.file').forEach(e => e.remove());
 
-    let file_container = document.querySelector('.file-container');
+    let fileContainer = document.querySelector('.file-container');
 
-    let files = getFileNames(directory);
+    let files = getFiles(directory);
 
-    let columns = document.querySelector('.file-container').dataset.viewType === 'columns';
-
-    file_container.classList.add(columns ? 'file-view-column' : 'file-view-icons');
+    fileContainer.classList.add('file-view-icons');
 
     // Add all files to the file container
-    for (let file_name of files) {
-        if (file_name.length === 0)
-            continue;
-        let element = createFileElement(directory, file_name, columns, indent);
-        if (insertAfter === null)
-            file_container.appendChild(element);
-        else
-            file_container.insertBefore(element, insertAfter.nextSibling);
-    }
+    files.forEach(file => fileContainer.appendChild(createFileElement(file)));
 
     // Deselect all files when user clicks next to file element.
     document.addEventListener('click', () => {
+        document.querySelector('.file-information').style.visibility = 'hidden';
         document.querySelector('.context-menu').classList.remove('active');
         document.querySelectorAll('.file.selected').forEach(e => e.classList.remove('selected'));
     })
 
+    /** Context menu - Right-clicking*/
     document.addEventListener('contextmenu', async (event) => {
+        if (!document.hasFocus())
+            return;
         event.preventDefault();
         event.stopImmediatePropagation();
 
         // Select potential file
-        let file = event.target;
+        let file = event.target.parentElement;
         let isFile = file.classList.contains('file');
-        await navigator.clipboard.read().then(data => console.log(data));
         let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
         if (isFile)
             file.classList.add('selected');
 
-        console.log(isFile, event.target);
-
         document.querySelectorAll(`#context-menu-rename, #context-menu-delete, #context-menu-download, #context-menu-cut, #context-menu-copy ${hasClipboard ? '' : ', #context-menu-paste'}`)
             .forEach(e => e.classList.toggle('disabled', !isFile));
-
 
         let menu = document.querySelector('.context-menu');
         menu.style.left = event.clientX + 'px';
@@ -238,50 +249,45 @@ function loadFileElements(directory = current_directory, clearOld = true, indent
 
 /**
  * Method for creating a file element.
- * @param {string} directory The directory in which the file resides.
- * @param {string} file_name The name of the file.
- * @param {boolean} columns Whether the file should be displayed in columns or not.
- * @param {number} [indent] The column indent of the file. Default is 0.
+ * @param {File} file The file object to create an element for
  * @returns {HTMLDivElement} The file element created
  */
-function createFileElement(directory, file_name, columns = false, indent = 0) {
+function createFileElement(file) {
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
 
     let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'jar'];
-    let isExecutable = executables.indexOf(file_name.substring(file_name.lastIndexOf('.') + 1)) >= 0;
-    let isDirectory = file_name.indexOf('.') < 0;
+    let isExecutable = executables.indexOf(file.name.substring(file.name.lastIndexOf('.') + 1)) >= 0;
 
-    let file_element = document.createElement('div');
-    file_element.classList.add('file', columns ? 'r-columns' : 'r-icons', isDirectory ? 'directory' : 'ordinary');
-    file_element.dataset.path = directory + '/' + file_name;
-    file_element.dataset.name = file_name;
-    file_element.draggable = true;
-    file_element.style.setProperty('--indent', indent);
+    let fileElement = document.createElement('div');
+    fileElement.classList.add('file', 'r-icons', file.directory ? 'directory' : 'ordinary');
+    fileElement.dataset.path = file.path;
+    fileElement.dataset.name = file.name;
+    fileElement.draggable = true;
+    file.reference(fileElement);
 
 
-    let file_icon = document.createElement('div');
-    file_icon.classList.add('file-icon', isDirectory ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary');
-    file_element.appendChild(file_icon);
+    let fileIcon = document.createElement('div');
+    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary');
+    fileElement.appendChild(fileIcon);
 
     // Add the file name to the file element
-    let file_name_element = document.createElement('span');
-    file_name_element.classList.add('file-name');
-    file_name_element.innerHTML = formatFileName(file_name)  ;
-    file_element.appendChild(file_name_element);
+    let fileTitle = document.createElement('span');
+    fileTitle.classList.add('file-name');
+    fileTitle.innerHTML = formatFileName(file.name)  ;
+    fileElement.appendChild(fileTitle);
 
     /** File interact functionality **/
 
     // When one double-clicks on a file, we open it.
-    file_element.addEventListener('dblclick', () => {
+    fileElement.addEventListener('dblclick', () => {
 
-        // If it's a directory, and we're in Icon view, we open it.
-        // If we're in column view, double-clicking doesn't do anything.
-        if (file_element.classList.contains('directory') && !columns) {
-            window.ssh.listFiles(file_element.dataset.path)
+        // If it's a directory, we open it.
+        if (file.directory) {
+            window.ssh.listFiles(file.path + '/' + file.name)
                 .then(result => {
-                    storeFiles(result, file_element.dataset.path);
-                    current_directory = file_element.dataset.path;
+                    storeFiles(result, file.path + '/' + file.name);
+                    current_directory = file.path + '/' + file.name;
                     loadFileViewer(); // reload the file viewer
                 });
         }
@@ -289,49 +295,22 @@ function createFileElement(directory, file_name, columns = false, indent = 0) {
 
     // When one clicks on a file, we select it.
     // If we're in column view, we open the directory.
-    file_element.addEventListener('click',  (event) => {
+    fileElement.addEventListener('click',  (event) => {
 
         // Deselect all other files
         document.querySelectorAll('.file').forEach(e => e.classList.remove('selected'));
 
-        // Check if we're in column view, and if we're clicking on a directory.
-        // If so, we open it and show its child files.
-        if (columns && file_element.classList.contains('directory')) {
-            file_element.classList.add('open');
+        document.querySelector('.context-menu').classList.remove('active');
 
-            // If we're in column view and one clicks on a directory, we want to
-            // expand it and show all containing files.
-            // If the files haven't been loaded in the file map yet, we'll have to retrieve them.
-            if (!hasFile(file_element.dataset.path)) {
-
-                // Retrieve files from the server
-                window.ssh.listFiles(file_element.dataset.path)
-                    .then(result => {
-                        storeFiles(result, file_element.dataset.path);
-                        loadFileElements(file_element.dataset.path, false, ++indent, file_element);
-                    });
-            } else {
-                // If the files have been loaded in the file map, we can just load them in.
-                loadFileElements(file_element.dataset.path, false, ++indent, file_element);
-            }
-        }
-
-        file_element.classList.add('selected');
-        selectFiles([file_name], directory);
+        fileElement.classList.add('selected');
+        selectFiles([file.name], file.path);
 
         // Prevent further propagation of the event.
         event.preventDefault();
         event.stopImmediatePropagation();
     })
-
-    return file_element;
+    return fileElement;
 }
-
-function hasFileInClipboard() {
-    return navigator.clipboard.readText().then(text => text.length > 0);
-}
-
-
 
 /**
  * Function for selecting a file
@@ -342,50 +321,36 @@ function hasFileInClipboard() {
 function selectFiles(files, directory = current_directory) {
 
     document.querySelector('.file-information').style.visibility = files.length > 0 ? 'visible' : 'hidden';
-    if (files.length === 1) {
-        let preview = document.querySelector('.file-info-preview');
-        let isDir = files[0].indexOf('.') < 0;
-        let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'jar'];
-        let isExecutable = executables.indexOf(files[0].substring(files[0].lastIndexOf('.') + 1)) >= 0;
-
-        preview.classList.toggle(isDir ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary', true);
-    }
 
     if (files.length === 0)
         return;
 
     if (files.length > 1) {
         // TODO: Add implementation for multiple files
-    } else {
+    } else { // Single file
+
+        let preview = document.querySelector('.file-info-preview');
+        let isDir = files[0].indexOf('.') < 0;
+        let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'jar'];
+        let isExecutable = executables.indexOf(files[0].substring(files[0].lastIndexOf('.') + 1)) >= 0;
+
+        // TODO: Fix this
+        preview.classList.toggle(isDir ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary', true);
 
         (async () => {
-
+            // If there's only one file, we can show all information about it.
             let file = getFile(directory, files[0]);
+            if (!file.loaded) {
+                busy(true);
+                await file.loadInfo().then(_ => busy(false)); // Load file info
+            }
 
-            busy(true);
-            window.ssh.getFileInfo(directory, files[0])
-                .then(result => {
-                    let details = result.split(' ');
-                    let fileSize = parseInt(details[4]);
+            document.getElementById('file-info-permissions').innerText = file.permissions.toString(currentUser);
 
-                    let permissions = []
-                    let checkIndex = details[2] === window.ssh.sessions.currentSession().username ? 0 : 1;
-                    for (let i = 0; i < 3; i++) {
-                        if (details[0][i + 3 * checkIndex] === 'r') permissions.push('Read');
-                        if (details[0][i + 3 * checkIndex] === 'w') permissions.push('Write');
-                        if (details[0][i + 3 * checkIndex] === 'x') permissions.push('Execute');
-                    }
-                    if (permissions.length === 0) permissions.push('None');
-                    document.getElementById('file-info-permissions').innerText = permissions.join(' / ');
-
-                    document.getElementById('file-info-title').innerText = files[0];
-                    document.getElementById('file-info-size').innerText =
-                        fileSize > (1024 * 1024) ? `${(fileSize / (1024 * 1024)).toFixed(2)} MB` :
-                            fileSize > 1024 ? `${(fileSize / 1024).toFixed(2)} KB` : `${fileSize} B`;
-                    document.getElementById('file-info-owner').innerText = details[2];
-                    document.getElementById('file-info-modified').innerText = `${details[6]} ${details[5]} ${details[7]}`;
-                })
-                .finally(_ => busy(false));
+            document.getElementById('file-info-title').innerText = file.name;
+            document.getElementById('file-info-size').innerText = file.fileSizeString;
+            document.getElementById('file-info-owner').innerText = file?.owner || 'Unknown';
+            document.getElementById('file-info-modified').innerText = file.lastModified || 'Unknown';
         })();
     }
 }

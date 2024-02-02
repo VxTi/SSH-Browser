@@ -11,6 +11,8 @@ let current_directory = '~';
  * @param {boolean} load Whether to load the file info or not. Default is false.
  */
 function storeFiles(files, path, load = false) {
+    if (files === undefined || path === undefined || files.length === 0)
+        return;
     file_map.set(path, files.split('\n').map(f => new File(f, path, load)));
 }
 
@@ -30,7 +32,7 @@ function getFiles(path) {
  * @returns {File} The file object
  */
 function getFile(path, name) {
-    return file_map.get(path).find(f => f.fileName === name);
+    return file_map.get(path)?.find(f => f.name === name) || null
 }
 
 /**
@@ -39,15 +41,7 @@ function getFile(path, name) {
  * @returns {string[]} Array containing the names of the files
  */
 function getFileNames(path) {
-    return file_map.get(path)?.map(f => f.fileName) || [];
-}
-
-/**
- * Method for checking if the cache contains the path
- * @param path
- */
-function hasFile(path) {
-    return file_map.has(path);
+    return file_map.get(path)?.map(f => f.fileName) || []
 }
 
 /**
