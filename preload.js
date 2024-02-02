@@ -19,6 +19,9 @@ contextBridge.exposeInMainWorld('ssh',  {
     listFiles: async (directory) => {
         return ipcRenderer.invoke('list-files', directory)
     },
+    renameFile: async (directory, file, newName) => {
+        return ipcRenderer.invoke('rename-file', directory, file, newName)
+    },
     currentDirectory: async () => {
         return ipcRenderer.invoke('list-directory')
     },

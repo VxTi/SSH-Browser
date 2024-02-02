@@ -10,6 +10,9 @@
     background-color: var(--theme-2);
     overflow: scroll;
     display: flex;
+    scroll-behavior: smooth;
+    scrollbar-color: rgba(0, 0, 0, 0) var(--theme-5);
+    scrollbar-width: thin;
 }
 
 /* Change the direction of flow when in column view to top to bottom. */
@@ -36,6 +39,7 @@
     color: var(--text-color);
     font-family: var(--font);
     border-radius: 10px;
+    z-index: 99;
 }
 
 /* Class for file icon in file element */

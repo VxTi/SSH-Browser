@@ -8,13 +8,24 @@
     <link rel="stylesheet" href="../css/file_viewer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <link rel="stylesheet" href="../css/file_viewer_items.css">
-    <script src="../js/file_viewer_loader.js"></script>
+    <script src="../js/file_viewer_management.js"></script>
+    <script src="../js/file_viewer_element_loader.js"></script>
     <script src="../js/file_viewer.js"></script>
     <script src="../js/loading_spinner.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
     <div class="content">
+        <div class="context-menu">
+            <div class="context-menu-item" id="context-menu-rename">Rename</div>
+            <div class="context-menu-item" id="context-menu-delete">Delete</div>
+            <div class="context-menu-item" id="context-menu-download">Download</div>
+            <div class="context-menu-item" id="context-menu-cut">Cut</div>
+            <div class="context-menu-item" id="context-menu-copy">Copy</div>
+            <div class="context-menu-item" id="context-menu-paste">Paste</div>
+            <div class="context-menu-item" id="context-menu-new-dir">New directory</div>
+            <div class="context-menu-item" id="context-menu-new-file">New file</div>
+        </div>
         <div class="action-container">
             <div class="back-button" id="back-main"></div>
             <input type="text" name="filter" placeholder="Filter" id="file-filter">

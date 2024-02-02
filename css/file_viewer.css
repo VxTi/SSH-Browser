@@ -288,3 +288,38 @@
     outline: none;
     display: none;
 }
+
+.context-menu {
+    position: absolute;
+    display: block;
+    background-color: var(--theme-1);
+    border: 1px solid var(--theme-5);
+    z-index: 100;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out, visibility 0.1s ease-in-out;
+}
+
+.context-menu.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.context-menu-item {
+
+    color: var(--text-color-2);
+    font-family: var(--font);
+    font-size: 1rem;
+    padding: 2px 10px;
+    margin: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.context-menu-item.disabled {
+    color: var(--text-color-3);
+}
+
+.context-menu-item:hover {
+    background-color: var(--theme-5);
+}

@@ -1,37 +1,3 @@
-// Map containing paths with arrays of files
-const file_map = new Map();
-let current_directory = '';
-
-
-/**
- * Loading in the files from the provided string.
- * Method parses the provided string into the 'files' object and caches them.
- * This makes it easier to traverse back and forth.
- * Parameter must be in format 'file1\nfile2\n ...'
- * @param {string} files The files to be loaded.
- * @param {string} path The path in which the files reside. Example: '/home/user', put in /user/
- */
-function storeFiles(files, path) {
-    file_map.set(path, files.split('\n'));
-}
-
-/**
- * Method for retrieving files from the cache.
- * @param {string} path The path where the files are located at
- * @returns {string[]} Array containing the names of the files
- */
-function getFiles(path) {
-    return file_map.get(path) || [];
-}
-
-/**
- * Method for checking if the cache contains the path
- * @param path
- */
-function hasFile(path) {
-    return file_map.has(path);
-}
-
 let busy = (state) => { document.querySelector('.process-loading').style.visibility = state ? 'visible' : 'hidden' }
 
 /**
@@ -65,13 +31,16 @@ function loadFileViewer() {
         directory.addEventListener('click', () => {
             // If it's the same directory, we don't have to perform another query.
             if (current_directory !== directory.dataset.path) {
+
+                busy(true);
                 window.ssh
-                    .listFiles(directory.dataset.path)
+                    .listFiles(directory.dataset.path) // Retrieve files from selected directory
                     .then(result => {
                         storeFiles(result, directory.dataset.path);
                         current_directory = directory.dataset.path;
                         loadFileViewer(); // reload the file viewer
-                    });
+                    })
+                    .finally(_ => busy(false));
             }
         })
         path_container.appendChild(directory);
@@ -133,17 +102,26 @@ function loadFileViewer() {
      */
     document.getElementById('action-delete-file')
         .addEventListener('click', () => {
-        let selected = document.querySelector('.file.selected');
-        if (!selected)
+        let selected = document.querySelectorAll('.file.selected');
+        if (selected.length === 0)
             return;
-        busy(true);
-        window.ssh.deleteFile(current_directory, selected.dataset.path).then(_ => {
-            selected.remove() // remove from elements
 
-            let files = getFiles(current_directory);
-            files.splice(files.indexOf(selected.dataset.name), 1);
-            storeFiles(current_directory, files.join('\n'));
-        }).finally(_ => busy(false));
+        busy(true);
+
+        // Remove all selected files from the server
+        Promise.all(selected.map(file => window.ssh.deleteFile(current_directory, file.dataset.name)))
+            .then(_ => {
+                // Remove previously selected files from the file viewer
+                selected.forEach(e => e.remove());
+                let files = getFiles(current_directory);
+
+                // Remove all selected files from the file map
+                files = files.filter(f => !selected.map(e => e.dataset.name).includes(f.fileName));
+
+                // Update the file map with remaining files.
+                storeFiles(current_directory, files.join('\n'));
+            })
+            .finally(_ => busy(false));
     });
 
     /**
@@ -210,7 +188,7 @@ function loadFileElements(directory = current_directory, clearOld = true, indent
 
     let file_container = document.querySelector('.file-container');
 
-    let files = getFiles(directory);
+    let files = getFileNames(directory);
 
     let columns = document.querySelector('.file-container').dataset.viewType === 'columns';
 
@@ -226,8 +204,46 @@ function loadFileElements(directory = current_directory, clearOld = true, indent
         else
             file_container.insertBefore(element, insertAfter.nextSibling);
     }
+
+    // Deselect all files when user clicks next to file element.
+    document.addEventListener('click', () => {
+        document.querySelector('.context-menu').classList.remove('active');
+        document.querySelectorAll('.file.selected').forEach(e => e.classList.remove('selected'));
+    })
+
+    document.addEventListener('contextmenu', async (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        // Select potential file
+        let file = event.target;
+        let isFile = file.classList.contains('file');
+        await navigator.clipboard.read().then(data => console.log(data));
+        let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
+        if (isFile)
+            file.classList.add('selected');
+
+        console.log(isFile, event.target);
+
+        document.querySelectorAll(`#context-menu-rename, #context-menu-delete, #context-menu-download, #context-menu-cut, #context-menu-copy ${hasClipboard ? '' : ', #context-menu-paste'}`)
+            .forEach(e => e.classList.toggle('disabled', !isFile));
+
+
+        let menu = document.querySelector('.context-menu');
+        menu.style.left = event.clientX + 'px';
+        menu.style.top = event.clientY + 'px';
+        menu.classList.add('active');
+    });
 }
 
+/**
+ * Method for creating a file element.
+ * @param {string} directory The directory in which the file resides.
+ * @param {string} file_name The name of the file.
+ * @param {boolean} columns Whether the file should be displayed in columns or not.
+ * @param {number} [indent] The column indent of the file. Default is 0.
+ * @returns {HTMLDivElement} The file element created
+ */
 function createFileElement(directory, file_name, columns = false, indent = 0) {
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
@@ -303,11 +319,16 @@ function createFileElement(directory, file_name, columns = false, indent = 0) {
         file_element.classList.add('selected');
         selectFiles([file_name], directory);
 
+        // Prevent further propagation of the event.
         event.preventDefault();
         event.stopImmediatePropagation();
     })
 
     return file_element;
+}
+
+function hasFileInClipboard() {
+    return navigator.clipboard.readText().then(text => text.length > 0);
 }
 
 
@@ -337,47 +358,38 @@ function selectFiles(files, directory = current_directory) {
         // TODO: Add implementation for multiple files
     } else {
 
-        busy(true);
-        window.ssh.getFileInfo(directory, files[0])
-            .then(result => {
-                console.log(result);
-                let details = result.split(' ');
-                let fileSize = parseInt(details[4]);
+        (async () => {
 
-                let permissions = []
-                let checkIndex = details[2] === window.ssh.sessions.currentSession().username ? 0 : 1;
-                for (let i = 0; i < 3; i++) {
-                    if (details[checkIndex][i] === 'r') permissions.push('Read');
-                    if (details[checkIndex][i] === 'w') permissions.push('Write');
-                    if (details[checkIndex][i] === 'x') permissions.push('Execute');
-                }
-                if (permissions.length === 0) permissions.push('None');
-                document.getElementById('file-info-permissions').innerText = permissions.join(' / ');
+            let file = getFile(directory, files[0]);
 
-                document.getElementById('file-info-title').innerText = files[0];
-                document.getElementById('file-info-size').innerText =
-                    fileSize > (1024 * 1024) ? `${(fileSize / (1024 * 1024)).toFixed(2)} MB` :
-                        fileSize > 1024 ? `${(fileSize / 1024).toFixed(2)} KB` : `${fileSize} B`;
-                document.getElementById('file-info-owner').innerText = details[2];
-                document.getElementById('file-info-modified').innerText = `${details[6]} ${details[5]} ${details[7]}`;
-            })
-            .finally(_ => busy(false));
+            if (file.permissions === undefined) {
+
+            }
+
+            busy(true);
+            window.ssh.getFileInfo(directory, files[0])
+                .then(result => {
+                    let details = result.split(' ');
+                    let fileSize = parseInt(details[4]);
+
+                    let permissions = []
+                    let checkIndex = details[2] === window.ssh.sessions.currentSession().username ? 0 : 1;
+                    for (let i = 0; i < 3; i++) {
+                        if (details[0][i + 3 * checkIndex] === 'r') permissions.push('Read');
+                        if (details[0][i + 3 * checkIndex] === 'w') permissions.push('Write');
+                        if (details[0][i + 3 * checkIndex] === 'x') permissions.push('Execute');
+                    }
+                    if (permissions.length === 0) permissions.push('None');
+                    document.getElementById('file-info-permissions').innerText = permissions.join(' / ');
+
+                    document.getElementById('file-info-title').innerText = files[0];
+                    document.getElementById('file-info-size').innerText =
+                        fileSize > (1024 * 1024) ? `${(fileSize / (1024 * 1024)).toFixed(2)} MB` :
+                            fileSize > 1024 ? `${(fileSize / 1024).toFixed(2)} KB` : `${fileSize} B`;
+                    document.getElementById('file-info-owner').innerText = details[2];
+                    document.getElementById('file-info-modified').innerText = `${details[6]} ${details[5]} ${details[7]}`;
+                })
+                .finally(_ => busy(false));
+        })();
     }
-}
-
-/**
- * Method for formatting file names.
- * This is used for when file names are too long to be displayed on the screen.
- * @param {string} name The name of the file to be formatted.
- * @param {number} maxLength The maximum length of the file name. Default is 20.
- */
-function formatFileName(name, maxLength= 14) {
-    if (name.length > maxLength) {
-        let extensionIndex = name.indexOf('.');
-        if (extensionIndex < 0) // Directory
-            return name.substring(0, maxLength - 3) + '...';
-
-        return name.substring(0, maxLength / 2) + '...' + name.substring(maxLength / 2);
-    }
-    return name;
 }

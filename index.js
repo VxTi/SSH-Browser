@@ -2,27 +2,37 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const { dialog } = require('electron');
 
 const fs = require('fs')
+const os = require('os')
 const path = require('node:path')
-const {NodeSSH} = require('node-ssh')
+const { NodeSSH } = require('node-ssh')
 
 
 let connection = null;
 
-const sessionsFile = 'sessions.json';
-let sessionsPath = path.join(__dirname, sessionsFile);
-let window;
+let sessionsPath = path.join(__dirname, 'sessions.json');
+let mainWindow = null;
 
 let _clog = console.log;
-console.log = function(...args) { _clog(...args); }
+console.log = function(...args) { _clog(new Date().toLocaleDateString('nl-NL'), ...args); }
 
+const OS = {
+    isWindows: os.platform() === 'win32',
+    isMac: os.platform() === 'darwin',
+    isLinux: os.platform() === 'linux'
+}
+
+/**
+ * Method for creating a window.
+ * @returns {Electron.CrossProcessExports.BrowserWindow} The created window.
+ */
 function createWindow() {
-    window = new BrowserWindow({
+    let window = new BrowserWindow({
         width: 900,
         height: 700,
         transparent: true,
         movable: true,
         titleText: 'SSH Client',
-        titleBarOverlay: true,
+        titleBarOverlay: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: false, // is default value after Electron v5
@@ -31,13 +41,16 @@ function createWindow() {
             preload: path.join(__dirname, "preload.js") // use a preload script
         }
     });
-    window.setWindowButtonVisibility(true);
+    if (OS.isMac)
+        window.setWindowButtonVisibility(true); // Show the window buttons on macOS
+
     window.loadFile('./index.html')
         .catch((err) => console.error(err));
+    return window;
 }
 
 app.whenReady().then(() => {
-    createWindow()
+    mainWindow = createWindow()
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
@@ -52,7 +65,7 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin')
+    if (!OS.isMac)
         app.quit()
 })
 
@@ -72,7 +85,7 @@ ipcMain.handle('delete-file', async (_, directory, fileName) => deleteFile(direc
 ipcMain.handle('retrieve-sessions', retrieveSessions);
 
 /** Event handler for retrieving the status of the current SSH connection **/
-ipcMain.handle('connection-status', connectionStatus)
+ipcMain.handle('connection-status', sshConnected)
 
 /** Event handler for attempting to connect to a remote server **/
 ipcMain.handle('connect', async (_, ...args) => sshConnect(...args))
@@ -80,16 +93,19 @@ ipcMain.handle('connect', async (_, ...args) => sshConnect(...args))
 /** Event handler for uploading multiple files **/
 ipcMain.handle('upload-files', async (_, directory, files) => uploadFiles(directory, files))
 
+/** Event handler for renaming a file on the remote server. */
+ipcMain.handle('rename-file', async (_, directory, file, newName) => renameFile(directory, file, newName))
+
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, title) => createDirectory(directory, title));
 
 ipcMain.handle('get-file-info', async (_, directory, file) => getFileInfo(directory, file));
 
 /** Event handler for resizing the main window **/
-ipcMain.on('window-resize', (_, width, height) => window.setSize(width, height))
+ipcMain.on('window-resize', (_, width, height) => mainWindow.setSize(width, height))
 
 /** Event handler for minimizing the main window **/
-ipcMain.on('window-minimize', () => window.minimize());
+ipcMain.on('window-minimize', () => mainWindow.minimize());
 
 ipcMain.on('current-session', (event) => {
     event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
@@ -107,7 +123,7 @@ ipcMain.on('log', (_, args) => {
  */
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             getCurrentSession().execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
                 .catch(err => reject(err));
@@ -115,11 +131,42 @@ async function createDirectory(directory, name) {
     })
 }
 
+/**
+ * Method for renaming a file on the remote server.
+ * @param {string} directory The directory in which the file is located.
+ * @param {string} file The name of the file to rename.
+ * @param {string} newName The new name of the file.
+ * @returns {Promise<void | Error>} Resolved promise when file renaming is successful; rejected promise when an error occurs.
+ */
+async function renameFile(directory, file, newName) {
+    return new Promise((resolve, reject) => {
+        if (sshConnected()) {
+            getCurrentSession().execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
+                .then(_ => resolve())
+                .catch(err => reject(err));
+        } else reject('Not connected');
+    })
+}
+
+/**
+ * Method for retrieving file info from the remote server.
+ * @param {string} directory The directory in which the file is located.
+ * @param {string} file The name of the file.
+ * @returns {Promise<{permissions: string, owner: string, fileSize: number, lastModified: Date} | Error>}
+ */
 async function getFileInfo(directory, file) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             getCurrentSession().execCommand(`cd ~ && cd ${directory} && ls -l -d ${file}`)
-                .then(result => resolve(result.stdout))
+                .then(result => {
+                    let arguments = result.stdout.split(' ');
+                    resolve({
+                        permissions: arguments[0],
+                        owner: arguments[2],
+                        fileSize: parseInt(arguments[4]),
+                        lastModified: new Date(arguments.slice(5, 8).join(' ')),
+                    })
+                })
                 .catch(err => reject(err));
         } else reject('Not connected');
     })
@@ -133,7 +180,7 @@ async function getFileInfo(directory, file) {
  */
 async function uploadFiles(directory, files) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             connection.ssh.putFiles(files.map(path => {
                 return {local: path, remote: directory + '/' + path.split('/').pop()}
             }))
@@ -143,14 +190,18 @@ async function uploadFiles(directory, files) {
     })
 }
 
-function connectionStatus() {
-    return currentSession()?.ssh?.isConnected() || false;
+/**
+ * Method for checking the status of the current SSH connection.
+ * @returns {boolean} Whether or not the connection is active.
+ */
+function sshConnected() {
+    return connection?.ssh.isConnected() || false;
 }
 
 
 async function sshConnect(host, username, password, port = 22, privateKey = null) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus() && (connection.host === host && connection.username === username && connection.port === port)) {
+        if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port)) {
             console.log("Already connected");
             return resolve();
         }
@@ -170,7 +221,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
             }
         })
             .then(ssh => {
-                updateSessions(connection);
+                updateSessions(connection); // store the session in sessions.json
                 resolve();
             })
             .catch(err => reject(err));
@@ -184,7 +235,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
  */
 async function openFiles() {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             dialog.showOpenDialog({ properties: ['openFile', 'multiSelections'] })
                 .then(result => resolve(result.filePaths))
                 .catch(err => reject(err));
@@ -211,7 +262,7 @@ async function listFiles(directory) {
         // If this is the case, we move to the provided directory and list its files
         // We return the retrieved files in a 'listFilesResponse' event, with two arguments:
         // arg[0]: the absolute path of the directory
-        if (connectionStatus()) {
+        if (sshConnected()) {
             return currentSession().ssh.execCommand(`cd ~ && cd ${directory} && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
@@ -222,7 +273,7 @@ async function listFiles(directory) {
 
 async function listDirectory() {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             getCurrentSession().execCommand('pwd')
                 .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
@@ -232,7 +283,7 @@ async function listDirectory() {
 
 async function deleteFile(directory, file) {
     return new Promise((resolve, reject) => {
-        if (connectionStatus()) {
+        if (sshConnected()) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
@@ -277,6 +328,10 @@ function session(host, username, password, port = 22, privateKey = null) {
     }
 }
 
+/**
+ * Method for retrieving the successful sessions in sessions.json.
+ * @returns {Promise<Object | Error>} A promise that resolves to the content of the sessions file.
+ */
 async function retrieveSessions() {
     return new Promise((resolve, reject) => {
         fs.readFile(path.join(__dirname, 'sessions.json'), (err, data) => {
