@@ -1,19 +1,31 @@
 /** @type {Map<string, File[]>} */
-const file_map = new Map();
-let current_directory = '~';
+const fileCache = new Map();
+let currentDir = '~';
 
 
 /**
  * Loading in the files from the provided string.
  * Method parses the provided string into the 'files' object and caches them.
- * @param {string} files The files to be loaded, separated by \n (newline)
+ * @param {string | string[]} files The files to be loaded, separated by \n (newline)
  * @param {string} path The path in which the files reside.
  * @param {boolean} load Whether to load the file info or not. Default is false.
  */
 function storeFiles(files, path, load = false) {
     if (files === undefined || path === undefined || files.length === 0)
         return;
-    file_map.set(path, files.split('\n').map(f => new File(f, path, load)));
+
+    // If the path is already loaded in the file map, we'll check whether we have to add new files or not.
+    if (fileCache.has(path)) {
+
+        let fileArr = Array.isArray(files) ? files : files.split('\n');
+        let filesToAdd = fileArr.filter(f => !fileCache.get(path).find(f2 => f2.name === f));
+        if (filesToAdd.length > 0)
+            fileCache.get(path).push(...filesToAdd.map(fileName => new File(fileName, path, load)));
+
+    } else {
+        // If the path is not loaded in the file map, we'll add the files to the map.
+        fileCache.set(path, files.split('\n').map(fileName => new File(fileName, path, load)));
+    }
 }
 
 /**
@@ -22,7 +34,7 @@ function storeFiles(files, path, load = false) {
  * @returns {File[]} Array containing the names of the files
  */
 function getFiles(path) {
-    return file_map.get(path) || [];
+    return fileCache.get(path) || [];
 }
 
 /**
@@ -32,16 +44,7 @@ function getFiles(path) {
  * @returns {File} The file object
  */
 function getFile(path, name) {
-    return file_map.get(path)?.find(f => f.name === name) || null
-}
-
-/**
- * Method for retrieving file names from the cache.
- * @param {string} path The path where the files are located at
- * @returns {string[]} Array containing the names of the files
- */
-function getFileNames(path) {
-    return file_map.get(path)?.map(f => f.fileName) || []
+    return fileCache.get(path)?.find(f => f.name === name) || null
 }
 
 /**

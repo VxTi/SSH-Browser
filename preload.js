@@ -26,6 +26,8 @@ contextBridge.exposeInMainWorld('ssh',  {
 
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
+    navigateHome: async () => ipcRenderer.invoke('navigate-home'),
+
     /** @param {string} directory */
     listFiles: async (directory) => ipcRenderer.invoke('list-files', directory),
 
@@ -50,6 +52,10 @@ contextBridge.exposeInMainWorld('ssh',  {
 
 contextBridge.exposeInMainWorld('events', {
     on: (event, callback) => ipcRenderer.on(event, (e, args) => callback(args))
+});
+
+contextBridge.exposeInMainWorld('terminal', {
+    execute: async (command) => ipcRenderer.invoke('cmd', command)
 });
 
 /**

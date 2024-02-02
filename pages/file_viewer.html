@@ -5,6 +5,7 @@
     <title>SSH Browser</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/terminal.css">
     <link rel="stylesheet" href="../css/file_viewer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <link rel="stylesheet" href="../css/file_viewer_items.css">
@@ -29,12 +30,13 @@
             <div class="context-menu-item" id="context-menu-new-file">New file</div>
         </div>
         <div class="action-container">
-            <div class="back-button" id="back-main"></div>
+            <div class="back-button" id="back-main" title="Return to main menu"></div>
             <input type="text" name="filter" placeholder="Filter" id="file-filter">
-            <div class="action action-add-dir" id="action-add-dir"></div>
-            <div class="action action-refresh" id="action-refresh"></div>
-            <div class="action action-delete" id="action-delete-file"></div>
-            <div class="action action-add" id="action-add-file"></div>
+            <div class="action action-home" id="action-home" title="Navigate to home directory"></div>
+            <div class="action action-add-dir" id="action-add-dir" title="Create a new directory"></div>
+            <div class="action action-refresh" id="action-refresh" title="Refresh the content of the current directory"></div>
+            <div class="action action-delete" id="action-delete-file" title="Delete the currently selected file"></div>
+            <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
         </div>
         <div class="file-section">
             <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
@@ -43,7 +45,7 @@
             <div class="file-container" data-view-type="icons"></div>
 
             <div class="file-information">
-                <div class="file-information-resize" title="Double click to minimize"></div> <!-- Resize bar -->
+                <div class="file-information-resize" title="Resize the file info menu"></div> <!-- Resize bar -->
                 <div class="grid grid-v-2">
                     <div class="file-info-preview"></div>
                     <div class="flex f-nowrap f-column f-m-center">
@@ -56,10 +58,15 @@
                 </div>
             </div>
         </div>
+        <div class="terminal hidden">
+            <div class="terminal-content"></div>
+            <input type="text" name="terminal-input" id="terminal-input" class="terminal-input input-box user-interact" placeholder="Enter command">
+            <div class="terminal-send user-interact page-button" id="terminal-send"><p>Send</p></div>
+        </div>
         <div class="path-container">
             <div class="path-section">
                 <div class="navigate-arrows">
-                    <div class="arrow navigate-back" title="Navigate back"></div>
+                    <div class="arrow navigate-back" title="Navigate backward"></div>
                     <div class="arrow navigate-forward" title="Navigate forward"></div>
                 </div>
             </div>

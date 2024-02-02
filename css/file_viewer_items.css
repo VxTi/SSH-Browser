@@ -52,13 +52,19 @@
 }
 
 /* Background image for directory */
-.file-directory { background-image: url('../assets/folder_icon.png'); }
+.file-directory { background-image: url('../assets/file_icons/folder_icon.png'); }
 
 /* Background image for executable file */
-.file-executable { background-image: url('../assets/executable_icon.png'); }
+.file-executable { background-image: url('../assets/file_icons/executable_icon.png'); }
+
+.file-js { background-image: url('../assets/file_icons/javascript_icon.png'); }
+.file-css { background-image: url('../assets/file_icons/css_icon.png'); }
+.file-html { background-image: url('../assets/file_icons/html_icon.png'); }
+.file-json { background-image: url('../assets/file_icons/json_icon.png'); }
+.file-md { background-image: url('../assets/file_icons/markdown_icon.png'); }
 
 /* Background image for normal file */
-.file-ordinary { background-image: url('../assets/file_icon.png'); }
+.file-ordinary { background-image: url('../assets/file_icons/file_icon.png'); }
 
 .hidden {
     display: none;

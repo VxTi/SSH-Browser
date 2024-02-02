@@ -98,6 +98,9 @@ ipcMain.handle('upload-files', async (_, directory, files) => uploadFiles(direct
 /** Event handler for renaming a file on the remote server. */
 ipcMain.handle('rename-file', async (_, directory, file, newName) => renameFile(directory, file, newName))
 
+/** Event handler for navigating to the home directory **/
+ipcMain.handle('navigate-home', async () => navigateHome());
+
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, title) => createDirectory(directory, title));
 
@@ -113,6 +116,16 @@ ipcMain.on('current-session', (event) => {
     event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
 })
 
+ipcMain.handle('cmd', async (_, command) => {
+    return new Promise((resolve, reject) => {
+        if (sshConnected()) {
+            connection.ssh.execCommand(command)
+                .then(result => resolve(result.stdout))
+                .catch(err => resolve(err));
+        } else resolve('Not connected');
+    })
+})
+
 ipcMain.on('log', (_, args) => console.log(args));
 
 /**
@@ -126,6 +139,16 @@ async function createDirectory(directory, name) {
         if (sshConnected()) {
             connection.ssh.execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
+                .catch(err => reject(err));
+        } else reject('Not connected');
+    })
+}
+
+async function navigateHome() {
+    return new Promise((resolve, reject) => {
+        if (sshConnected()) {
+            connection.ssh.execCommand('cd ~ && pwd && ls')
+                .then(result => resolve({directory: result.stdout.split('\n')[0], files: result.stdout.split('\n').slice(1)}))
                 .catch(err => reject(err));
         } else reject('Not connected');
     })

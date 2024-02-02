@@ -3,10 +3,11 @@
 An application written with ElectronJS and NodeJS.
 
 To utilize this program, one has to first install all the necessary packages for NodeJS.
+After first installing NodeJS (https://nodejs.org/en/download), one can then install
+all the packages by running 'npm i' in the root directory of the project.
 Once complete, one can compile the program using 'npm run build_(os)'
 
 The build files can then be found in 'release-builds'.
-
 
 ## How to use the software 
 
@@ -19,6 +20,8 @@ Once on the login page, you can fill in the required credentials for the host yo
 This can be the username, specific port, private key or passphrase.
 
 Once you've successfully connected to the host, you can browse your files remotely, add them, delete them or view them.
+
+---
 
 Future functions will be:
 - Run console commands remotely

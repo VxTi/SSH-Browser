@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded',  () => {
     window.ssh.currentDirectory()
         .then(dir => window.ssh.listFiles(dir)
             .then(result => {
-                current_directory = dir;
+                currentDir = dir;
                 storeFiles(result, dir);
                 loadFileViewer();
             })
@@ -35,7 +35,25 @@ document.addEventListener('DOMContentLoaded',  () => {
             window.location.href = '../index.html'
         }) // Redirect to the main page if the user is not connected
         .finally(_ => busy(false));
+
+    document.getElementById('terminal-send').addEventListener('click', () => {
+        let inputBox = document.getElementById('terminal-input');
+        terminalPrint(inputBox.value);
+        window.terminal.execute(inputBox.value)
+            .then(result => terminalPrint(result));
+        inputBox.value = '';
+
+
+    });
 })
+
+function terminalPrint(content) {
+    let contentBox = document.querySelector('.terminal-content');
+    let newContent = document.createElement('div');
+    newContent.innerText = content;
+    newContent.classList.add('terminal-output');
+    contentBox.appendChild(newContent);
+}
 
 window.events.on('file-transfer-progress', (status) => {
     console.log(status)

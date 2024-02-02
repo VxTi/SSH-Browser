@@ -9,7 +9,7 @@ let navigateHistory = {
 
 /**
  * Loading in the functionality of the file viewer.
- * All files that are loaded are cached in the 'file_map' object.
+ * All files that are loaded are cached in the 'fileCache' object.
  * These are then converted into elements visible on the screen.
  * All previously visible files will be removed upon calling this function.
  */
@@ -18,7 +18,7 @@ function loadFileViewer() {
     if (currentUser === undefined)
         currentUser = window.ssh.sessions.currentSession().username;
 
-    let path_segments = current_directory.split('/') || [];
+    let path_segments = currentDir.split('/') || [];
 
     // Remove all previous segments from previous queries
 
@@ -42,14 +42,14 @@ function loadFileViewer() {
 
             // If we click on the path segment, first check whether we're already on that path.
             // If not, load its contents.
-            if (current_directory !== directory.dataset.path) {
+            if (currentDir !== directory.dataset.path) {
 
                 busy(true);
                 window.ssh
                     .listFiles(directory.dataset.path) // Retrieve files from selected directory
                     .then(result => {
                         storeFiles(result, directory.dataset.path);
-                        current_directory = directory.dataset.path;
+                        currentDir = directory.dataset.path;
                         loadFileViewer(); // reload the file viewer
                     })
                     .finally(_ => busy(false));
@@ -66,7 +66,7 @@ function loadFileViewer() {
 
     // Clear all previously shown files and show all
     // files in the current working directory.
-    loadFileElements(current_directory, true);
+    loadFileElements(currentDir, true);
 
     // Add file filtering functionality
     let filter = document.getElementById('file-filter');
@@ -86,9 +86,9 @@ function loadFileViewer() {
     document.getElementById('action-refresh')
         .addEventListener('click', () => {
         busy(true);
-        window.ssh.listFiles(current_directory)
+        window.ssh.listFiles(currentDir)
             .then(result => {
-                storeFiles(result, current_directory);
+                storeFiles(result, currentDir);
                 loadFileViewer();
             }).finally(_ => busy(false));
     });
@@ -104,7 +104,7 @@ function loadFileViewer() {
                 .then(files => {
                     if (files.length < 1)
                         return;
-                    window.ssh.uploadFiles(current_directory, files)
+                    window.ssh.uploadFiles(currentDir, files)
                         .finally(_ => busy(false));
 
             })
@@ -128,19 +128,32 @@ function loadFileViewer() {
                 selected.forEach(e => e.remove());
 
                 // Retrieve files and filter out the deleted ones.
-                let files = getFiles(current_directory);
+                let files = getFiles(currentDir);
                 files.forEach((file, i) => {
                     if (selected.find(e => e.dataset.name === file.name))
                         files.splice(i, 1);
-
                 });
 
                 // Update the file map
-                file_map[current_directory] = files;
+                fileCache[currentDir] = files;
 
             })
             .finally(_ => busy(false));
     });
+
+
+    /** Functionality for the 'home' button */
+    document.getElementById('action-home')
+        .addEventListener('click', () => {
+            busy(true);
+            window.ssh.navigateHome()
+                .then(res => {
+                    currentDir = res.directory
+                    storeFiles(res.files, currentDir);
+                    loadFileViewer();
+                })
+                .finally(_ => busy(false));
+        });
 
     /**
      * Add keyboard functionality.
@@ -187,11 +200,11 @@ function loadFileViewer() {
             pathArr.push(f.path);
 
         busy(true);
-        window.ssh.uploadFiles(current_directory, pathArr)
+        window.ssh.uploadFiles(currentDir, pathArr)
             .then(_ => {
-                // get current files in current_directory, map paths to file objects and add to file_map
-                getFiles(current_directory).push(...pathArr.map(p => new File(p.substring(p.lastIndexOf('/') + 1), p)));
-                loadFileElements(current_directory, true);
+                // get current files in currentDir, map paths to file objects and add to fileCache
+                getFiles(currentDir).push(...pathArr.map(p => new File(p.substring(p.lastIndexOf('/') + 1), p)));
+                loadFileElements(currentDir, true);
             })
             .finally(_ => busy(false));
     });
@@ -199,9 +212,9 @@ function loadFileViewer() {
 
 /**
  * Method for loading all files in the currently selected directory.
- * This method converts the files in 'file_map[current_directory]' into elements.
+ * This method converts the files in 'fileCache[currentDir]' into elements.
  */
-function loadFileElements(directory = current_directory, clearOld = true, indent = 0, insertAfter = null) {
+function loadFileElements(directory = currentDir, clearOld = true, indent = 0, insertAfter = null) {
 
     // remove all old files if
     if (clearOld)
@@ -216,10 +229,14 @@ function loadFileElements(directory = current_directory, clearOld = true, indent
     // Add all files to the file container
     files.forEach(file => fileContainer.appendChild(createFileElement(file)));
 
-    // Deselect all files when user clicks next to file element.
+    // When the user clicks, hide the context menu.
     document.addEventListener('click', () => {
-        document.querySelector('.file-information').style.visibility = 'hidden';
         document.querySelector('.context-menu').classList.remove('active');
+    })
+
+    // When a user double-clicks on the document, we deselect all files and hide the file information.
+    document.addEventListener('dblclick', () => {
+        document.querySelector('.file-information').classList.toggle('hidden', true);
         document.querySelectorAll('.file.selected').forEach(e => e.classList.remove('selected'));
     })
 
@@ -256,7 +273,7 @@ function createFileElement(file) {
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
 
-    let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'jar'];
+    let executables = ['exe', 'sh', 'bat', 'dylib', 'so'];
     let isExecutable = executables.indexOf(file.name.substring(file.name.lastIndexOf('.') + 1)) >= 0;
 
     let fileElement = document.createElement('div');
@@ -268,7 +285,12 @@ function createFileElement(file) {
 
 
     let fileIcon = document.createElement('div');
-    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary');
+    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' : isExecutable ? 'file-executable' :
+        file.name.endsWith('.css') ? 'file-css' :
+            file.name.endsWith('.html') ? 'file-html' :
+                file.name.endsWith('.js') ? 'file-js' :
+                    file.name.endsWith('.json') ? 'file-json' :
+                        file.name.endsWith('.md') ? 'file-md' : 'file-ordinary');
     fileElement.appendChild(fileIcon);
 
     // Add the file name to the file element
@@ -287,7 +309,7 @@ function createFileElement(file) {
             window.ssh.listFiles(file.path + '/' + file.name)
                 .then(result => {
                     storeFiles(result, file.path + '/' + file.name);
-                    current_directory = file.path + '/' + file.name;
+                    currentDir = file.path + '/' + file.name;
                     loadFileViewer(); // reload the file viewer
                 });
         }
@@ -318,9 +340,9 @@ function createFileElement(file) {
  * @param {string[]} files The file(s) to select, separated by a newline.
  * This also shows all information in the 'file-information' section.
  */
-function selectFiles(files, directory = current_directory) {
+function selectFiles(files, directory = currentDir) {
 
-    document.querySelector('.file-information').style.visibility = files.length > 0 ? 'visible' : 'hidden';
+    document.querySelector('.file-information').classList.toggle('hidden', files.length <= 0)
 
     if (files.length === 0)
         return;

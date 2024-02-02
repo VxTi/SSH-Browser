@@ -1,0 +1,52 @@
+.terminal {
+    display: grid;
+    position: absolute;
+    top: 25%;
+    left: 10%;
+    border-radius: 10px;
+    background-color: var(--theme-1);
+    grid-template-columns: 1.5fr 1.5fr;
+    grid-template-rows: 0.6fr auto;
+    gap: 0;
+    grid-template-areas:
+            'terminal-content terminal-content terminal-content . . .'
+            'terminal-input terminal-input terminal-send . . .'
+}
+
+.terminal.hidden {
+    display: none;
+}
+
+.terminal-output {
+    font-family: monospace;
+    color: var(--text-color);
+    grid-area: terminal-content;
+    width: 400px;
+    height: 20px;
+    font-size: 0.8rem;
+}
+
+.terminal-content {
+    grid-area: terminal-content;
+    width: 400px;
+    height: 300px;
+    margin: 10px;
+    display: flex;
+    flex-flow: column nowrap;
+    overflow-y: scroll;
+}
+
+.terminal-input {
+    grid-area: terminal-input;
+}
+
+.terminal-send {
+    width: 100px;
+    height: 50px;
+    user-select: none;
+    grid-area: terminal-send;
+    background-color: var(--theme-1);
+    color: var(--text-color);
+    font-family: var(--font);
+    text-align: center;
+}

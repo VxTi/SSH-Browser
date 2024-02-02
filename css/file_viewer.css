@@ -178,6 +178,8 @@
 
 .action-add-dir { background-image: url('../assets/add_dir_icon.png'); }
 
+.action-home { background-image: url('../assets/home_icon.png'); }
+
 /** Generic action class **/
 .action {
     margin: calc(0.5 * var(--file-navigator-action-margin));
@@ -242,8 +244,8 @@
     visibility: visible;
 }
 
-.file-information.active {
-    visibility: visible;
+.file-information.hidden {
+    width: 0;
 }
 
 .file-information-resize {
