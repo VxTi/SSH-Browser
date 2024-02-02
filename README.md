@@ -21,6 +21,21 @@ This can be the username, specific port, private key or passphrase.
 
 Once you've successfully connected to the host, you can browse your files remotely, add them, delete them or view them.
 
+An example of how the pages look like can be found below.
+
+
+## Example of the login page
+
+![Login page](https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_login.png)
+
+## Example of the Sessions page
+
+![Login page](https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_sessions.png)
+
+## Example of the file viewing page
+
+![Login page](https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_view_files.png)
+
 ---
 
 Future functions will be:
