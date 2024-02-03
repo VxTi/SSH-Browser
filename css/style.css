@@ -18,6 +18,9 @@
     --text-color-2: #ccc;
     --text-color-3: #777;
 
+    --scrollbar-background: transparent;
+    --scrollbar-thumb: #4D5052;
+
     --background-opacity: 0.95;
 
     --default-rounding: 5px;
@@ -60,6 +63,24 @@ body {
     background-color: var(--theme-1);
     outline: 1px solid var(--border-1);
     border: 1px solid var(--border-2);
+}
+
+.scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-background);
+}
+
+.scrollbar::-webkit-scrollbar-track {
+    background-color: var(--scrollbar-background);
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 5px;
 }
 
 .navigator {

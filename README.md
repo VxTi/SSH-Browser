@@ -38,7 +38,11 @@ An example of how the pages look like can be found below.
 ---
 
 Future functions will be:
-- Run console commands remotely
-- Execute scripts remotely
-- Add different file viewing options
+> Have a virtual console to execute commands (In progress)
+>
+>  ![50%](https://progress-bar.dev/50)
+
+> Execute scripts remotely, and view the output (If supported by server)
+> 
+> Add different file viewing options
 

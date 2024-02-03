@@ -1,52 +1,72 @@
 .terminal {
-    display: grid;
+    --terminal-height: 200px;
+    --terminal-input-height: 12px;
+    display: flex;
     position: absolute;
-    top: 25%;
-    left: 10%;
-    border-radius: 10px;
+    flex-flow: column nowrap;
+    top: calc(100vh - var(--file-navigator-height) - var(--terminal-height));
+    left: 0;
+    height: var(--terminal-height);
+    width: 50vw;
+    border-radius: 5px;
     background-color: var(--theme-1);
-    grid-template-columns: 1.5fr 1.5fr;
-    grid-template-rows: 0.6fr auto;
     gap: 0;
-    grid-template-areas:
-            'terminal-content terminal-content terminal-content . . .'
-            'terminal-input terminal-input terminal-send . . .'
+    transition: top 0.5s;
+    z-index: 100;
 }
+
+.terminal-toggle-view {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    border-top: 1px solid transparent;
+}
+
+.terminal-toggle-view:hover {
+    border-top-color: var(--text-color-2);
+}
+
+.terminal.hidden > .terminal-toggle-view { cursor: n-resize; }
+
+.terminal:not(.hidden) > .terminal-toggle-view { cursor: s-resize; }
 
 .terminal.hidden {
-    display: none;
+    display: block;
+    top: calc(100vh - var(--file-navigator-height) - 5px);
 }
 
+/* Styling for a line of text in the terminal */
 .terminal-output {
     font-family: monospace;
     color: var(--text-color);
-    grid-area: terminal-content;
-    width: 400px;
     height: 20px;
-    font-size: 0.8rem;
+    font-size: 0.65rem;
+    line-height: 1.5;
 }
 
+/* The container for output */
 .terminal-content {
-    grid-area: terminal-content;
-    width: 400px;
-    height: 300px;
+    grid-area: a;
+    height: calc(var(--terminal-height) - var(--terminal-input-height));
     margin: 10px;
     display: flex;
     flex-flow: column nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-5) var(--theme-1);
     overflow-y: scroll;
 }
 
 .terminal-input {
-    grid-area: terminal-input;
+    grid-area: b;
+    margin: 0;
+    font-size: var(--terminal-input-height);
+    border-color: transparent;
+    background-color: var(--theme-1);
+    padding: 0 0 0 15px;
+    width: auto;
+    font-family: "Andale Mono", monospace;
 }
 
-.terminal-send {
-    width: 100px;
-    height: 50px;
-    user-select: none;
-    grid-area: terminal-send;
+.terminal-input:focus {
     background-color: var(--theme-1);
-    color: var(--text-color);
-    font-family: var(--font);
-    text-align: center;
 }

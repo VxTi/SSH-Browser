@@ -30,14 +30,12 @@ function createWindow() {
         width: 900,
         height: 700,
         transparent: true,
-        movable: true,
         titleText: 'SSH Client',
         titleBarOverlay: false,
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
-            enableRemoteModule: true,
             preload: path.join(__dirname, "preload.js")
         }
     });
@@ -53,6 +51,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     mainWindow = createWindow()
+    mainWindow.setMinimumSize(600, 500);
     app.on('activate', function () {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
@@ -99,7 +98,7 @@ ipcMain.handle('upload-files', async (_, directory, files) => uploadFiles(direct
 ipcMain.handle('rename-file', async (_, directory, file, newName) => renameFile(directory, file, newName))
 
 /** Event handler for navigating to the home directory **/
-ipcMain.handle('navigate-home', async () => navigateHome());
+ipcMain.handle('navigate-home', async _ => navigateHome());
 
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, title) => createDirectory(directory, title));
@@ -110,18 +109,18 @@ ipcMain.handle('get-file-info', async (_, directory, file) => getFileInfo(direct
 ipcMain.on('window-resize', (_, width, height) => mainWindow.setSize(width, height))
 
 /** Event handler for minimizing the main window **/
-ipcMain.on('window-minimize', () => mainWindow.minimize());
+ipcMain.on('window-minimize', _ => mainWindow.minimize());
 
 ipcMain.on('current-session', (event) => {
     event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
 })
 
-ipcMain.handle('cmd', async (_, command) => {
-    return new Promise((resolve, reject) => {
+ipcMain.handle('cmd', async (_, cwd, command) => {
+    return new Promise(resolve => {
         if (sshConnected()) {
-            connection.ssh.execCommand(command)
-                .then(result => resolve(result.stdout))
-                .catch(err => resolve(err));
+            connection.ssh.execCommand(command, { cwd: cwd })
+                .then(res => resolve(res.stdout))
+                .catch(e => resolve(e));
         } else resolve('Not connected');
     })
 })
@@ -232,18 +231,20 @@ function sshConnected() {
 }
 
 
-async function sshConnect(host, username, password, port = 22, privateKey = null) {
+async function sshConnect(host, username, password, port = 22, privateKey = null, passphrase = null) {
     return new Promise((resolve, reject) => {
         if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port))
             return resolve();
 
-        connection = session(host, username, password, port, privateKey);
+        connection = { ssh: new NodeSSH(), port: port, host: host, username: username, password: password, privateKey: privateKey, passphrase: passphrase }
+
         connection.ssh.connect({
             host: connection.host,
             privateKey: connection.privateKey,
             username: connection.username,
             password: connection.password,
             port: connection.port,
+            passphrase: connection.passphrase,
             tryKeyboard: true,
 
             onKeyboardInteractive: (name, instructions, instructionsLang, prompts, finish) => {
@@ -251,7 +252,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
             }
         })
             .then(ssh => {
-                updateSessions(connection); // store the session in sessions.json
+                storeSession(connection); // store the session in sessions.json
                 resolve();
             })
             .catch(err => reject(err));
@@ -321,45 +322,11 @@ async function deleteFile(directory, file) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
-            return getCurrentSession().execCommand(`cd ~ && cd ${directory} && rm -r '${file}'`)
+            return connection.ssh.execCommand(`cd ~ && cd ${directory} && rm -r '${file}'`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
     });
-}
-
-/**
- * Method for retrieving the current SSH session.
- * Currently returns the NodeSSH object.
- * Future proofing for possible changes.
- * @returns {NodeSSH} the current SSH session.
- */
-function getCurrentSession() {
-    return connection.ssh;
-}
-
-function currentSession() {
-    return connection;
-}
-
-/**
- * Method for creating a new SSH session.
- * @param {string} host The host for the SSH session. Can be either an IP address or a domain name.
- * @param {string} username The username for the SSH session.
- * @param {string} password The password for the SSH session.
- * @param {number} port The port for the SSH session. Default is 22.
- * @param {string} privateKey The private key for the SSH session. Default is null.
- * @returns {{ssh: NodeSSH, port: number, host: string, username: string, password: string, privateKey: string}}
- */
-function session(host, username, password, port = 22, privateKey = null) {
-    return {
-        ssh: new NodeSSH(),
-        port: port,
-        host: host,
-        username: username,
-        password: password,
-        privateKey: privateKey,
-    }
 }
 
 /**
@@ -383,10 +350,10 @@ async function retrieveSessions() {
 
 /**
  * Method for updating the sessions file with a new successful connection.
- * @param {{host: string, username: string, password: string, port: number, privateKey: string}} connection
+ * @param {{host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}} session
  * The connection object to update the sessions file with.
  */
-function updateSessions(connection) {
+function storeSession(session) {
 
     // Get previous data
     fs.readFile(sessionsPath, (error, data) => {
@@ -396,15 +363,16 @@ function updateSessions(connection) {
         let sessions = JSON.parse(data.toString());
 
         // Check if the connection is already in the sessions file, if not, add it.
-        if (!sessions.some(session => session.host === connection.host && session.username === connection.username)) {
+        if (!sessions.some(session => session.host === session.host && session.username === session.username)) {
 
             // Add new data
             sessions.push({
-                host: connection.host,
-                username: connection.username,
-                password: connection.password,
-                port: connection.port,
-                privateKey: connection.privateKey
+                host: session.host,
+                username: session.username,
+                password: session.password,
+                port: session.port,
+                privateKey: session.privateKey,
+                passphrase: session.passphrase
             });
 
             // Write back to file

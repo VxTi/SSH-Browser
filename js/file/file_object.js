@@ -13,6 +13,7 @@ class File {
     #exists = true;             // Whether the file exists on the server
     /** @type HTMLElement */
     #refElement = undefined;    // Reference element of the file
+    name;                       // Name of the file
 
     /**
      * Constructor for the File class.
@@ -49,11 +50,10 @@ class File {
      */
     get fileSizeString() {
         let suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        for (let i = 0; i < suffixes.length; i++) {
-            if (this.#fileSize < 1024)
-                return `${this.#fileSize.toFixed(1)} ${suffixes[i]}`;
-
-            this.#fileSize /= 1024;
+        for (let i = 0, fs = this.#fileSize; i < suffixes.length; i++) {
+            if (fs < 1024)
+                return `${fs.toFixed(1)} ${suffixes[i]}`;
+            fs /= 1024;
         }
     }
 

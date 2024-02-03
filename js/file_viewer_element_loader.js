@@ -52,6 +52,7 @@ function loadFileViewer() {
                         currentDir = directory.dataset.path;
                         loadFileViewer(); // reload the file viewer
                     })
+                    .catch(_ => console.log('Error occurred whilst attempting to navigate', _))
                     .finally(_ => busy(false));
             }
         })
@@ -88,7 +89,7 @@ function loadFileViewer() {
         busy(true);
         window.ssh.listFiles(currentDir)
             .then(result => {
-                storeFiles(result, currentDir);
+                storeFiles(result, currentDir, true);
                 loadFileViewer();
             }).finally(_ => busy(false));
     });
@@ -364,7 +365,7 @@ function selectFiles(files, directory = currentDir) {
             let file = getFile(directory, files[0]);
             if (!file.loaded) {
                 busy(true);
-                await file.loadInfo().then(_ => busy(false)); // Load file info
+                await file.loadInfo().finally(_ => busy(false)); // Load file info
             }
 
             document.getElementById('file-info-permissions').innerText = file.permissions.toString(currentUser);

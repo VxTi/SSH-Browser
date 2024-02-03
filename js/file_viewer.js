@@ -1,6 +1,8 @@
 
 let fileTransferElement;
 
+let terminalDir = '~';
+
 document.addEventListener('DOMContentLoaded',  () => {
     // Load the files from the current directory
     addLoadingSpinner(document.querySelector('.process-loading'));
@@ -23,7 +25,7 @@ document.addEventListener('DOMContentLoaded',  () => {
     window.ssh.currentDirectory()
         .then(dir => window.ssh.listFiles(dir)
             .then(result => {
-                currentDir = dir;
+                currentDir = terminalDir = dir;
                 storeFiles(result, dir);
                 loadFileViewer();
             })
@@ -36,27 +38,46 @@ document.addEventListener('DOMContentLoaded',  () => {
         }) // Redirect to the main page if the user is not connected
         .finally(_ => busy(false));
 
-    document.getElementById('terminal-send').addEventListener('click', () => {
-        let inputBox = document.getElementById('terminal-input');
-        terminalPrint(inputBox.value);
-        window.terminal.execute(inputBox.value)
-            .then(result => terminalPrint(result));
-        inputBox.value = '';
+    let terminalInput = document.getElementById('terminal-input');
 
+    document.querySelector('.terminal-toggle-view')
+        .addEventListener('dblclick', (event) => {
+            document.getElementById('terminal').classList.toggle('hidden');
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        })
 
+    // When user presses enter, simulate a click on the send button
+    terminalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            terminalPrint('> ' + terminalInput.value);
+            window.terminal.execute(currentDir, terminalInput.value)
+                .then(result => terminalPrint(result))
+                .catch(error => terminalPrint(error, '#ff0000'));
+            terminalInput.value = '';
+        }
     });
 })
 
-function terminalPrint(content) {
+/**
+ * Prints a message to the terminal console.
+ * @param {string[] | string} content The message to print.
+ * @param {string} color The color of the message. Default is white
+ */
+function terminalPrint(content, color= '#ffffff') {
     let contentBox = document.querySelector('.terminal-content');
-    let newContent = document.createElement('div');
-    newContent.innerText = content;
-    newContent.classList.add('terminal-output');
-    contentBox.appendChild(newContent);
+    if (!Array.isArray(content))
+        content = content.split('\n');
+    content.forEach(line => {
+        contentBox.innerHTML += `<div class="terminal-output" style="color: ${color}">${line}</div>`;
+    })
 }
 
+/**
+ * Event handling of file transfer progress.
+ * This updates the progress bar in the file viewer accordingly.
+ */
 window.events.on('file-transfer-progress', (status) => {
-    console.log(status)
     status.progress = Math.min(Math.max(0, status.progress), 100)
     fileTransferElement.style.setProperty('--progress', '' + status.progress)
     fileTransferElement.style.visibility = status.finished ? 'hidden' : 'visible';

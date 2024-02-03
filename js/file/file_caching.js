@@ -8,23 +8,24 @@ let currentDir = '~';
  * Method parses the provided string into the 'files' object and caches them.
  * @param {string | string[]} files The files to be loaded, separated by \n (newline)
  * @param {string} path The path in which the files reside.
- * @param {boolean} load Whether to load the file info or not. Default is false.
+ * @param {boolean} forceLoad Whether to reload the content of the provided path or not. Default is false.
+ * @param {boolean} loadFileInfo Whether to load the file info or not. Default is false.
  */
-function storeFiles(files, path, load = false) {
+function storeFiles(files, path, forceLoad = false, loadFileInfo = false) {
     if (files === undefined || path === undefined || files.length === 0)
         return;
 
     // If the path is already loaded in the file map, we'll check whether we have to add new files or not.
-    if (fileCache.has(path)) {
+    if (fileCache.has(path) && !forceLoad) {
 
         let fileArr = Array.isArray(files) ? files : files.split('\n');
         let filesToAdd = fileArr.filter(f => !fileCache.get(path).find(f2 => f2.name === f));
         if (filesToAdd.length > 0)
-            fileCache.get(path).push(...filesToAdd.map(fileName => new File(fileName, path, load)));
+            fileCache.get(path).push(...filesToAdd.map(fileName => new File(fileName, path, loadFileInfo)));
 
     } else {
         // If the path is not loaded in the file map, we'll add the files to the map.
-        fileCache.set(path, files.split('\n').map(fileName => new File(fileName, path, load)));
+        fileCache.set(path, files.split('\n').map(fileName => new File(fileName, path, loadFileInfo)));
     }
 }
 

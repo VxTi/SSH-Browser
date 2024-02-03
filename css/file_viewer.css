@@ -21,6 +21,7 @@
     flex-flow: column nowrap;
     background-color: var(--theme-2);
     opacity: 1;
+    z-index: 999;
     justify-content: center;
     align-items: center;
     user-select: none;
