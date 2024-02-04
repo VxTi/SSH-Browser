@@ -303,11 +303,13 @@ function createFileElement(file) {
     fileElement.classList.add('file', 'r-icons', file.directory ? 'directory' : 'ordinary');
     fileElement.dataset.path = file.path;
     fileElement.dataset.name = file.name;
+    fileElement.title = file.name;
     fileElement.dataset.contextMenu = `${file.directory ? 'paste' : ''} ${isExecutable ? 'execute' : ''}`
     fileElement.draggable = true;
     file.reference(fileElement);
 
     let fileIcon = document.createElement('div');
+
     fileIcon.classList.add('file-icon', file.directory ? 'file-directory' :
         isExecutable ? 'file-executable' :
             file.name.endsWith('.css') ? 'file-css' :
@@ -342,14 +344,14 @@ function createFileElement(file) {
 
     // When one clicks on a file, we select it.
     // If we're in column view, we open the directory.
-    fileElement.addEventListener('click',  (event) => {
+    fileElement.addEventListener('click',  async (event) => {
 
         // Deselect all other files
-        document.querySelectorAll('.file').forEach(e => e.classList.remove('selected'));
-
-        document.querySelector('.context-menu').classList.remove('active');
+        $('.file').removeClass('selected');
+        $('.context-menu').removeClass('active');
 
         fileElement.classList.add('selected');
+        await file.loadInfo(true);
         selectFiles([file.name], file.path);
 
         // Prevent further propagation of the event.
@@ -367,7 +369,7 @@ function createFileElement(file) {
  */
 function selectFiles(files, directory = currentDir) {
 
-    document.querySelector('.file-information').classList.toggle('hidden', files.length <= 0)
+    $('.file-information').toggleClass('hidden', files.length <= 0);
 
     if (files.length === 0)
         return;
@@ -382,26 +384,34 @@ function selectFiles(files, directory = currentDir) {
         let isExecutable = executables.indexOf(files[0].substring(files[0].lastIndexOf('.') + 1)) >= 0;
 
         // TODO: Fix this
-        preview.classList.toggle(isDir ? 'file-directory' : isExecutable ? 'file-executable' : 'file-ordinary', true);
+        // Remove all previous classes and add the correct one
+        preview.classList.forEach(c => preview.classList.remove(c));
+        preview.classList.add('file-info-preview');
+        preview.classList.add(isDir ? 'file-directory' : isExecutable ? 'file-executable' :
+        files[0].endsWith('.css') ? 'file-css' :
+            files[0].endsWith('.html') ? 'file-html' :
+                files[0].endsWith('.js') ? 'file-js' :
+                    files[0].endsWith('.json') ? 'file-json' :
+                        files[0].endsWith('.txt') ? 'file-text' :
+                            files[0].endsWith('.md') ? 'file-md' : 'file-ordinary');
 
         (async () => {
             // If there's only one file, we can show all information about it.
             let file = getFile(directory, files[0]);
             if (!file.loaded) {
                 busy(true);
-                await file.loadInfo().finally(_ => busy(false)); // Load file info
+                await file.loadInfo().finally(_ => {busy(false)}); // Load file info
             }
 
             /** Show file info **/
-            document.getElementById('file-info-permissions-values').innerHTML = file.permissions.toString(currentUser, (input) => {
-                console.log(input)
-                return input.map(e => `<span class="f-perm-${e.toLowerCase()}">${e}</span>`).join('<span>/</span>');
-            });
+            $('#file-info-perm-user').text(file.permissions.toString('user'));
+            $('#file-info-perm-group').text(file.permissions.toString('group'));
+            $('#file-info-perm-other').text(file.permissions.toString('other'));
 
-            document.getElementById('file-info-title').innerText = file.name;
-            document.getElementById('file-info-size').innerText = file.fileSizeString;
-            document.getElementById('file-info-owner').innerText = file?.owner || 'Unknown';
-            document.getElementById('file-info-modified').innerText = file.lastModified || 'Unknown';
+            $('#file-info-title').text(file.name);
+            $('#file-info-size').text(file.fileSizeString);
+            $('#file-info-owner').text(file?.owner || 'Unknown');
+            $('#file-info-modified').text(file.lastModified || 'Unknown');
         })();
     }
 }

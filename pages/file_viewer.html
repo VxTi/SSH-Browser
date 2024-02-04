@@ -46,20 +46,25 @@
             <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
 
             <!-- Container displaying file contents -->
-            <div class="file-container scorllbar" data-view-type="icons"></div>
+            <div class="file-container scrollbar"></div>
 
             <div class="file-information">
                 <div class="file-information-resize" title="Resize the file info menu"></div> <!-- Resize bar -->
-                <div class="grid grid-v-2">
-                    <div class="file-info-preview flex f-nowrap f-column f-m-center"></div>
-                    <div class="flex f-nowrap f-column f-m-center">
-                        <div class="file-info al-s-c" id="file-info-title"></div>
-                        <div class="file-info">Date modified: <span id="file-info-modified"></span></div>
-                        <div class="file-info file-info-created-by">Created by <span id="file-info-owner"></span></div>
-                        <div class="file-info file-info-size">Size: <span id="file-info-size"></span></div>
-                        <div class="file-info file-info-permissions ">
-                            <span id="file-info-permissions-title">Permissions:</span>
-                            <span id="file-info-permissions-values"></span>
+                <div class="flex f-column f-nowrap f-m-center">
+                    <div class="file-info-preview"></div>
+                    <div class="file-info" id="file-info-title"></div>
+                    <div class="file-info">Date modified: <span id="file-info-modified"></span></div>
+                    <div class="file-info file-info-created-by">Created by <span id="file-info-owner"></span></div>
+                    <div class="file-info file-info-size">Size: <span id="file-info-size"></span></div>
+                    <div class="file-info file-accessibility">
+                        <span class="al-s-c">Accessibility</span>
+                        <div class="file-info file-info-permissions">
+                            <span class="f-access-title">User</span>
+                            <span class="file-info-perm-value" id="file-info-perm-user"></span>
+                            <span class="f-access-title">Group</span>
+                            <span class="file-info-perm-value" id="file-info-perm-group"></span>
+                            <span class="f-access-title">Other</span>
+                            <span class="file-info-perm-value" id="file-info-perm-other"></span>
                         </div>
                     </div>
                 </div>

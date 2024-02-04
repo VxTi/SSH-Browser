@@ -7,13 +7,11 @@
 .file-container {
     width: 100%;
     height: 100%;
+    flex-wrap: wrap;
     background-color: var(--theme-2);
     overflow-y: scroll;
     overflow-x: hidden;
     display: flex;
-    scroll-behavior: smooth;
-    scrollbar-color: rgba(0, 0, 0, 0) var(--theme-5);
-    scrollbar-width: thin;
 }
 
 /* Change the direction of flow when in column view to top to bottom. */

@@ -13,7 +13,7 @@ class FilePermissions {
      * @param {File} file The file object
      * @param {string} permissions File permissions, in the form of rwxrwxrwx (Linux/Unix format)
      */
-    constructor(file, permissions= '---------' ) {
+    constructor(file, permissions= null ) {
         this.update(permissions);
         this.#file = file;
     }
@@ -23,9 +23,10 @@ class FilePermissions {
      * @param permissions
      */
     update(permissions) {
-        if (/([rwx-]{9}@?)/.test(permissions))
+        permissions = permissions || this.#permissions || '----------'
+        if (/([-d][rwx-]{9}@?)/.test(permissions))
             this.#permissions = permissions;
-        else throw new Error('Invalid permissions format');
+        else throw new Error('Invalid permissions format: ' + permissions);
     }
 
     /**
@@ -38,24 +39,28 @@ class FilePermissions {
 
     /**
      * Returns the string representation of the permissions.
-     * @param {string} accessor Who to check the permissions for
-     * @param {function} formatFn Function to format the permissions
-     * @returns {string}
+     * @param {string} accessor Who to check the permissions for.
+     *  This can be one of the following: 'user', 'group', 'other'
+     * @returns {string} The string representation of the permissions.
      */
-    toString(accessor, formatFn = null) {
-        let readIndex = this.#file.owner === accessor ? 0 : 1;
+    toString(accessor) {
         let perms = [];
+
+        let accepts = ['user', 'group', 'other'];
+        let index = accepts.indexOf(accessor);
+        if (index < 0)
+            throw new Error('Invalid accessor: ' + accessor + ', expected one of: ' + accepts.join(', '));
+
         for (let i = 0; i < 3; i++) {
-            let permission = this.#permissions[i + 3 * readIndex];
-            if (permission === 'r')
+            let c = this.#permissions[1 + i + (index * 3)];
+            if (c === 'r')
                 perms.push('Read');
-            if (permission === 'w')
+            else if (c === 'w')
                 perms.push('Write');
-            if (permission === 'x')
+            else if (c === 'x')
                 perms.push('Execute');
         }
-        if (typeof formatFn === 'function')
-            return formatFn(perms);
+
         return perms.length === 0 ? 'None' : perms.join('/');
     }
 }

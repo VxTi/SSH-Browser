@@ -5,13 +5,13 @@ $(document).ready(() => {
     let terminalDir = '~';
 
     // Resizing of the file information section
-    let fileInfoResize = $('.file-information-resize');
-    fileInfoResize.on('mousedown', _ => fileInfoResize.addClass('active'));
+    $('.file-information-resize').on('dblclick', _ => $('.file-information').toggleClass('hidden'))
+    /*fileInfoResize.on('mousedown', _ => fileInfoResize.addClass('active'));
     $(document).on('mouseup', _ => fileInfoResize.removeClass('active'));
     $(document).on('mousemove', (e) => {
         if (fileInfoResize.hasClass('active'))
             $('.file-information').css('width', `calc(100vw - ${e.clientX}px)`);
-    })
+    })*/
 
     // Hiding and showing the terminal console
     $('.terminal-toggle-view').on('dblclick', (event) => {
@@ -22,6 +22,7 @@ $(document).ready(() => {
 
     // When user presses enter, send the command
     $('#terminal-input').on('keydown', (e) => {
+        e.stopImmediatePropagation();
         // Check if the user pressed the Enter key and the input is not empty
         if (e.key === 'Enter' && e.target.value.trim() !== '') {
             terminalPrint('> ' + e.target.value);
@@ -49,8 +50,8 @@ $(document).ready(() => {
             loadFileViewer();
         })
         .catch(_ => {
-            console.log(_);
-            //window.location.href = '../index.html'
+            window.logger.log(_);
+            window.location.href = '../index.html'
         })
         .finally(_ => {busy(false)});
 
