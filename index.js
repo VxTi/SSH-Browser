@@ -293,7 +293,10 @@ async function listFiles(path) {
         if (sshConnected()) {
             return connection.ssh.execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
-                .catch(err => reject(err));
+                .catch(err => {
+                    console.log("ERROR RECEIVED", err);
+                    reject(err)
+                });
         } else reject('Not connected');
     });
 }

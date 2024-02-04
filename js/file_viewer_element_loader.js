@@ -1,4 +1,4 @@
-let busy = (state) => { document.querySelector('.process-loading').style.visibility = state ? 'visible' : 'hidden' }
+let busy = (state) => $('.process-loading').css('visibility', state ? 'visible' : 'hidden');
 
 let currentUser = undefined
 
@@ -18,24 +18,23 @@ function loadFileViewer() {
     if (currentUser === undefined)
         currentUser = window.ssh.sessions.currentSession().username;
 
-    let path_segments = currentDir.split('/') || [];
+    let pathSegments = currentDir.split('/') || [];
 
     // Remove all previous segments from previous queries
 
-    document.querySelectorAll('.path-separator, .path-arrow, .path-separator, .file')
-        .forEach(e => e.remove());
+    $('.path-separator, .path-arrow, .path-separator, .file').remove();
 
-    let path_container = document.querySelector('.path-section');
+    let pathContainer = document.querySelector('.path-section');
 
     // Add all the path segments to the path container
     // These are just directories
-    for (let i = 0; i < path_segments.length; i++) {
-        let seg = path_segments[i];
+    for (let i = 0; i < pathSegments.length; i++) {
+        let seg = pathSegments[i];
 
         /** Path segment element on the bottom of the page **/
         let directory = document.createElement('div');
         directory.classList.add('path-separator');
-        directory.dataset.path = path_segments.slice(0, i + 1).join('/');
+        directory.dataset.path = pathSegments.slice(0, i + 1).join('/');
         directory.innerHTML = seg;
 
         directory.addEventListener('click', () => {
@@ -56,13 +55,13 @@ function loadFileViewer() {
                     .finally(_ => busy(false));
             }
         })
-        path_container.appendChild(directory);
+        pathContainer.appendChild(directory);
 
         /** Directory separator arrow **/
         let arrow = document.createElement('div');
         arrow.classList.add('path-arrow');
         arrow.innerHTML = '';
-        path_container.appendChild(arrow);
+        pathContainer.appendChild(arrow);
     }
 
     // Clear all previously shown files and show all
@@ -70,16 +69,15 @@ function loadFileViewer() {
     loadFileElements(currentDir, true);
 
     // Add file filtering functionality
-    let filter = document.getElementById('file-filter');
-    filter.value = ''; // reset previous input
-    filter.blur();     // remove focus from the input
-
-    // Add filtering on file name
-    filter.addEventListener('input', () => {
-        document.querySelectorAll('.file')
-            .forEach(file =>
-                file.classList.toggle('hidden', file.dataset.name.indexOf(filter.value) < 0));
-    })
+    let filter = $('#file-filter');
+    filter.val(''); // reset previous input
+    filter.blur(); // remove focus from the input
+    filter.on('input', () => {
+        $('.file').each((i, file) => {
+            file = $(file);
+            file.toggleClass('hidden', file.data('name').indexOf(filter.val()) < 0);
+        })
+    });
 
     /**
      * Functionality for the 'refresh' button in the action bar
@@ -91,7 +89,7 @@ function loadFileViewer() {
             .then(result => {
                 storeFiles(result, currentDir, true);
                 loadFileViewer();
-            }).finally(_ => busy(false));
+            }).finally(_ => {busy(false)});
     });
 
     /**
@@ -106,8 +104,7 @@ function loadFileViewer() {
                     if (files.length < 1)
                         return;
                     window.ssh.uploadFiles(currentDir, files)
-                        .finally(_ => busy(false));
-
+                        .finally(_ => {busy(false)});
             })
     });
 
@@ -215,53 +212,78 @@ function loadFileViewer() {
  * Method for loading all files in the currently selected directory.
  * This method converts the files in 'fileCache[currentDir]' into elements.
  */
-function loadFileElements(directory = currentDir, clearOld = true, indent = 0, insertAfter = null) {
+function loadFileElements(directory = currentDir, clearOld = true) {
 
     // remove all old files if
-    if (clearOld)
-        document.querySelectorAll('.file').forEach(e => e.remove());
+    if (clearOld) $('.file').remove();
 
     let fileContainer = document.querySelector('.file-container');
 
     let files = getFiles(directory);
 
-    fileContainer.classList.add('file-view-icons');
-
     // Add all files to the file container
     files.forEach(file => fileContainer.appendChild(createFileElement(file)));
 
-    // When the user clicks, hide the context menu.
-    document.addEventListener('click', () => {
-        document.querySelector('.context-menu').classList.remove('active');
-    })
+    // When the user clicks on the screen outside a file element, hide the context menu.
+    $(document).on('click', event => $('.context-menu').removeClass('active'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
-    document.addEventListener('dblclick', () => {
-        document.querySelector('.file-information').classList.toggle('hidden', true);
-        document.querySelectorAll('.file.selected').forEach(e => e.classList.remove('selected'));
+    $(document).on('dblclick', () => {
+        $('.file-information').addClass('hidden');
+        $('.file.selected').removeClass('selected');
     })
 
     /** Context menu - Right-clicking*/
-    document.addEventListener('contextmenu', async (event) => {
+    $(document).on('contextmenu', async (event) => {
         if (!document.hasFocus())
             return;
         event.preventDefault();
         event.stopImmediatePropagation();
 
         // Select potential file
-        let file = event.target.parentElement;
-        let isFile = file.classList.contains('file');
+        let target = event.target.parentElement || event.target;
+        let isFile = target.classList.contains('file');
         let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
-        if (isFile)
-            file.classList.add('selected');
 
-        document.querySelectorAll(`#context-menu-rename, #context-menu-delete, #context-menu-download, #context-menu-cut, #context-menu-copy ${hasClipboard ? '' : ', #context-menu-paste'}`)
-            .forEach(e => e.classList.toggle('disabled', !isFile));
+        // Which items are enabled in the context menu
+        /** @type {HTMLElement[]} */
+        let enabled = [];
+
+        if (isFile) {
+            target.classList.add('selected');
+            enabled.push(
+                ...['copy', 'cut', 'delete', 'rename', 'download']
+                    .map(e => document.getElementById('ctx-' + e))
+            );
+        }
+
+        // If there's something in the clipboard, we enable the 'paste' action.
+        if (hasClipboard)
+            enabled.push(document.getElementById('ctx-paste'));
+
+        // Disable all context actions first.
+        $('.context-menu-item').addClass('disabled');
+
+
+        // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
+        // First, check whether it has a 'context-menu' dataset property.
+        if (target.dataset.hasOwnProperty('contextMenu')) {
+            let items = target.dataset.contextMenu.split(' ');
+            items.forEach(ctxMenuItem => {
+                let element = document.getElementById('ctx-' + ctxMenuItem.trim());
+
+                if (element)
+                    enabled.push(element);
+            })
+        }
+
+        enabled.forEach(e => e.classList.remove('disabled'));
 
         let menu = document.querySelector('.context-menu');
         menu.style.left = event.clientX + 'px';
         menu.style.top = event.clientY + 'px';
-        menu.classList.add('active');
+        if (enabled.length > 0)
+            menu.classList.add('active');
     });
 }
 
@@ -281,16 +303,18 @@ function createFileElement(file) {
     fileElement.classList.add('file', 'r-icons', file.directory ? 'directory' : 'ordinary');
     fileElement.dataset.path = file.path;
     fileElement.dataset.name = file.name;
+    fileElement.dataset.contextMenu = `${file.directory ? 'paste' : ''} ${isExecutable ? 'execute' : ''}`
     fileElement.draggable = true;
     file.reference(fileElement);
 
-
     let fileIcon = document.createElement('div');
-    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' : isExecutable ? 'file-executable' :
-        file.name.endsWith('.css') ? 'file-css' :
+    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' :
+        isExecutable ? 'file-executable' :
+            file.name.endsWith('.css') ? 'file-css' :
             file.name.endsWith('.html') ? 'file-html' :
                 file.name.endsWith('.js') ? 'file-js' :
                     file.name.endsWith('.json') ? 'file-json' :
+                        file.name.endsWith('.txt') ? 'file-text' :
                         file.name.endsWith('.md') ? 'file-md' : 'file-ordinary');
     fileElement.appendChild(fileIcon);
 

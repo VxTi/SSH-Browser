@@ -72,7 +72,7 @@ async function checkFsDifferences() {
         .then(result => result.split('\n'))
         .then(serverFiles => {
             // Compare files, if there's any difference, update the file viewer
-            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => file !== serverFiles[i])) {
+            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => file.name !== serverFiles[i])) {
                 storeFiles(serverFiles, currentDir, true);
                 loadFileViewer();
                 console.log('Received incoming changes');

@@ -299,7 +299,7 @@
     display: block;
     background-color: var(--theme-1);
     border: 1px solid var(--theme-5);
-    z-index: 100;
+    z-index: 9999;
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s ease-in-out, visibility 0.1s ease-in-out;
@@ -322,7 +322,7 @@
 }
 
 .context-menu-item.disabled {
-    color: var(--text-color-3);
+    display: none;
 }
 
 .context-menu-item:hover {

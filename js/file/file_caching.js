@@ -56,13 +56,13 @@ function getFile(path, name) {
  * @param {string} name The name of the file to be formatted.
  * @param {number} maxLength The maximum length of the file name. Default is 20.
  */
-function formatFileName(name, maxLength= 14) {
+function formatFileName(name, maxLength= 10) {
     if (name.length > maxLength) {
         let extensionIndex = name.indexOf('.');
-        if (extensionIndex < 0) // Directory
+        if (extensionIndex < 0) // Directory ?
             return name.substring(0, maxLength - 3) + '...';
 
-        return name.substring(0, maxLength / 2) + '...' + name.substring(maxLength / 2);
+        return name.substring(0, maxLength - 4) + '...' + name.substring(extensionIndex);
     }
     return name;
 }
