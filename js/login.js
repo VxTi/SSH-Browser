@@ -1,40 +1,34 @@
-document.addEventListener('DOMContentLoaded', () => {
-    let [host, username, password] = [
-        document.getElementById('ssh-host'),
-        document.getElementById('ssh-username'),
-        document.getElementById('ssh-password')
-    ];
 
-    let show_pass = document.getElementById("ssh-show-password");
-    show_pass.addEventListener('click', () => {
-        password.type = password.type === 'password' ? 'text' : 'password';
-        show_pass.classList.toggle('password-invisible');
-    });
+$(document).ready(() => {
+    // Get the input fields
+    let [host, username, password] = $('#ssh-host, #ssh-username, #ssh-password')
 
-    document.getElementById('ssh-back-button').onclick = () => window.location.href = '../index.html';
+    $('#ssh-show-password').on('click', () => {
+        let e = $('#ssh-password');
+        e.attr('type', e.attr('type') === 'password' ? 'text' : 'password');
+        $(this).toggleClass('password-invisible');
+    })
+
+    // Add the back button functionality
+    $('#ssh-back-button').on('click', () => window.location.href = '../index.html');
 
     // Add the login functionality
-    document.getElementById('ssh-login').onclick = () => {
-
-        document.querySelector('.login-container').style.visibility = 'hidden';
-        document.querySelector('.loading').style.visibility = 'visible';
+    $('#ssh-login').on('click', () => {
+        $('.login-container').css('visibility', 'hidden');
+        $('.loading').css('visibility', 'visible');
 
         // Send a request to log in with the retrieved input.
         window.ssh.connect(host.value, username.value, password.value)
-            .then(_ => {
-                document.querySelector('.login-container').style.visibility = 'visible';
-                document.querySelector('.loading').style.visibility = 'hidden';
-                window.location.href = './file_viewer.html';
-            })
+            .then(_ => window.location.href = './file_viewer.html')     // Redirect to the file viewer page.
             .catch(err => {
-                document.querySelector('.login-container').style.visibility = 'visible';
-                document.querySelector('.loading').style.visibility = 'hidden';
-                let errorContainer = document.querySelector('.login-error');
-                errorContainer.style.visibility = 'visible';
-                errorContainer.innerText = err.message;
+                $('.login-container').css('visibility', 'visible');
+                $('.loading').css('visibility', 'hidden');
+                let errorContainer = $('.error-message');
+                errorContainer.css('visibility', 'visible');
+                errorContainer.text(err.message);
                 setTimeout(() => {
-                    errorContainer.style.visibility = 'hidden';
+                    errorContainer.hide();
                 }, 5000);
             });
-    }
+    })
 })

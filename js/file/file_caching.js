@@ -15,17 +15,19 @@ function storeFiles(files, path, forceLoad = false, loadFileInfo = false) {
     if (files === undefined || path === undefined || files.length === 0)
         return;
 
+    // Convert 'files' parameter to an array if it isn't one already.
+    files = Array.isArray(files) ? files : files.split('\n');
+
     // If the path is already loaded in the file map, we'll check whether we have to add new files or not.
     if (fileCache.has(path) && !forceLoad) {
 
-        let fileArr = Array.isArray(files) ? files : files.split('\n');
-        let filesToAdd = fileArr.filter(f => !fileCache.get(path).find(f2 => f2.name === f));
+        let filesToAdd = files.filter(f => !fileCache.get(path).find(f2 => f2.name === f));
         if (filesToAdd.length > 0)
             fileCache.get(path).push(...filesToAdd.map(fileName => new File(fileName, path, loadFileInfo)));
 
     } else {
         // If the path is not loaded in the file map, we'll add the files to the map.
-        fileCache.set(path, files.split('\n').map(fileName => new File(fileName, path, loadFileInfo)));
+        fileCache.set(path, files.map(fileName => new File(fileName, path, loadFileInfo)));
     }
 }
 

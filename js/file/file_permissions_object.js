@@ -39,9 +39,10 @@ class FilePermissions {
     /**
      * Returns the string representation of the permissions.
      * @param {string} accessor Who to check the permissions for
+     * @param {function} formatFn Function to format the permissions
      * @returns {string}
      */
-    toString(accessor) {
+    toString(accessor, formatFn = null) {
         let readIndex = this.#file.owner === accessor ? 0 : 1;
         let perms = [];
         for (let i = 0; i < 3; i++) {
@@ -53,6 +54,8 @@ class FilePermissions {
             if (permission === 'x')
                 perms.push('Execute');
         }
+        if (typeof formatFn === 'function')
+            return formatFn(perms);
         return perms.length === 0 ? 'None' : perms.join('/');
     }
 }

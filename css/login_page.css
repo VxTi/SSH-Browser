@@ -13,7 +13,6 @@
     align-items: center;
     background-color: var(--theme-1);
     border-radius: var(--default-rounding);
-    opacity: var(--background-opacity);
 }
 
 .login-container.loading { visibility: hidden; }

@@ -252,12 +252,13 @@
 .file-information-resize {
     min-width: 10px;
     height: var(--file-container-height);
+    border-left: 1px solid transparent;
     display: block;
     cursor: ew-resize;
 }
 
-.file-information-resize:active + .file-information {
-    border-top-color: var(--theme-5);
+.file-information-resize:hover, .file-information-resize.active {
+    border-left-color: var(--container-resize-color);
 }
 
 .file-info {
@@ -266,7 +267,8 @@
     font-size: 0.8rem;
     user-select: none;
     margin: 0 10px;
-    word-wrap: break-word;
+    flex-wrap: nowrap;
+    padding: 2px 10px;
 }
 
 .file-info-preview {

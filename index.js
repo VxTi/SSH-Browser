@@ -98,7 +98,7 @@ ipcMain.handle('upload-files', async (_, directory, files) => uploadFiles(direct
 ipcMain.handle('rename-file', async (_, directory, file, newName) => renameFile(directory, file, newName))
 
 /** Event handler for navigating to the home directory **/
-ipcMain.handle('navigate-home', async _ => navigateHome());
+ipcMain.handle('view-starting-directory', async _ => viewStartingDir());
 
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, title) => createDirectory(directory, title));
@@ -136,18 +136,18 @@ ipcMain.on('log', (_, args) => console.log(args));
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand(`cd ~ && cd ${directory} && mkdir ${name}`)
+            connection.ssh.execCommand(`cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
     })
 }
 
-async function navigateHome() {
+async function viewStartingDir() {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand('cd ~ && pwd && ls')
-                .then(result => resolve({directory: result.stdout.split('\n')[0], files: result.stdout.split('\n').slice(1)}))
+            connection.ssh.execCommand('pwd && ls')
+                .then(result => resolve({path: result.stdout.split('\n')[0], files: result.stdout.split('\n').slice(1)}))
                 .catch(err => reject(err));
         } else reject('Not connected');
     })
@@ -276,24 +276,22 @@ async function openFiles() {
 
 /**
  * Method to list the files in a directory.
- * @param {string} directory The directory in which to list the files.
+ * @param {string} path The absolute path in which to list the files.
  * @returns {Promise<string>} A promise that resolves to a string containing the files in the directory.
- * Rejects when the directory is not a string or when there's no active connection, or an error occurs.
+ * Rejects when the path is not a string or when there's no active connection, or an error occurs.
  */
-async function listFiles(directory) {
+async function listFiles(path) {
     return new Promise((resolve, reject) => {
 
         // Check whether the provided argument is a string or not.
         // If this is not the case, do not proceed.
-        if (! (typeof directory === 'string' || directory instanceof String))
+        if (! (typeof path === 'string' || path instanceof String))
             return reject('Argument \'directory\' is not a string');
 
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
-        // We return the retrieved files in a 'listFilesResponse' event, with two arguments:
-        // arg[0]: the absolute path of the directory
         if (sshConnected()) {
-            return connection.ssh.execCommand(`cd ~ && cd ${directory} && ls`)
+            return connection.ssh.execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => reject(err));
         } else reject('Not connected');

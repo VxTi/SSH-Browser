@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld('ssh',  {
 
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
-    navigateHome: async () => ipcRenderer.invoke('navigate-home'),
+    startingDir: async () => ipcRenderer.invoke('view-starting-directory'),
 
     /** @param {string} directory */
     listFiles: async (directory) => ipcRenderer.invoke('list-files', directory),

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/file_viewer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <link rel="stylesheet" href="../css/file_viewer_items.css">
+    <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/file/file_permissions_object.js"></script>
     <script src="../js/file/file_object.js"></script>
     <script src="../js/file/file_caching.js"></script>
@@ -47,13 +48,16 @@
             <div class="file-information">
                 <div class="file-information-resize" title="Resize the file info menu"></div> <!-- Resize bar -->
                 <div class="grid grid-v-2">
-                    <div class="file-info-preview"></div>
+                    <div class="file-info-preview flex f-nowrap f-column f-m-center"></div>
                     <div class="flex f-nowrap f-column f-m-center">
-                        <div class="file-info file-info-title al-s-c" id="file-info-title"></div>
-                        <div class="file-info file-info-date-modified">Date modified: <span id="file-info-modified"></span></div>
+                        <div class="file-info al-s-c" id="file-info-title"></div>
+                        <div class="file-info">Date modified: <span id="file-info-modified"></span></div>
                         <div class="file-info file-info-created-by">Created by <span id="file-info-owner"></span></div>
                         <div class="file-info file-info-size">Size: <span id="file-info-size"></span></div>
-                        <div class="file-info file-info-permissions">Permissions: <span id="file-info-permissions"></span></div>
+                        <div class="file-info file-info-permissions ">
+                            <span id="file-info-permissions-title">Permissions:</span>
+                            <span id="file-info-permissions-values"></span>
+                        </div>
                     </div>
                 </div>
             </div>

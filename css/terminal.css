@@ -23,7 +23,7 @@
 }
 
 .terminal-toggle-view:hover {
-    border-top-color: var(--text-color-2);
+    border-top-color: var(--container-resize-color);
 }
 
 .terminal.hidden > .terminal-toggle-view { cursor: n-resize; }

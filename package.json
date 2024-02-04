@@ -4,7 +4,7 @@
   "description": "A Simple SSH File Browser",
   "main": "index.js",
   "scripts": {
-    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/app_icon.ico --prune=true --out=release-builds",
+    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/app_icon.icns --prune=true --out=release-builds",
     "build_win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=assets/app_icon.ico --prune=true --out=release-builds",
     "build_all": "electron-packager . --overwrite --platform=all --arch=all --icon=assets/app_icon.ico --prune=true --out=release-builds",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,6 +13,7 @@
   "author": "Luca Warmenhoven",
   "private": true,
   "dependencies": {
+    "jquery": "^3.7.1",
     "menu": "^0.2.5",
     "node-ssh": "^13.1.0",
     "uuidv4": "^6.2.13"

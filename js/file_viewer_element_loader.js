@@ -139,7 +139,7 @@ function loadFileViewer() {
                 fileCache[currentDir] = files;
 
             })
-            .finally(_ => busy(false));
+            .finally(_ => {busy(false)});
     });
 
 
@@ -147,13 +147,13 @@ function loadFileViewer() {
     document.getElementById('action-home')
         .addEventListener('click', () => {
             busy(true);
-            window.ssh.navigateHome()
+            window.ssh.startingDir()
                 .then(res => {
-                    currentDir = res.directory
+                    currentDir = res.path;
                     storeFiles(res.files, currentDir);
                     loadFileViewer();
                 })
-                .finally(_ => busy(false));
+                .finally(_ => {busy(false)});
         });
 
     /**
@@ -368,7 +368,11 @@ function selectFiles(files, directory = currentDir) {
                 await file.loadInfo().finally(_ => busy(false)); // Load file info
             }
 
-            document.getElementById('file-info-permissions').innerText = file.permissions.toString(currentUser);
+            /** Show file info **/
+            document.getElementById('file-info-permissions-values').innerHTML = file.permissions.toString(currentUser, (input) => {
+                console.log(input)
+                return input.map(e => `<span class="f-perm-${e.toLowerCase()}">${e}</span>`).join('<span>/</span>');
+            });
 
             document.getElementById('file-info-title').innerText = file.name;
             document.getElementById('file-info-size').innerText = file.fileSizeString;

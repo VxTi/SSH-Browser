@@ -21,6 +21,8 @@
     --scrollbar-background: transparent;
     --scrollbar-thumb: #4D5052;
 
+    --container-resize-color: #ccc;
+
     --background-opacity: 0.95;
 
     --default-rounding: 5px;

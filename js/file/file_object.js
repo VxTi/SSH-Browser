@@ -76,20 +76,6 @@ class File {
     get permissions() { return this.#permissions; }
 
     /**
-     * Getting a readable version of the file permissions.
-     * @param {string} accessor Who is accessing the file
-     * @param {boolean} forceLoad Whether to force load the file info
-     */
-    readablePermissions(accessor = this.#owner, forceLoad = false) {
-        if (!this.loaded) {
-            if (forceLoad)
-                this.loadInfo();
-            else
-                return 'Permissions not loaded yet.';
-        }
-    }
-
-    /**
      * Getter for isDirectory.
      * @returns {boolean}
      */
