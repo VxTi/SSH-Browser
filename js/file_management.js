@@ -72,6 +72,13 @@ $(document).ready(() => {
         .finally(_ => {busy(false)});
 
     setInterval(checkFsDifferences, 3000);
+
+    // Context menu functionality
+    $('#ctx-download').on('click', () => {
+        let selected = document.querySelector('.file.selected');
+        if (selected)
+            window.ssh.downloadFile(selected.dataset.path, selected.dataset.name);
+    })
 });
 
 /**
@@ -511,8 +518,13 @@ async function checkFsDifferences() {
  * This updates the progress bar in the file viewer accordingly.
  */
 window.events.on('file-transfer-progress', (status) => {
-    status.progress = Math.min(Math.max(0, status.progress), 100)
     let fileTransferElement = $('.file-transfer-progress');
-    fileTransferElement.css('--progress', status.progress + '%')
+    fileTransferElement.css('--progress', status.progress)
     fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
 });
+
+window.events.on('file-download-progress', (status) => {
+    let fileTransferElement = $('.file-download-progress');
+    fileTransferElement.css('--progress', status.progress)
+    fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
+})

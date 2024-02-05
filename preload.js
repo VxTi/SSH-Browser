@@ -25,6 +25,13 @@ contextBridge.exposeInMainWorld('ssh',  {
         return ipcRenderer.invoke('delete-file', directory, file)
     },
 
+    /** @param {string} absolutePath
+     * @param {string} fileName
+     */
+    downloadFile: async (absolutePath, fileName) => {
+        return ipcRenderer.invoke('download-file', absolutePath, fileName)
+    },
+
     /** @param {string} directory
      * @param {string} file
      * @param {string} permissions

@@ -363,7 +363,7 @@
     background-color: var(--theme-5);
 }
 
-.file-transfer-progress {
+.progress-bar {
     --progress: 0;
     position: absolute;
     align-self: flex-end;
@@ -376,11 +376,11 @@
     background-color: var(--theme-5);
 }
 
-.file-transfer-progress:after {
+.progress-bar:after {
     content: "";
     display: block;
     position: absolute;
-    width: calc(var(--progress) * 1%);
+    width: calc(max(min(var(--progress), 100), 0) * 1%);
     height: 100%;
     border-radius: 3px;
     background-color: var(--theme-4);

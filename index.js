@@ -15,6 +15,8 @@ let mainWindow = null;
 let _clog = console.log;
 console.log = function(...args) { _clog(new Date().toLocaleDateString('nl-NL'), ...args); }
 
+const downloadPath = app.getPath('downloads');
+
 const OS = {
     isWindows: os.platform() === 'win32',
     isMac: os.platform() === 'darwin',
@@ -72,6 +74,9 @@ app.on('window-all-closed', () => {
 
 /** Event handler for the 'select files' dialog menu **/
 ipcMain.handle('open-files', async () => openFiles());
+
+/** Event handler for downloading a file from the remote server **/
+ipcMain.handle('download-file', async (_, remotePath, fileName) => downloadFile(remotePath, fileName));
 
 /** Event handler for listing files on the remote server **/
 ipcMain.handle('list-files', async (_, directory) => listFiles(directory));
@@ -164,6 +169,28 @@ async function renameFile(directory, file, newName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
             connection.ssh.execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
+                .then(_ => resolve())
+                .catch(err => reject(err));
+        } else reject('Not connected');
+    })
+}
+
+/**
+ * Method for downloading a file from the remote server.
+ * @param {string} remotePath The remote path to the file
+ * @param {string} fileName The name of the file to save the file as.
+ * @returns {Promise<unknown>}
+ */
+async function downloadFile(remotePath, fileName) {
+    return new Promise((resolve, reject) => {
+        if (sshConnected()) {
+            console.log('Downloading file: ' + remotePath + ' to ' + downloadPath)
+            connection.ssh.getFile(downloadPath + '/' + fileName, remotePath + '/' + fileName, null, {
+                step: (transferred, chunk, total) => {
+                    console.log(100 * transferred / total);
+                    mainWindow.webContents.send('file-download-progress', {progress: 100 * transferred / total, finished: transferred === total});
+                }
+            })
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
