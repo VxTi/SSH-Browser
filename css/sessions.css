@@ -64,10 +64,10 @@
 .delete-button {
     --delete-pos-x: 0;
     --delete-pos-y: 0;
-    width: calc(var(--input-box-width) * 0.5);
-    height: var(--input-box-height);
+    width: 50px;
+    height: 20px;
     background-color: var(--theme-2);
-    color: white;
+    color: #900;
     position: absolute;
     left: var(--delete-pos-x);
     top: var(--delete-pos-y);
@@ -77,4 +77,5 @@
     cursor: pointer;
     font-family: var(--font);
     text-align: center;
+    z-index: 99;
 }

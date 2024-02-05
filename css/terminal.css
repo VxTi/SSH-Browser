@@ -39,8 +39,8 @@
 .terminal-output {
     font-family: monospace;
     color: var(--text-color);
-    height: 20px;
     font-size: 0.65rem;
+    flex-wrap: wrap;
     line-height: 1.5;
 }
 

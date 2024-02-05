@@ -1,4 +1,5 @@
 let delete_button;
+
 document.addEventListener('DOMContentLoaded', () => {
     delete_button = document.querySelector('.delete-button');
     document.onclick = () => delete_button.style.visibility = 'hidden';
@@ -41,13 +42,24 @@ function addSession(session) {
         document.querySelector('.loading').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)
             .then(_ => window.location.href = './pages/file_viewer.html')
-            .catch(e => document.querySelector('.session-container').style.visibility = 'visible');
+            .catch(_ => {
+                document.querySelector('.loading').style.visibility = 'hidden';
+                document.querySelector('.session-container').style.visibility = 'visible'
+            });
     })
 
     session_element.addEventListener('mousedown', (event) => {
         if (event.button !== 2) return;
         delete_button.style.setProperty('--delete-pos-x', `${session_element.offsetLeft}px`);
-        delete_button.style.setProperty('--delete-pos-y', `${session_element.offsetTop + session_element.offsetHeight}px`);
+        delete_button.style.setProperty('--delete-pos-y', `${session_element.offsetTop + session_element.offsetHeight + 4}px`);
         delete_button.style.visibility = 'visible';
+        delete_button.onclick = () => {
+            window.ssh.sessions.delete(session.host, session.username)
+                .then(() => {
+                    session_container.removeChild(session_element);
+                    delete_button.style.visibility = 'hidden';
+                })
+                .catch(e => console.error(e));
+        }
     })
 }
