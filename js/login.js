@@ -1,7 +1,7 @@
 
 $(document).ready(() => {
     // Get the input fields
-    let [host, username, password] = $('#ssh-host, #ssh-username, #ssh-password')
+    let [host, username, password, port, privateKey, passphrase] = $('#ssh-host, #ssh-username, #ssh-password, #ssh-port, #ssh-private-key, #ssh-passphrase')
 
     $('#ssh-show-password').on('click', () => {
         let e = $('#ssh-password');
@@ -27,7 +27,7 @@ $(document).ready(() => {
         $('.loading').css('visibility', 'visible');
 
         // Send a request to log in with the retrieved input.
-        window.ssh.connect(host.value, username.value, password.value)
+        window.ssh.connect(host.value, username.value, password.value, parseInt(port.value), privateKey.value, passphrase.value)
             .then(_ => window.location.href = './file_viewer.html')     // Redirect to the file viewer page.
             .catch(err => {
                 $('.login-container').css('visibility', 'visible');
