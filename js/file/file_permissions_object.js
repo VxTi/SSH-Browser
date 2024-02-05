@@ -61,6 +61,9 @@ class FilePermissions {
                 perms.push('Execute');
         }
 
+        if (perms.length === 1 && perms[0] === 'Read')
+            perms = ['Read Only']
+
         return perms.length === 0 ? 'None' : perms.join('/');
     }
 }

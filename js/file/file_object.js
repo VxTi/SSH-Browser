@@ -49,6 +49,10 @@ class File {
      * @returns {string}
      */
     get fileSizeString() {
+
+        if (this.#fileSize === 0)
+            return 'Zero KB';
+
         let suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
         for (let i = 0, fs = this.#fileSize; i < suffixes.length; i++) {
             if (fs < 1024)

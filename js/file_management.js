@@ -2,10 +2,77 @@ let busy = (state) => $('.process-loading').css('visibility', state ? 'visible' 
 
 let currentUser = undefined
 
-let navigateHistory = {
-    forward: [],
-    backward: []
-}
+/**
+ * History of user navigation
+ */
+let navigationHistory = [];
+let navigationHistoryIndex = 0;
+
+/**
+ * History of the terminal commands.
+ */
+let terminalHistory = [];
+let terminalHistoryIndex = 0;
+
+$(document).ready(() => {
+    addLoadingSpinner($('.process-loading')[0]);
+    $('#back-main').on('click', () => window.location.href = '../index.html');
+
+    let terminalDir = '~';
+
+    // Resizing of the file information section
+    $('.file-information-resize').on('dblclick', _ => $('.file-information').toggleClass('hidden'))
+
+    // Hiding and showing the terminal console
+    $('.terminal-toggle-view').on('dblclick', (event) => {
+        $('#terminal').toggleClass('hidden');
+        event.preventDefault();
+        event.stopImmediatePropagation();
+    })
+
+    // When user presses enter, send the command
+    $('#terminal-input').on('keydown', (e) => {
+        e.stopImmediatePropagation();
+        // Check if the user pressed the Enter key and the input is not empty
+        if (e.key === 'Enter' && e.target.value.trim() !== '') {
+            terminalHistory.push(e.target.value);
+            terminalHistoryIndex = terminalHistory.length - 1;
+            terminalPrint('> ' + e.target.value);
+            window.terminal.execute(terminalDir, e.target.value)
+                .then(result => terminalPrint(result))
+                .catch(error => terminalPrint(error, '#ff0000'));
+            e.target.value = '';
+        } else if (e.key === 'ArrowUp') {
+            e.target.value = terminalHistory[Math.max(0, --terminalHistoryIndex)] || '';
+        } else if (e.key === 'ArrowDown') {
+            e.target.value = terminalHistory[Math.min(terminalHistory.length - 1, ++terminalHistoryIndex)] || '';
+        } else terminalHistoryIndex = terminalHistory.length - 1;
+    })
+
+    let contentBox = $('.terminal-content');
+
+    function terminalPrint(message, color = '#ffffff') {
+        if (!Array.isArray(message))
+            message = message.split('\n');
+        message.forEach(line => {
+            contentBox.append(`<div class="terminal-output" style="color: ${color}">${line}</div>`);
+        })
+    }
+    busy(true);
+    window.ssh.startingDir()
+        .then(res => {
+            currentDir = terminalDir = res.path;
+            storeFiles(res.files, res.path);
+            loadFileViewer();
+        })
+        .catch(_ => {
+            window.logger.log(_);
+            window.location.href = '../index.html'
+        })
+        .finally(_ => {busy(false)});
+
+    setInterval(checkFsDifferences, 3000);
+});
 
 /**
  * Loading in the functionality of the file viewer.
@@ -225,7 +292,7 @@ function loadFileElements(directory = currentDir, clearOld = true) {
     files.forEach(file => fileContainer.appendChild(createFileElement(file)));
 
     // When the user clicks on the screen outside a file element, hide the context menu.
-    $(document).on('click', event => $('.context-menu').removeClass('active'));
+    $(document).on('click', _ => $('.context-menu').removeClass('active'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
     $(document).on('dblclick', () => {
@@ -288,6 +355,40 @@ function loadFileElements(directory = currentDir, clearOld = true) {
 }
 
 /**
+ * Retrieves the appropriate file icon for the given file, as a string (css class)
+ * @param {File | string} file
+ * @returns {string} The appropriate file icon class for CSS.
+ */
+function getFileThumbnail(file) {
+    if (file instanceof File)
+        file = file.name;
+    let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'dll'];
+    let acceptedExtensions = ['css', 'html', 'js', 'json', 'txt', 'md'];
+    let isExecutable = executables.indexOf(file.substring(file.lastIndexOf('.') + 1)) >= 0;
+    return (file.endsWith('/') || file.indexOf('.') < 0) ? 'file-directory' : isExecutable ? 'file-executable' :
+        acceptedExtensions.indexOf(file.substring(file.lastIndexOf('.') + 1)) >= 0 ? 'file-' + file.substring(file.lastIndexOf('.') + 1) : 'file-ordinary';
+
+}
+
+/**
+ * Method for navigating to a different directory.
+ * @param path
+ */
+function navigateTo(path) {
+    busy(true);
+    window.ssh
+        .listFiles(path) // Retrieve files from selected directory
+        .then(result => {
+            navigationHistory.push(currentDir);
+            storeFiles(result, path);
+            currentDir = path;
+            loadFileViewer(); // reload the file viewer
+        })
+        .catch(_ => console.log('Error occurred whilst attempting to navigate', _))
+        .finally(_ => {busy(false)});
+}
+
+/**
  * Method for creating a file element.
  * @param {File} file The file object to create an element for
  * @returns {HTMLDivElement} The file element created
@@ -296,7 +397,7 @@ function createFileElement(file) {
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
 
-    let executables = ['exe', 'sh', 'bat', 'dylib', 'so'];
+    let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'dll'];
     let isExecutable = executables.indexOf(file.name.substring(file.name.lastIndexOf('.') + 1)) >= 0;
 
     let fileElement = document.createElement('div');
@@ -310,14 +411,7 @@ function createFileElement(file) {
 
     let fileIcon = document.createElement('div');
 
-    fileIcon.classList.add('file-icon', file.directory ? 'file-directory' :
-        isExecutable ? 'file-executable' :
-            file.name.endsWith('.css') ? 'file-css' :
-            file.name.endsWith('.html') ? 'file-html' :
-                file.name.endsWith('.js') ? 'file-js' :
-                    file.name.endsWith('.json') ? 'file-json' :
-                        file.name.endsWith('.txt') ? 'file-text' :
-                        file.name.endsWith('.md') ? 'file-md' : 'file-ordinary');
+    fileIcon.classList.add('file-icon', getFileThumbnail(file));
     fileElement.appendChild(fileIcon);
 
     // Add the file name to the file element
@@ -379,21 +473,12 @@ function selectFiles(files, directory = currentDir) {
     } else { // Single file
 
         let preview = document.querySelector('.file-info-preview');
-        let isDir = files[0].indexOf('.') < 0;
-        let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'jar'];
-        let isExecutable = executables.indexOf(files[0].substring(files[0].lastIndexOf('.') + 1)) >= 0;
 
         // TODO: Fix this
         // Remove all previous classes and add the correct one
         preview.classList.forEach(c => preview.classList.remove(c));
         preview.classList.add('file-info-preview');
-        preview.classList.add(isDir ? 'file-directory' : isExecutable ? 'file-executable' :
-        files[0].endsWith('.css') ? 'file-css' :
-            files[0].endsWith('.html') ? 'file-html' :
-                files[0].endsWith('.js') ? 'file-js' :
-                    files[0].endsWith('.json') ? 'file-json' :
-                        files[0].endsWith('.txt') ? 'file-text' :
-                            files[0].endsWith('.md') ? 'file-md' : 'file-ordinary');
+        preview.classList.add(getFileThumbnail(files[0]));
 
         (async () => {
             // If there's only one file, we can show all information about it.
@@ -404,7 +489,7 @@ function selectFiles(files, directory = currentDir) {
             }
 
             /** Show file info **/
-            $('#file-info-perm-user').text(file.permissions.toString('user'));
+            $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
             $('#file-info-perm-group').text(file.permissions.toString('group'));
             $('#file-info-perm-other').text(file.permissions.toString('other'));
 
@@ -415,3 +500,38 @@ function selectFiles(files, directory = currentDir) {
         })();
     }
 }
+
+/**
+ * Periodically checks the differences between the local and remote file system.
+ * If there's any changes, the file viewer will be updated accordingly.
+ */
+async function checkFsDifferences() {
+    // Check if there's an active connection, if not, don't proceed.
+    if (window.ssh === undefined || currentDir === undefined || !(await window.ssh.connected()))
+        return;
+
+    //
+    let cachedFiles = getFiles(currentDir);
+    window.ssh.listFiles(currentDir)
+        .then(result => result.split('\n'))
+        .then(serverFiles => {
+            // Compare files, if there's any difference, update the file viewer
+            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => file.name !== serverFiles[i])) {
+                storeFiles(serverFiles, currentDir, true);
+                loadFileViewer();
+                console.log('Received incoming changes');
+            }
+        }) // TODO: Handle errors
+        .catch(_ => console.log(_));
+}
+
+/**
+ * Event handling of file transfer progress.
+ * This updates the progress bar in the file viewer accordingly.
+ */
+window.events.on('file-transfer-progress', (status) => {
+    status.progress = Math.min(Math.max(0, status.progress), 100)
+    let fileTransferElement = $('.file-transfer-progress');
+    fileTransferElement.css('--progress', status.progress + '%')
+    fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
+});

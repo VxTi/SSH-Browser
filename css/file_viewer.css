@@ -5,7 +5,7 @@
     --file-element-size: 50px;
     --file-navigator-action-margin: 6px;
 
-    --file-information-width: 300px;
+    --file-information-width: 280px;
 
     --file-container-height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
 }
@@ -247,12 +247,15 @@
     width: 10px;
 }
 
+/* Change cursor to resize left when window is closed */
+.file-information.hidden > .file-information-resize { cursor: w-resize; }
+
 .file-information-resize {
     min-width: 10px;
     height: var(--file-container-height);
     border-left: 1px solid transparent;
     display: block;
-    cursor: ew-resize;
+    cursor: e-resize;
 }
 
 .file-information-resize:hover, .file-information-resize.active {
@@ -264,7 +267,7 @@
     font-family: var(--font);
     font-size: 0.8rem;
     user-select: none;
-    margin: 0 10px;
+    margin: 0;
     width: 100%;
     flex-wrap: nowrap;
     padding: 2px 10px;
@@ -295,13 +298,19 @@
     width: 40px;
 }
 
-.file-info-permissions {
+.grid-2-3 {
     display: grid;
-    width: 100%;
     grid-template-columns: auto auto;
     grid-template-rows: repeat(3, 1fr);
     grid-gap: 0;
     font-size: 0.7rem;
+    font-family: var(--font);
+    color: var(--text-color);
+    padding: 0 10px;
+}
+
+.f-i-params {
+    padding: 10px 0;
 }
 
 .file-rename {
@@ -375,16 +384,4 @@
     height: 100%;
     border-radius: 3px;
     background-color: var(--theme-4);
-}
-
-.f-perm-read {
-    background-color: #880000;
-}
-
-.f-perm-write {
-    background-color: #008800;
-}
-
-.f-perm-execute {
-    background-color: #000088;
 }

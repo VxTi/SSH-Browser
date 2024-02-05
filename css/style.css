@@ -269,6 +269,7 @@ body {
     transition: scale 0.2s ease-in-out;
 }
 
+
 .back-button:hover {
     scale: 0.95;
 }

@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('ssh',  {
         return ipcRenderer.invoke('delete-file', directory, file)
     },
 
+    /** @param {string} directory
+     * @param {string} file
+     * @param {string} permissions
+     */
+    grantPermissions: async (directory, file, permissions) => ipcRenderer.invoke('grant-permissions', directory, file, permissions),
+
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
     startingDir: async () => ipcRenderer.invoke('view-starting-directory'),
