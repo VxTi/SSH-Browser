@@ -6,7 +6,6 @@ const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 
-
 let connection = null;
 
 let sessionsPath = path.join(__dirname, 'sessions.json');
@@ -148,6 +147,11 @@ async function createDirectory(directory, name) {
     })
 }
 
+/**
+ * Method for viewing the files in the starting directory.
+ * @returns {Promise<string | Error>} A promise that resolves to a string containing the files in the
+ * directory and the path to the directory. Rejects when there's no active connection or an error occurs.
+ */
 async function viewStartingDir() {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
@@ -258,6 +262,16 @@ function sshConnected() {
 }
 
 
+/**
+ * Method for connecting to a remote server, given the provided arguments.
+ * @param {string} host The host to connect to.
+ * @param {string} username The username to use for the connection.
+ * @param {string} password The password to use for the connection.
+ * @param {number} port The port to use for the connection (default: 22).
+ * @param {string} privateKey The private key to use for the connection (default: null).
+ * @param {string} passphrase The passphrase to use for the private key (default: null).
+ * @returns {Promise<*>} A promise that resolves when the connection is successful; rejects when an error occurs.
+ */
 async function sshConnect(host, username, password, port = 22, privateKey = null, passphrase = null) {
     return new Promise((resolve, reject) => {
         if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port))
@@ -365,7 +379,7 @@ async function retrieveSessions() {
     return new Promise((resolve, reject) => {
         fs.readFile(path.join(__dirname, 'sessions.json'), (err, data) => {
             if (err)
-                reject(err);
+                return reject(err);
 
             let content = {};
 

@@ -13,7 +13,7 @@ The build files can then be found in 'release-builds'.
 
 Once successfully built, you'll find yourself on the homepage.
 Here you can add a session you'd like to connect to. 
-If you haven't added any yet, you can press the '+' button to add one to go to the login page.
+If you haven't added any yet, you can press the '+' button to add one and go to the login page.
 
 Once on the login page, you can fill in the required credentials for the host you'd like to connect to.
 
@@ -38,11 +38,10 @@ An example of how the pages look like can be found below.
 ---
 
 Future functions will be:
-> Have a virtual console to execute commands (In progress)
->
->  ![50%](https://progress-bar.dev/50)
 
 > Execute scripts remotely, and view the output (If supported by server)
 > 
 > Add different file viewing options
+> 
+> Add a file preview / editor
 

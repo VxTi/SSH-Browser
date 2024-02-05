@@ -186,7 +186,7 @@
     width: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
     height: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
     border-radius: var(--file-navigator-action-margin);
-    background-size: 100%;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     display: block;
@@ -194,13 +194,12 @@
 
 .action:hover {
     cursor: pointer;
-    background-color: var(--theme-1);
+    background-color: var(--theme-2);
 }
 
 .action:active {
     background-color: var(--theme-3);
 }
-
 
 
 #file-filter {
