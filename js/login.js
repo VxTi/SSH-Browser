@@ -14,6 +14,15 @@ $(document).ready(() => {
 
     // Add the login functionality
     $('#ssh-login').on('click', () => {
+
+        // Check if there's actually input in the fields
+        if (!host.value || !username.value) {
+            let errorContainer = $('.error-message');
+            errorContainer.css('visibility', 'visible');
+            errorContainer.text('Please enter a valid host and username.');
+            return;
+        }
+
         $('.login-container').css('visibility', 'hidden');
         $('.loading').css('visibility', 'visible');
 
@@ -26,9 +35,6 @@ $(document).ready(() => {
                 let errorContainer = $('.error-message');
                 errorContainer.css('visibility', 'visible');
                 errorContainer.text(err.message);
-                setTimeout(() => {
-                    errorContainer.hide();
-                }, 5000);
             });
     })
 })

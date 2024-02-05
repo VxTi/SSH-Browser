@@ -12,6 +12,7 @@
     overflow-y: scroll;
     overflow-x: hidden;
     display: flex;
+    align-content: flex-start;
 }
 
 /* Change the direction of flow when in column view to top to bottom. */

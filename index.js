@@ -236,14 +236,40 @@ async function uploadFiles(directory, files) {
         if (files.length === 0)
             return resolve('No files to upload');
         if (sshConnected()) {
+
+            for (let i = 0; i < files.length; i++) {
+                let path = files[i];
+                // If file doesn't exist, reject
+                if (!fs.existsSync(path)) {
+                    return reject('File at ' + path + ' does not exist');
+                }
+                // Check whether provided file is a directory
+                if (fs.lstatSync(path).isDirectory()) {
+                    // Remove file from argument and call 'putDirectory' instead
+                    files.splice(i, 1);
+                    return connection.ssh.putDirectory(path, directory, {
+                        recursive: true,
+                        concurrency: 5,
+                        transferOptions: {
+                            step: (transfer_count, chunk, total) => {
+                                mainWindow.webContents.send('file-transfer-progress',
+                                    {progress: 100 * transfer_count / total, finished: transfer_count === total});
+                            }
+                        }
+                    })
+                        .then(_ => resolve(true))
+                        .catch(e => reject(e))
+                }
+            }
+
             connection.ssh.putFiles(files.map(path => {
                 return {local: path, remote: directory + '/' + path.split('/').pop()}
             }),  {
-                concurrency: 2,
+                concurrency: 5,
                 transferOptions: {
                     step: (transfer_count, chunk, total) => {
-                        console.log(100 * transfer_count / total);
-                        mainWindow.webContents.send('file-transfer-progress', {progress: 100 * transfer_count / total, finished: transfer_count === total});
+                        mainWindow.webContents.send('file-transfer-progress',
+                            {progress: 100 * transfer_count / total, finished: transfer_count === total});
                     }
                 }
             })
@@ -294,6 +320,15 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
         })
             .then(ssh => {
                 storeSession(connection); // store the session in sessions.json
+                ssh.withShell((err, stream) => {
+                    if (err) return reject(err);
+                    stream.on('data', data => {
+                        mainWindow.webContents.send('ssh-output', data.toString());
+                    }).stderr.on('data', data => {
+                        mainWindow.webContents.send('ssh-output', data.toString());
+                    })
+
+                })
                 resolve();
             })
             .catch(err => reject(err));
@@ -334,10 +369,7 @@ async function listFiles(path) {
         if (sshConnected()) {
             return connection.ssh.execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
-                .catch(err => {
-                    console.log("ERROR RECEIVED", err);
-                    reject(err)
-                });
+                .catch(err => {reject(err)});
         } else reject('Not connected');
     });
 }
@@ -347,7 +379,7 @@ async function listDirectory() {
         if (sshConnected()) {
             connection.ssh.execCommand('pwd')
                 .then(result => resolve(result.stdout))
-                .catch(err => reject(err));
+                .catch(err => {reject(err)});
         } else reject('Not connected')
     })
 }
@@ -365,8 +397,8 @@ async function deleteFile(directory, file) {
 
             // Remove file.
             return connection.ssh.execCommand(`cd ${directory} && rm -r '${file}'`)
-                .then(result => resolve())
-                .catch(err => reject(err));
+                .then(_ => resolve())
+                .catch(err => {reject(err)});
         } else reject('Not connected');
     });
 }
@@ -378,11 +410,9 @@ async function deleteFile(directory, file) {
 async function retrieveSessions() {
     return new Promise((resolve, reject) => {
         fs.readFile(path.join(__dirname, 'sessions.json'), (err, data) => {
-            if (err)
-                return reject(err);
+            if (err) return reject(err);
 
             let content = {};
-
             try { content = JSON.parse(data.toString()); } catch (e) {}
 
             resolve(content);

@@ -49,15 +49,6 @@ $(document).ready(() => {
         } else terminalHistoryIndex = terminalHistory.length - 1;
     })
 
-    let contentBox = $('.terminal-content');
-
-    function terminalPrint(message, color = '#ffffff') {
-        if (!Array.isArray(message))
-            message = message.split('\n');
-        message.forEach(line => {
-            contentBox.append(`<div class="terminal-output" style="color: ${color}">${line}</div>`);
-        })
-    }
     busy(true);
     window.ssh.startingDir()
         .then(res => {
@@ -140,20 +131,20 @@ function loadFileViewer() {
      * Functionality for the 'refresh' button in the action bar
      */
     document.getElementById('action-refresh')
-        .addEventListener('click', () => {
+        .onclick = () => {
         busy(true);
         window.ssh.listFiles(currentDir)
             .then(result => {
                 storeFiles(result, currentDir, true);
                 loadFileViewer();
             }).finally(_ => {busy(false)});
-    });
+    };
 
     /**
      * Functionality for the 'add file' button in the action bar
      */
     document.getElementById('action-add-file')
-        .addEventListener('click', () => {
+        .onclick = () => {
 
             busy(true);
             window.ssh.selectFiles()
@@ -163,13 +154,13 @@ function loadFileViewer() {
                     window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
                         .finally(_ => {busy(false)});
                 })
-    });
+    };
 
     /**
      * Functionality for the 'delete file' button in the action bar
      */
     document.getElementById('action-delete-file')
-        .addEventListener('click', () => {
+        .onclick = () => {
         let selected = [...document.querySelectorAll('.file.selected')];
         if (selected.length === 0)
             return;
@@ -194,21 +185,20 @@ function loadFileViewer() {
 
             })
             .finally(_ => {busy(false)});
-    });
+    };
 
 
     /** Functionality for the 'home' button */
-    document.getElementById('action-home')
-        .addEventListener('click', () => {
-            busy(true);
-            window.ssh.startingDir()
-                .then(res => {
-                    currentDir = res.path;
-                    storeFiles(res.files, currentDir);
-                    loadFileViewer();
-                })
-                .finally(_ => {busy(false)});
-        });
+    document.getElementById('action-home').onclick = () => {
+        busy(true);
+        window.ssh.startingDir()
+            .then(res => {
+                currentDir = res.path;
+                storeFiles(res.files, currentDir);
+                loadFileViewer();
+            })
+            .finally(_ => {busy(false)});
+    };
 
     /**
      * Add keyboard functionality.
@@ -513,6 +503,16 @@ async function checkFsDifferences() {
         .catch(_ => console.log(_));
 }
 
+
+function terminalPrint(message, color = '#ffffff') {
+    if (!Array.isArray(message))
+        message = message.split('\n');
+    let content = $('.terminal-content')
+    message.forEach(line => {
+        content.append(`<div class="terminal-output" style="color: ${color}">${line}</div>`);
+    })
+}
+
 /**
  * Event handling of file transfer progress.
  * This updates the progress bar in the file viewer accordingly.
@@ -527,4 +527,8 @@ window.events.on('file-download-progress', (status) => {
     let fileTransferElement = $('.file-download-progress');
     fileTransferElement.css('--progress', status.progress)
     fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
+})
+
+window.events.on('message-received', (message) => {
+    terminalPrint(message);
 })
