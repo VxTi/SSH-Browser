@@ -323,7 +323,7 @@ async function deleteFile(directory, file) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
-            return connection.ssh.execCommand(`cd ~ && cd ${directory} && rm -r '${file}'`)
+            return connection.ssh.execCommand(`cd ${directory} && rm -r '${file}'`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');

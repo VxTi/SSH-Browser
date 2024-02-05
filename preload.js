@@ -9,9 +9,10 @@ contextBridge.exposeInMainWorld('ssh',  {
      *  @param {string} username
      *  @param {string} password
      *  @param {number} port
-     *  @param {string} privateKey */
-    connect: async (host, username, password, port = 22, privateKey = null) => {
-        return ipcRenderer.invoke('connect', host, username, password, port, privateKey)
+     *  @param {string} privateKey
+     *  @param {string} passphrase */
+    connect: async (host, username, password, port = 22, privateKey = null, passphrase = null) => {
+        return ipcRenderer.invoke('connect', host, username, password, port, privateKey, passphrase)
     },
     /** @param {string} directory
      *  @param {string[]} files */

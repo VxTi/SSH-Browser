@@ -104,24 +104,7 @@ function loadFileViewer() {
         directory.dataset.path = pathSegments.slice(0, i + 1).join('/');
         directory.innerHTML = seg;
 
-        directory.addEventListener('click', () => {
-
-            // If we click on the path segment, first check whether we're already on that path.
-            // If not, load its contents.
-            if (currentDir !== directory.dataset.path) {
-
-                busy(true);
-                window.ssh
-                    .listFiles(directory.dataset.path) // Retrieve files from selected directory
-                    .then(result => {
-                        storeFiles(result, directory.dataset.path);
-                        currentDir = directory.dataset.path;
-                        loadFileViewer(); // reload the file viewer
-                    })
-                    .catch(_ => console.log('Error occurred whilst attempting to navigate', _))
-                    .finally(_ => busy(false));
-            }
-        })
+        directory.addEventListener('click', () => navigateTo(directory.dataset.path))
         pathContainer.appendChild(directory);
 
         /** Directory separator arrow **/
@@ -170,9 +153,9 @@ function loadFileViewer() {
                 .then(files => {
                     if (files.length < 1)
                         return;
-                    window.ssh.uploadFiles(currentDir, files)
+                    window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
                         .finally(_ => {busy(false)});
-            })
+                })
     });
 
     /**
@@ -372,16 +355,25 @@ function getFileThumbnail(file) {
 
 /**
  * Method for navigating to a different directory.
- * @param path
+ * @param {string | File} target The directory to navigate to.
  */
-function navigateTo(path) {
+function navigateTo(target) {
+    if (target instanceof File) {
+        // Convert to viable path
+        target = target.path + (target.directory ? '/' + target.name : '')
+    }
+
+    // If we're already on there, don't proceed.
+    if (target === currentDir)
+        return;
+
     busy(true);
     window.ssh
-        .listFiles(path) // Retrieve files from selected directory
+        .listFiles(target) // Retrieve files from selected directory
         .then(result => {
             navigationHistory.push(currentDir);
-            storeFiles(result, path);
-            currentDir = path;
+            storeFiles(result, target);
+            currentDir = target;
             loadFileViewer(); // reload the file viewer
         })
         .catch(_ => console.log('Error occurred whilst attempting to navigate', _))
@@ -423,18 +415,7 @@ function createFileElement(file) {
     /** File interact functionality **/
 
     // When one double-clicks on a file, we open it.
-    fileElement.addEventListener('dblclick', () => {
-
-        // If it's a directory, we open it.
-        if (file.directory) {
-            window.ssh.listFiles(file.path + '/' + file.name)
-                .then(result => {
-                    storeFiles(result, file.path + '/' + file.name);
-                    currentDir = file.path + '/' + file.name;
-                    loadFileViewer(); // reload the file viewer
-                });
-        }
-    });
+    fileElement.addEventListener('dblclick', _ => navigateTo(file));
 
     // When one clicks on a file, we select it.
     // If we're in column view, we open the directory.
@@ -445,7 +426,7 @@ function createFileElement(file) {
         $('.context-menu').removeClass('active');
 
         fileElement.classList.add('selected');
-        await file.loadInfo(true);
+        await file.loadInfo(true); // Reload file info to show in the file information section
         selectFiles([file.name], file.path);
 
         // Prevent further propagation of the event.
