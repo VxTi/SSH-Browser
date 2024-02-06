@@ -119,7 +119,7 @@ ipcMain.on('current-session', (event) => {
     event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
 })
 
-ipcMain.handle('cmd', async (_, cwd, command) => {
+/*ipcMain.handle('cmd', async (_, cwd, command) => {
     return new Promise(resolve => {
         if (sshConnected()) {
             connection.ssh.execCommand(command, { cwd: cwd })
@@ -127,7 +127,7 @@ ipcMain.handle('cmd', async (_, cwd, command) => {
                 .catch(e => resolve(e));
         } else resolve('Not connected');
     })
-})
+})*/
 
 ipcMain.on('log', (_, args) => console.log(args));
 
@@ -320,16 +320,25 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
         })
             .then(ssh => {
                 storeSession(connection); // store the session in sessions.json
-                ssh.withShell((err, stream) => {
-                    if (err) return reject(err);
-                    stream.on('data', data => {
-                        mainWindow.webContents.send('ssh-output', data.toString());
-                    }).stderr.on('data', data => {
-                        mainWindow.webContents.send('ssh-output', data.toString());
-                    })
 
-                })
+                ssh.requestShell({term: process.env.TERM || 'vt100'})
+                    .then((stream) => {
+                        stream.on('data', data => {
+                            console.log(`Received[${data}]`)
+                            mainWindow.webContents.send('message-received', data.toString());
+                        }).stderr.on('data', data => {
+                            mainWindow.webContents.send('message-received', data.toString());
+                        });
+                        ipcMain.handle('cmd', async (_, cwd, command) => {
+                            console.log(`Sent[${command.replaceAll('\n', ' ')}]`)
+                            stream.pause();
+                            stream.write(command + '\r\n');
+                            stream.resume();
+                        })
+                    })
+                    .catch(e => console.log("An error occurred whilst requesting shell", e))
                 resolve();
+
             })
             .catch(err => reject(err));
     })

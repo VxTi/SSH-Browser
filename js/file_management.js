@@ -8,17 +8,9 @@ let currentUser = undefined
 let navigationHistory = [];
 let navigationHistoryIndex = 0;
 
-/**
- * History of the terminal commands.
- */
-let terminalHistory = [];
-let terminalHistoryIndex = 0;
-
 $(document).ready(() => {
     addLoadingSpinner($('.process-loading')[0]);
     $('#back-main').on('click', () => window.location.href = '../index.html');
-
-    let terminalDir = '~';
 
     // Resizing of the file information section
     $('.file-information-resize').on('dblclick', _ => $('.file-information').toggleClass('hidden'))
@@ -28,25 +20,6 @@ $(document).ready(() => {
         $('#terminal').toggleClass('hidden');
         event.preventDefault();
         event.stopImmediatePropagation();
-    })
-
-    // When user presses enter, send the command
-    $('#terminal-input').on('keydown', (e) => {
-        e.stopImmediatePropagation();
-        // Check if the user pressed the Enter key and the input is not empty
-        if (e.key === 'Enter' && e.target.value.trim() !== '') {
-            terminalHistory.push(e.target.value);
-            terminalHistoryIndex = terminalHistory.length - 1;
-            terminalPrint('> ' + e.target.value);
-            window.terminal.execute(terminalDir, e.target.value)
-                .then(result => terminalPrint(result))
-                .catch(error => terminalPrint(error, '#ff0000'));
-            e.target.value = '';
-        } else if (e.key === 'ArrowUp') {
-            e.target.value = terminalHistory[Math.max(0, --terminalHistoryIndex)] || '';
-        } else if (e.key === 'ArrowDown') {
-            e.target.value = terminalHistory[Math.min(terminalHistory.length - 1, ++terminalHistoryIndex)] || '';
-        } else terminalHistoryIndex = terminalHistory.length - 1;
     })
 
     busy(true);
@@ -83,7 +56,20 @@ function loadFileViewer() {
     if (currentUser === undefined)
         currentUser = window.ssh.sessions.currentSession().username;
 
-    let pathSegments = currentDir.split('/') || [];
+    // If for whatever reason currentDir is not defined, return to home menu.
+    if (currentDir === undefined) {
+        window.location.href = '../index.html';
+        return;
+    }
+
+    // If the current directory ends with a '/', remove it.
+    // This is for formatting purposes.
+    if (currentDir.endsWith('/'))
+        currentDir = currentDir.substring(0, currentDir.length - 1);
+
+    let pathSegments = currentDir.split('/') || [''];
+
+    console.log(pathSegments)
 
     // Remove all previous segments from previous queries
 
@@ -100,7 +86,12 @@ function loadFileViewer() {
         let directory = document.createElement('div');
         directory.classList.add('path-separator');
         directory.dataset.path = pathSegments.slice(0, i + 1).join('/');
-        directory.innerHTML = seg;
+        directory.innerText = seg;
+        if (seg.length === 0) {
+            directory.dataset.path = '/';
+            directory.innerText = 'root';
+        }
+
 
         directory.addEventListener('click', () => navigateTo(directory.dataset.path))
         pathContainer.appendChild(directory);
@@ -359,6 +350,7 @@ function navigateTo(target) {
         // Convert to viable path
         target = target.path + (target.directory ? '/' + target.name : '')
     }
+    console.log('Attempting to navigate to', target);
 
     // If we're already on there, don't proceed.
     if (target === currentDir)
@@ -504,15 +496,6 @@ async function checkFsDifferences() {
 }
 
 
-function terminalPrint(message, color = '#ffffff') {
-    if (!Array.isArray(message))
-        message = message.split('\n');
-    let content = $('.terminal-content')
-    message.forEach(line => {
-        content.append(`<div class="terminal-output" style="color: ${color}">${line}</div>`);
-    })
-}
-
 /**
  * Event handling of file transfer progress.
  * This updates the progress bar in the file viewer accordingly.
@@ -527,8 +510,4 @@ window.events.on('file-download-progress', (status) => {
     let fileTransferElement = $('.file-download-progress');
     fileTransferElement.css('--progress', status.progress)
     fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
-})
-
-window.events.on('message-received', (message) => {
-    terminalPrint(message);
 })
