@@ -6,13 +6,15 @@ const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 
-/** List of open connections (Future support)
+/** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
 let connections = [];
 let currentConnection = 0;
 
 let sessionsPath = path.join(__dirname, 'sessions.json');
 let mainWindow = null;
+
+let log;
 
 let _clog = console.log;
 console.log = function(...args) { _clog(`${new Date().toLocaleDateString('en-UK')} |`, ...args); }
@@ -163,7 +165,7 @@ async function viewStartingDir() {
 async function renameFile(directory, file, newName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
+            ssh().execCommand(`cd ${directory} && mv ${file} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -275,14 +277,14 @@ async function uploadFiles(directory, files) {
  * @returns {boolean} Whether or not the connection is active.
  */
 function sshConnected() {
-    return sshCurrent()?.ssh.isConnected() || false;
+    return ssh()?.isConnected() || false;
 }
 
 function sshCurrent() {
     return connections[currentConnection];
 }
 
-function ssh() { return sshCurrent().ssh; }
+function ssh() { return sshCurrent()?.ssh; }
 
 /**
  * Method for connecting to a remote server, given the provided arguments.
@@ -302,11 +304,11 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
         // trying to connect with the same credentials, resolve the promise.
         if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port) {
             currentConnection = connections.indexOf(cur);
-            console.log('Connection already active');
+            log && log('Connection already active');
             return resolve();
         }
 
-        console.log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+        log && log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
 
         let connection = { ssh: new NodeSSH(), port: port, host: host, username: username, password: password, privateKey: privateKey, passphrase: passphrase }
 
@@ -326,7 +328,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
             .then(ssh => {
                 storeSession(connection); // store the session in sessions.json
 
-                console.log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+                log && log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
 
                 connections.push(connection);
                 currentConnection = connections.length - 1;
@@ -339,7 +341,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
                             mainWindow.webContents.send('message-received', data.toString());
                         });
                         ipcMain.removeHandler('cmd');
-                        ipcMain.handle('cmd', async (_, cwd, command) => {
+                        ipcMain.handle('cmd', async (_, command) => {
                             stream.pause();
                             stream.write(command + '\n');
                             stream.resume();

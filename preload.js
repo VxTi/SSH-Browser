@@ -67,7 +67,7 @@ contextBridge.exposeInMainWorld('events', {
 });
 
 contextBridge.exposeInMainWorld('terminal', {
-    execute: async (cwd, command) => ipcRenderer.invoke('cmd', cwd, command)
+    execute: async (command) => ipcRenderer.invoke('cmd', command)
 });
 
 /**

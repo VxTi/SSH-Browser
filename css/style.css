@@ -86,6 +86,10 @@ body {
     border-radius: 5px;
 }
 
+.no-drag {
+    -webkit-user-drag: none;
+}
+
 .navigator {
     width: 100vw;
     height: var(--navigator-height);

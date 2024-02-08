@@ -1,38 +1,48 @@
 .terminal {
-    --terminal-height: 200px;
     --terminal-input-height: 12px;
+    --width: 50vw;
+    --height: 200px;
     display: flex;
     position: absolute;
     flex-flow: column nowrap;
-    top: calc(100vh - var(--file-navigator-height) - var(--terminal-height));
     left: 0;
-    height: var(--terminal-height);
-    width: 50vw;
+    top: calc(100vh - var(--height) - var(--file-navigator-height));
+    height: var(--height);
+    width: var(--width);
     border-radius: 5px;
     background-color: var(--theme-1);
-    gap: 0;
-    transition: top 0.5s;
     z-index: 100;
+    -webkit-user-drag: none;
 }
 
-.terminal-toggle-view {
+.terminal-resize-vertical {
     position: absolute;
     width: 100%;
     height: 5px;
     border-top: 1px solid transparent;
 }
 
-.terminal-toggle-view:hover {
-    border-top-color: var(--container-resize-color);
+.terminal-resize-horizontal {
+    position: absolute;
+    width: 5px;
+    height: 100%;
+    border-left: 1px solid transparent;
+    right: 0;
 }
 
-.terminal.hidden > .terminal-toggle-view { cursor: n-resize; }
+.terminal-resize-horizontal:hover { border-left-color: var(--container-resize-color); }
+.terminal-resize-vertical:hover { border-top-color: var(--container-resize-color); }
 
-.terminal:not(.hidden) > .terminal-toggle-view { cursor: s-resize; }
+.terminal-resize-vertical { cursor: ns-resize; }
+.terminal-resize-horizontal { cursor: ew-resize; }
+
+.terminal-resize-horizontal:hover + .terminal-resize-vertical { cursor: nwse-resize; }
 
 .terminal.hidden {
     display: block;
-    top: calc(100vh - var(--file-navigator-height) - 5px);
+    --width: 20px;
+    --height: 20px;
+    background-color: white;
 }
 
 /* Styling for a line of text in the terminal */
@@ -47,7 +57,7 @@
 /* The container for output */
 .terminal-content {
     grid-area: a;
-    height: calc(var(--terminal-height) - var(--terminal-input-height));
+    height: calc(var(--height) - var(--terminal-input-height));
     margin: 10px;
     display: flex;
     flex-flow: column nowrap;

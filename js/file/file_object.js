@@ -83,7 +83,7 @@ class File {
      * Getter for isDirectory.
      * @returns {boolean}
      */
-    get directory() { return this.name.indexOf('.') < 0; }
+    get directory() { return this.#loaded ? this.#permissions.permissions.charAt(0) === 'd' : this.name.indexOf('.') < 0; }
 
     /**
      * Getter for whether the file info has loaded.

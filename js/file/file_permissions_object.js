@@ -39,7 +39,7 @@ class FilePermissions {
 
     /**
      * Returns the string representation of the permissions.
-     * @param {string} accessor Who to check the permissions for.
+     * @param {'user' | 'group' | 'other'} accessor Who to check the permissions for.
      *  This can be one of the following: 'user', 'group', 'other'
      * @returns {string} The string representation of the permissions.
      */

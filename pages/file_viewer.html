@@ -47,7 +47,7 @@
             <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
 
             <!-- Container displaying file contents -->
-            <div class="file-container scrollbar"></div>
+            <div class="file-container scrollbar no-drag"></div>
 
             <div class="file-information hidden">
                 <div class="file-information-resize" title="Double-click to hide"></div> <!-- Resize bar -->
@@ -77,7 +77,8 @@
             </div>
         </div>
         <div class="terminal container" id="terminal">
-            <div class="terminal-toggle-view" title="Double click to show/hide"></div>
+            <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
+            <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
             <div class="terminal-content scrollbar"></div>
             <input type="text" name="terminal-input" id="terminal-input" class="terminal-input input-box user-interact" placeholder="Enter command">
         </div>
@@ -89,9 +90,7 @@
                 </div>
             </div>
             <div class="process-loading"></div>
-            <div class="progress-bars">
-
-            </div>
+            <div class="progress-bars"></div>
         </div>
     </div>
 </body>

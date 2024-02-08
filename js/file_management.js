@@ -1,4 +1,4 @@
-let busy = (state) => $('.process-loading').css('visibility', state ? 'visible' : 'hidden');
+let busy = (state) => {$('.process-loading').css('visibility', state ? 'visible' : 'hidden')};
 
 let currentUser = undefined
 
@@ -8,6 +8,9 @@ let currentUser = undefined
 let navigationHistory = [];
 let navigationHistoryIndex = 0;
 
+// Which element the context menu is targeting
+let ctxTarget = [];
+
 $(document).ready(() => {
     addLoadingSpinner($('.process-loading')[0]);
     $('#back-main').on('click', () => window.location.href = '../index.html');
@@ -15,17 +18,10 @@ $(document).ready(() => {
     // Resizing of the file information section
     $('.file-information-resize').on('dblclick', _ => $('.file-information').toggleClass('hidden'))
 
-    // Hiding and showing the terminal console
-    $('.terminal-toggle-view').on('dblclick', (event) => {
-        $('#terminal').toggleClass('hidden');
-        event.preventDefault();
-        event.stopImmediatePropagation();
-    })
-
     busy(true);
     window.ssh.startingDir()
         .then(res => {
-            currentDir = terminalDir = res.path;
+            currentDir = res.path;
             storeFiles(res.files, res.path);
             loadFileViewer();
         })
@@ -37,22 +33,15 @@ $(document).ready(() => {
 
     setInterval(checkFsDifferences, 3000);
 
-    // Context menu functionality
-    $('#ctx-download').on('click', () => {
-        let selected = document.querySelector('.file.selected');
-        if (selected)
-            window.ssh.downloadFile(selected.dataset.path, selected.dataset.name);
-    })
     // When the user clicks on the screen outside a file element, hide the context menu.
     $(document).on('click', _ => $('.context-menu').removeClass('active'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
-    $(document).on('dblclick', () => {
-        $('.file-information').addClass('hidden');
-        $('.file.selected').removeClass('selected');
-    })
+    $(document).on('dblclick', () => $('.file.selected').removeClass('selected'))
 
-    /** Context menu - Right-clicking*/
+    /** - - - - - - - - - - - - - - - **
+     | Context menu (Right-clicking)   |
+     ** - - - - - - - - - - - - - - - **/
     $(document).on('contextmenu', async (event) => {
         if (!document.hasFocus())
             return;
@@ -68,10 +57,13 @@ $(document).ready(() => {
         /** @type {HTMLElement[]} */
         let enabled = [];
 
+        ctxTarget = [target];
+
         if (isFile) {
             target.classList.add('selected');
+            ctxTarget = [...document.querySelectorAll('.file.selected')];
             enabled.push(
-                ...['copy', 'cut', 'delete', 'rename', 'download']
+                ...['info', 'copy', 'cut', 'delete', 'rename', 'download', 'open']
                     .map(e => document.getElementById('ctx-' + e))
             );
         }
@@ -104,6 +96,27 @@ $(document).ready(() => {
         if (enabled.length > 0)
             menu.classList.add('active');
     });
+
+    /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
+
+    // Downloading a selected file
+    $('#ctx-download').on('click', () => {
+        // Check if there's anything selected
+        if (ctxTarget.length > 0) {
+            // Filter out all elements that don't have a path and name (non-files)
+            ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
+            Promise.all(ctxTarget.map(e => window.ssh.downloadFile(e.dataset.path, e.dataset.name)))
+                .then(_ => console.log('Downloaded file'))
+                .catch(_ => console.log('Error occurred whilst attempting to download file', _));
+        }
+    })
+
+    $('#ctx-info').on('click', () => {
+        if (ctxTarget.length > 0) {
+            ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
+            showPreview(ctxTarget.map(e => e.dataset.name), ctxTarget[0].dataset.path);
+        }
+    })
 });
 
 /**
@@ -130,6 +143,8 @@ function loadFileViewer() {
     let pathContainer = document.querySelector('.path-section');
 
     let pathSegments = currentDir.split('/') || [''];
+    if (pathSegments[pathSegments.length - 1] === '')
+        pathSegments.pop();
 
     // Add all the path segments to the path container
     // These are just directories
@@ -140,13 +155,11 @@ function loadFileViewer() {
         let directory = document.createElement('div');
         directory.classList.add('path-separator');
 
-        // We'd like to set the 'dataset.path' to the current path.
-        // If we're on the root folder, e.g. currentDir == '/', pathSegments = ['', ''].
-        // We want to turn the path into just '/'.
         directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
         directory.dataset.name = seg;
         directory.innerText = seg;
-        console.log(seg);
+        if (i === 0)
+            directory.innerText = 'root';
 
         directory.addEventListener('click', () => navigateTo(directory.dataset.path))
 
@@ -189,8 +202,7 @@ function loadFileViewer() {
     /**
      * Functionality for the 'add file' button in the action bar
      */
-    document.getElementById('action-add-file')
-        .onclick = () => {
+    document.getElementById('action-add-file').onclick = () => {
 
             busy(true);
             window.ssh.selectFiles()
@@ -205,8 +217,7 @@ function loadFileViewer() {
     /**
      * Functionality for the 'delete file' button in the action bar
      */
-    document.getElementById('action-delete-file')
-        .onclick = () => {
+    document.getElementById('action-delete-file').onclick = () => {
         let selected = [...document.querySelectorAll('.file.selected')];
         if (selected.length === 0)
             return;
@@ -270,7 +281,6 @@ function loadFileViewer() {
             next.classList.add('selected');
             let files = [];
             document.querySelectorAll('.file.selected').forEach(e => files.push(e.dataset.name))
-            selectFiles(files);
         }
     });
     // Add drag and drop functionality
@@ -285,6 +295,9 @@ function loadFileViewer() {
         event.preventDefault();
         event.stopImmediatePropagation();
 
+        if (event.dataTransfer.files.length === 0)
+            return;
+
         /** @type {string[]} */
         let pathArr = [];
         for (const f of event.dataTransfer.files)
@@ -294,7 +307,8 @@ function loadFileViewer() {
         window.ssh.uploadFiles(currentDir, pathArr)
             .then(_ => {
                 // get current files in currentDir, map paths to file objects and add to fileCache
-                getFiles(currentDir).push(...pathArr.map(p => new File(p.substring(p.lastIndexOf('/') + 1), p)));
+                getFiles(currentDir).push(...pathArr.map(p =>
+                    new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements(currentDir, true);
             })
             .finally(_ => busy(false));
@@ -357,8 +371,12 @@ function navigateTo(target) {
             storeFiles(result, target);
             currentDir = target;
             loadFileViewer(); // reload the file viewer
+            window.terminal.execute(`cd ${target}`) // Change directory in the terminal
         })
-        .catch(_ => console.log('Error occurred whilst attempting to navigate', _))
+        .catch(_ => {
+            window.logger.log('Error occurred whilst attempting to navigate', _)
+            window.location.href = '../index.html';
+        })
         .finally(_ => {busy(false)});
 }
 
@@ -408,8 +426,6 @@ function createFileElement(file) {
         $('.context-menu').removeClass('active');
 
         fileElement.classList.add('selected');
-        await file.loadInfo(true); // Reload file info to show in the file information section
-        selectFiles([file.name], file.path);
 
         // Prevent further propagation of the event.
         event.preventDefault();
@@ -424,44 +440,38 @@ function createFileElement(file) {
  * @param {string[]} files The file(s) to select, separated by a newline.
  * This also shows all information in the 'file-information' section.
  */
-function selectFiles(files, directory = currentDir) {
-
-    $('.file-information').toggleClass('hidden', files.length <= 0);
+function showPreview(files, directory = currentDir) {
 
     if (files.length === 0)
         return;
 
-    if (files.length > 1) {
-        // TODO: Add implementation for multiple files
-    } else { // Single file
+    let preview = document.querySelector('.file-info-preview');
+    $('.file-information').removeClass('hidden');
 
-        let preview = document.querySelector('.file-info-preview');
+    // TODO: Fix this
+    // Remove all previous classes and add the correct one
+    preview.classList.forEach(c => preview.classList.remove(c));
+    preview.classList.add('file-info-preview');
+    preview.classList.add(getFileThumbnail(files[0]));
 
-        // TODO: Fix this
-        // Remove all previous classes and add the correct one
-        preview.classList.forEach(c => preview.classList.remove(c));
-        preview.classList.add('file-info-preview');
-        preview.classList.add(getFileThumbnail(files[0]));
+    (async () => {
+        // If there's only one file, we can show all information about it.
+        let file = getFile(directory, files[0]);
+        if (!file.loaded) {
+            busy(true);
+            await file.loadInfo().finally(_ => {busy(false)}); // Load file info
+        }
 
-        (async () => {
-            // If there's only one file, we can show all information about it.
-            let file = getFile(directory, files[0]);
-            if (!file.loaded) {
-                busy(true);
-                await file.loadInfo().finally(_ => {busy(false)}); // Load file info
-            }
+        /** Show file info **/
+        $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
+        $('#file-info-perm-group').text(file.permissions.toString('group'));
+        $('#file-info-perm-other').text(file.permissions.toString('other'));
 
-            /** Show file info **/
-            $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
-            $('#file-info-perm-group').text(file.permissions.toString('group'));
-            $('#file-info-perm-other').text(file.permissions.toString('other'));
-
-            $('#file-info-title').text(file.name);
-            $('#file-info-size').text(file.fileSizeString);
-            $('#file-info-owner').text(file?.owner || 'Unknown');
-            $('#file-info-modified').text(file.lastModified || 'Unknown');
-        })();
-    }
+        $('#file-info-title').text(file.name);
+        $('#file-info-size').text(file.fileSizeString);
+        $('#file-info-owner').text(file?.owner || 'Unknown');
+        $('#file-info-modified').text(file.lastModified || 'Unknown');
+    })();
 }
 
 /**

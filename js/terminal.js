@@ -2,7 +2,9 @@
  | Here lies the implementation of inner terminal. |
  ** - - - - - - - - - - - - - - - - - - - - - - - **/
 
-const logging = {}
+/**
+ * TODO - Add ANSI escape code support.
+ */
 
 /**
  * History of the terminal commands.
@@ -10,12 +12,38 @@ const logging = {}
 let terminalHistory = [];
 let terminalHistoryIndex = 0;
 
+const minWidth = '20vw';
+const minHeight = '100px'
+const maxWidth = '80vw';
+const maxHeight = '80vh';
+
 let terminalContent;
-let terminalDir = '~';
 
 $(document).ready(() => {
 
     terminalContent = document.querySelector('.terminal-content');
+
+    // Implementation of resizing of the terminal.
+    $('.terminal-resize-horizontal')
+        .on('mousedown', e => e.target.classList.add('rs-h'))
+        .on('dblclick', _ => {
+            $('.terminal').toggleClass('hidden')
+        })
+    $('.terminal-resize-vertical')
+        .on('mousedown', e => e.target.classList.add('rs-v'))
+        .on('dblclick', _ => {
+            $('.terminal').toggleClass('hidden')
+        })
+
+    $(document).on('mousemove', e => {
+        if ($('.rs-h').length > 0)
+            $('.terminal').css('--width', `calc(min(max(${minWidth}, ${e.clientX}px), ${maxWidth}))`);
+
+        if ($('.rs-v').length > 0)
+            $('.terminal').css('--height', `calc(min(max(${minHeight}, ${window.innerHeight - e.clientY}px), ${maxHeight}))`);
+    })
+
+    $(document).on('mouseup', e => $('.rs-h, .rs-v').removeClass('rs-h rs-v'))
 
     $('#terminal-input').on('keydown', (e) => {
         e.stopImmediatePropagation();
@@ -27,7 +55,7 @@ $(document).ready(() => {
                     return;
                 terminalHistory.push(e.target.value);
                 terminalHistoryIndex = terminalHistory.length - 1;
-                window.terminal.execute(terminalDir, e.target.value);
+                window.terminal.execute(e.target.value);
                 e.target.value = '';
                 break;
             case 'ArrowUp':
@@ -38,8 +66,7 @@ $(document).ready(() => {
                 break;
             default:
                 if (e.ctrlKey) {
-                    logging && window.logger.log("Sending escape key");
-                    window.terminal.execute(terminalDir, `\x1b${e.target.value}`)
+                    window.terminal.execute(`\x1b${e.target.value}`)
                     return;
                 }
                 terminalHistoryIndex = terminalHistory.length - 1;
@@ -60,7 +87,10 @@ function println(messages, color = undefined) {
 
     messages.forEach(messageContent => {
         let messageElement = document.createElement('div');
-        messageElement.innerText = messageContent;
+        // TODO: Add support for ANSI escape codes.
+
+        messageElement.innerHTML = messageContent;
+
         messageElement.classList.add('terminal-output')
         if (typeof color !== 'undefined')
             messageElement.style.color = color;
