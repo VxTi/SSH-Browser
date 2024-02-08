@@ -133,7 +133,7 @@ ipcMain.on('log', (_, args) => console.log(args));
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd ${directory} && mkdir ${name}`)
+            ssh().execCommand(`cd ${directory} && mkdir '${name}'`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');

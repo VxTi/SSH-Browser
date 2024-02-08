@@ -51,7 +51,6 @@ $(document).ready(() => {
         // Select potential file
         let target = event.target.parentElement || event.target;
         let isFile = target.classList.contains('file');
-        let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
@@ -63,14 +62,10 @@ $(document).ready(() => {
             target.classList.add('selected');
             ctxTarget = [...document.querySelectorAll('.file.selected')];
             enabled.push(
-                ...['info', 'copy', 'cut', 'delete', 'rename', 'download', 'open']
+                ...['info', 'delete', 'rename', 'download']
                     .map(e => document.getElementById('ctx-' + e))
             );
         }
-
-        // If there's something in the clipboard, we enable the 'paste' action.
-        if (hasClipboard)
-            enabled.push(document.getElementById('ctx-paste'));
 
         // Disable all context actions first.
         $('.context-menu-item').addClass('disabled');
@@ -83,11 +78,10 @@ $(document).ready(() => {
             items.forEach(ctxMenuItem => {
                 let element = document.getElementById('ctx-' + ctxMenuItem.trim());
 
-                if (element)
+                if (element !== null)
                     enabled.push(element);
             })
         }
-
         enabled.forEach(e => e.classList.remove('disabled'));
 
         let menu = document.querySelector('.context-menu');
@@ -111,69 +105,28 @@ $(document).ready(() => {
         }
     })
 
+    const mkdir = () => {
+        console.log("creating directory")
+        let files = getFiles(currentDir);
+        let name = 'New Directory';
+        for (let i = 1; files.find(f => f.name === name); i++)
+            name = `New Directory (${i})`;
+
+        window.ssh.createDirectory(currentDir, name)
+            .catch(_ => console.log('Error occurred whilst attempting to create new directory', _));
+    }
+
+    // Viewing the information of a selected file
     $('#ctx-info').on('click', () => {
         if (ctxTarget.length > 0) {
             ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
             showPreview(ctxTarget.map(e => e.dataset.name), ctxTarget[0].dataset.path);
         }
     })
-});
 
-/**
- * Loading in the functionality of the file viewer.
- * All files that are loaded are cached in the 'fileCache' object.
- * These are then converted into elements visible on the screen.
- * All previously visible files will be removed upon calling this function.
- */
-function loadFileViewer() {
+    $('#ctx-new-dir').on('click', () => mkdir());
 
-    if (currentUser === undefined)
-        currentUser = window.ssh.sessions.currentSession().username;
-
-    // If for whatever reason currentDir is not defined, return to home menu.
-    if (currentDir === undefined) {
-        window.location.href = '../index.html';
-        return;
-    }
-
-    // Remove all previous segments from previous queries
-
-    $('.path-separator, .path-arrow, .path-separator, .file').remove();
-
-    let pathContainer = document.querySelector('.path-section');
-
-    let pathSegments = currentDir.split('/') || [''];
-    if (pathSegments[pathSegments.length - 1] === '')
-        pathSegments.pop();
-
-    // Add all the path segments to the path container
-    // These are just directories
-    for (let i = 0; i < pathSegments.length; i++) {
-        let seg = pathSegments[i];
-
-        /** Path segment element on the bottom of the page **/
-        let directory = document.createElement('div');
-        directory.classList.add('path-separator');
-
-        directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
-        directory.dataset.name = seg;
-        directory.innerText = seg;
-        if (i === 0)
-            directory.innerText = 'root';
-
-        directory.addEventListener('click', () => navigateTo(directory.dataset.path))
-
-        /** Directory separator arrow **/
-        let arrow = document.createElement('div');
-        arrow.classList.add('path-arrow');
-
-        pathContainer.appendChild(arrow);
-        pathContainer.appendChild(directory);
-    }
-
-    // Clear all previously shown files and show all
-    // files in the current working directory.
-    loadFileElements(currentDir, true);
+    $('#action-add-dir').on('click', () => mkdir());
 
     // Add file filtering functionality
     let filter = $('#file-filter');
@@ -204,14 +157,14 @@ function loadFileViewer() {
      */
     document.getElementById('action-add-file').onclick = () => {
 
-            busy(true);
-            window.ssh.selectFiles()
-                .then(files => {
-                    if (files.length < 1)
-                        return;
-                    window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
-                        .finally(_ => {busy(false)});
-                })
+        busy(true);
+        window.ssh.selectFiles()
+            .then(files => {
+                if (files.length < 1)
+                    return;
+                window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
+                    .finally(_ => {busy(false)});
+            })
     };
 
     /**
@@ -311,8 +264,65 @@ function loadFileViewer() {
                     new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements(currentDir, true);
             })
-            .finally(_ => busy(false));
+            .finally(_ => {busy(false)});
     });
+});
+
+/**
+ * Loading in the functionality of the file viewer.
+ * All files that are loaded are cached in the 'fileCache' object.
+ * These are then converted into elements visible on the screen.
+ * All previously visible files will be removed upon calling this function.
+ */
+function loadFileViewer() {
+
+    if (currentUser === undefined)
+        currentUser = window.ssh.sessions.currentSession().username;
+
+    // If for whatever reason currentDir is not defined, return to home menu.
+    if (currentDir === undefined) {
+        window.location.href = '../index.html';
+        return;
+    }
+
+    // Remove all previous segments from previous queries
+
+    $('.path-separator, .path-arrow, .path-separator, .file').remove();
+
+    let pathContainer = document.querySelector('.path-section');
+
+    let pathSegments = currentDir.split('/') || [''];
+    if (pathSegments[pathSegments.length - 1] === '')
+        pathSegments.pop();
+
+    // Add all the path segments to the path container
+    // These are just directories
+    for (let i = 0; i < pathSegments.length; i++) {
+        let seg = pathSegments[i];
+
+        /** Path segment element on the bottom of the page **/
+        let directory = document.createElement('div');
+        directory.classList.add('path-separator');
+
+        directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
+        directory.dataset.name = seg;
+        directory.innerText = seg;
+        if (i === 0)
+            directory.innerText = 'root';
+
+        directory.addEventListener('click', () => navigateTo(directory.dataset.path))
+
+        /** Directory separator arrow **/
+        let arrow = document.createElement('div');
+        arrow.classList.add('path-arrow');
+
+        pathContainer.appendChild(arrow);
+        pathContainer.appendChild(directory);
+    }
+
+    // Clear all previously shown files and show all
+    // files in the current working directory.
+    loadFileElements(currentDir, true);
 }
 
 /**
@@ -326,10 +336,8 @@ function loadFileElements(directory = currentDir, clearOld = true) {
 
     let fileContainer = document.querySelector('.file-container');
 
-    let files = getFiles(directory);
-
     // Add all files to the file container
-    files.forEach(file => fileContainer.appendChild(createFileElement(file)));
+    getFiles(directory).forEach(file => fileContainer.appendChild(createFileElement(file)));
 }
 
 /**
@@ -357,7 +365,6 @@ function navigateTo(target) {
         // Convert to viable path
         target = target.path + (target.directory ? '/' + target.name : '')
     }
-    console.log('Attempting to navigate to', target);
 
     // If we're already on there, don't proceed.
     if (target === currentDir)
@@ -371,7 +378,7 @@ function navigateTo(target) {
             storeFiles(result, target);
             currentDir = target;
             loadFileViewer(); // reload the file viewer
-            window.terminal.execute(`cd ${target}`) // Change directory in the terminal
+            window.terminal.execute(`cd '${target}'`) // Change directory in the terminal
         })
         .catch(_ => {
             window.logger.log('Error occurred whilst attempting to navigate', _)
@@ -488,11 +495,11 @@ async function checkFsDifferences() {
     window.ssh.listFiles(currentDir)
         .then(result => result.split('\n'))
         .then(serverFiles => {
+            serverFiles = serverFiles.filter(f => f.length > 0);
             // Compare files, if there's any difference, update the file viewer
             if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => file.name !== serverFiles[i])) {
                 storeFiles(serverFiles, currentDir, true);
                 loadFileViewer();
-                console.log('Received incoming changes');
             }
         }) // TODO: Handle errors
         .catch(_ => console.log(_));
@@ -506,7 +513,6 @@ async function checkFsDifferences() {
  * @param {{type: string, progress: number, finished: boolean}} status The status of the process
  */
 window.events.on('process-status', (status) => {
-    console.log('Received process status', status);
 
     // Check whether the provided argument has all the necessary properties.
     if (status.hasOwnProperty('type') && typeof status.type === 'string' &&

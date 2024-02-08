@@ -81,7 +81,6 @@ $(document).ready(() => {
  * @param {string} color The color to give the message. Default is white.
  */
 function println(messages, color = undefined) {
-    console.log("Received");
     if (!Array.isArray(messages))
         messages = messages.split('\n');
 

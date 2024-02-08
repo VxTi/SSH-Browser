@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld('ssh',  {
         return ipcRenderer.invoke('delete-file', directory, file)
     },
 
+    createDirectory: async (directory, name) => {
+        return ipcRenderer.invoke('create-directory', directory, name)
+    },
+
     /** @param {string} absolutePath
      * @param {string} fileName
      */
