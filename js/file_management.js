@@ -496,6 +496,7 @@ async function checkFsDifferences() {
  * @param {{type: string, progress: number, finished: boolean}} status The status of the process
  */
 window.events.on('process-status', (status) => {
+    console.log('Received process status', status);
 
     // Check whether the provided argument has all the necessary properties.
     if (status.hasOwnProperty('type') && typeof status.type === 'string' &&
@@ -503,10 +504,10 @@ window.events.on('process-status', (status) => {
         status.hasOwnProperty('finished') && typeof status.finished === 'boolean') {
 
         // Get the target element
-        let target = document.getElementById(`#pgb-${status.type}`);
+        let target = document.getElementById(`pgb-${status.type}`);
 
         // If the target element does not exist, we create it.
-        if (target.length == null && !status.finished) {
+        if (target == null && !status.finished) {
 
             target = document.createElement('div');
             target.classList.add('progress-bar');

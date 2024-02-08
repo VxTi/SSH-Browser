@@ -6,13 +6,16 @@ const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 
-let connection = null;
+/** List of open connections (Future support)
+ * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
+let connections = [];
+let currentConnection = 0;
 
 let sessionsPath = path.join(__dirname, 'sessions.json');
 let mainWindow = null;
 
 let _clog = console.log;
-console.log = function(...args) { _clog(new Date().toLocaleDateString('nl-NL'), ...args); }
+console.log = function(...args) { _clog(`${new Date().toLocaleDateString('en-UK')} |`, ...args); }
 
 const downloadPath = app.getPath('downloads');
 
@@ -33,6 +36,7 @@ function createWindow() {
         transparent: true,
         titleText: 'SSH Client',
         titleBarOverlay: false,
+        icon: './assets/app_icon.png',
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true,
@@ -42,8 +46,7 @@ function createWindow() {
     });
 
     // Show the window buttons on macOS
-    if (OS.isMac)
-        window.setWindowButtonVisibility(true);
+    if (OS.isMac) window.setWindowButtonVisibility(true);
 
     window.loadFile('./index.html')
         .catch((err) => console.error(err));
@@ -53,7 +56,7 @@ function createWindow() {
 app.whenReady().then(() => {
     mainWindow = createWindow()
     mainWindow.setMinimumSize(600, 500);
-    app.on('activate', function () {
+    app.on('activate',  _ => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
     // Check for the existence of the sessions file.
@@ -79,9 +82,6 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) => downloadFile(
 
 /** Event handler for listing files on the remote server **/
 ipcMain.handle('list-files', async (_, directory) => listFiles(directory));
-
-/** Event handler for listing the current working directory on the remote server **/
-ipcMain.handle('list-directory', async () => listDirectory());
 
 /** Event handler for deleting files on the remote server **/
 ipcMain.handle('delete-file', async (_, directory, fileName) => deleteFile(directory, fileName));
@@ -116,18 +116,9 @@ ipcMain.on('window-resize', (_, width, height) => mainWindow.setSize(width, heig
 ipcMain.on('window-minimize', _ => mainWindow.minimize());
 
 ipcMain.on('current-session', (event) => {
-    event.returnValue = {username: connection.username, host: connection.host, port: connection.port};
+    if (!sshConnected()) return event.returnValue = null;
+    event.returnValue = {username: sshCurrent().username, host: sshCurrent().host, port: sshCurrent().port};
 })
-
-/*ipcMain.handle('cmd', async (_, cwd, command) => {
-    return new Promise(resolve => {
-        if (sshConnected()) {
-            connection.ssh.execCommand(command, { cwd: cwd })
-                .then(res => resolve(res.stdout))
-                .catch(e => resolve(e));
-        } else resolve('Not connected');
-    })
-})*/
 
 ipcMain.on('log', (_, args) => console.log(args));
 
@@ -140,7 +131,7 @@ ipcMain.on('log', (_, args) => console.log(args));
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand(`cd ${directory} && mkdir ${name}`)
+            ssh().execCommand(`cd ${directory} && mkdir ${name}`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -155,7 +146,7 @@ async function createDirectory(directory, name) {
 async function viewStartingDir() {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand('pwd && ls')
+            ssh().execCommand('pwd && ls')
                 .then(result => resolve({path: result.stdout.split('\n')[0], files: result.stdout.split('\n').slice(1)}))
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -172,7 +163,7 @@ async function viewStartingDir() {
 async function renameFile(directory, file, newName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
+            ssh().execCommand(`cd ~ && cd ${directory} && mv ${file} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -188,11 +179,11 @@ async function renameFile(directory, file, newName) {
 async function downloadFile(remotePath, fileName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            console.log('Downloading file: ' + remotePath + ' to ' + downloadPath)
-            connection.ssh.getFile(downloadPath + '/' + fileName, remotePath + '/' + fileName, null, {
-                step: (transferred, chunk, total) => {
-                    console.log(100 * transferred / total);
-                    mainWindow.webContents.send('file-download-progress', {progress: 100 * transferred / total, finished: transferred === total});
+            console.log('Downloading file: ' + remotePath + '/' + fileName + ' to ' + downloadPath)
+            ssh().getFile(downloadPath + '/' + fileName, remotePath + '/' + fileName, null, {
+                step: (transfer_count, chunk, total) => {
+                    mainWindow.webContents.send('process-status',
+                        {type: 'download', progress: 100 * transfer_count / total, finished: transfer_count === total});
                 }
             })
                 .then(_ => resolve())
@@ -210,7 +201,7 @@ async function downloadFile(remotePath, fileName) {
 async function getFileInfo(directory, fileName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            connection.ssh.execCommand(`cd ~ && cd ${directory} && ls -l -d '${fileName}'`)
+            ssh().execCommand(`cd ${directory} && ls -l -d '${fileName}'`)
                 .then(result => {
                     let arguments = result.stdout.split(' ');
                     resolve({
@@ -237,6 +228,13 @@ async function uploadFiles(directory, files) {
             return resolve('No files to upload');
         if (sshConnected()) {
 
+            let opt = {
+                step: (transfer_count, chunk, total) => {
+                    mainWindow.webContents.send('process-status',
+                    {type: 'upload', progress: 100 * transfer_count / total, finished: transfer_count === total});
+                }
+            }
+
             for (let i = 0; i < files.length; i++) {
                 let path = files[i];
                 // If file doesn't exist, reject
@@ -247,31 +245,24 @@ async function uploadFiles(directory, files) {
                 if (fs.lstatSync(path).isDirectory()) {
                     // Remove file from argument and call 'putDirectory' instead
                     files.splice(i, 1);
-                    return connection.ssh.putDirectory(path, directory, {
+                    /**
+                     * TODO - Compress directory and upload as a single file
+                     */
+                    ssh().putDirectory(path, directory, {
                         recursive: true,
                         concurrency: 5,
-                        transferOptions: {
-                            step: (transfer_count, chunk, total) => {
-                                mainWindow.webContents.send('file-transfer-progress',
-                                    {progress: 100 * transfer_count / total, finished: transfer_count === total});
-                            }
-                        }
+                        transferOptions: opt
                     })
                         .then(_ => resolve(true))
                         .catch(e => reject(e))
                 }
             }
 
-            connection.ssh.putFiles(files.map(path => {
+            ssh().putFiles(files.map(path => {
                 return {local: path, remote: directory + '/' + path.split('/').pop()}
             }),  {
                 concurrency: 5,
-                transferOptions: {
-                    step: (transfer_count, chunk, total) => {
-                        mainWindow.webContents.send('process-status',
-                            {type: 'upload', progress: 100 * transfer_count / total, finished: transfer_count === total});
-                    }
-                }
+                transferOptions: opt
             })
                 .then(_ => resolve(true))
                 .catch(e => reject(e))
@@ -284,9 +275,14 @@ async function uploadFiles(directory, files) {
  * @returns {boolean} Whether or not the connection is active.
  */
 function sshConnected() {
-    return connection?.ssh.isConnected() || false;
+    return sshCurrent()?.ssh.isConnected() || false;
 }
 
+function sshCurrent() {
+    return connections[currentConnection];
+}
+
+function ssh() { return sshCurrent().ssh; }
 
 /**
  * Method for connecting to a remote server, given the provided arguments.
@@ -300,10 +296,19 @@ function sshConnected() {
  */
 async function sshConnect(host, username, password, port = 22, privateKey = null, passphrase = null) {
     return new Promise((resolve, reject) => {
-        if (sshConnected() && (connection.host === host && connection.username === username && connection.port === port))
-            return resolve();
+        let cur = sshCurrent();
 
-        connection = { ssh: new NodeSSH(), port: port, host: host, username: username, password: password, privateKey: privateKey, passphrase: passphrase }
+        // If the connection is already active and one is
+        // trying to connect with the same credentials, resolve the promise.
+        if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port) {
+            currentConnection = connections.indexOf(cur);
+            console.log('Connection already active');
+            return resolve();
+        }
+
+        console.log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+
+        let connection = { ssh: new NodeSSH(), port: port, host: host, username: username, password: password, privateKey: privateKey, passphrase: passphrase }
 
         connection.ssh.connect({
             host: connection.host,
@@ -321,6 +326,11 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
             .then(ssh => {
                 storeSession(connection); // store the session in sessions.json
 
+                console.log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+
+                connections.push(connection);
+                currentConnection = connections.length - 1;
+
                 ssh.requestShell({term: process.env.TERM || 'vt100'})
                     .then((stream) => {
                         stream.on('data', data => {
@@ -328,6 +338,7 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
                         }).stderr.on('data', data => {
                             mainWindow.webContents.send('message-received', data.toString());
                         });
+                        ipcMain.removeHandler('cmd');
                         ipcMain.handle('cmd', async (_, cwd, command) => {
                             stream.pause();
                             stream.write(command + '\n');
@@ -374,21 +385,11 @@ async function listFiles(path) {
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
         if (sshConnected()) {
-            return connection.ssh.execCommand(`cd ${path} && ls`)
+            return ssh().execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => {reject(err)});
         } else reject('Not connected');
     });
-}
-
-async function listDirectory() {
-    return new Promise((resolve, reject) => {
-        if (sshConnected()) {
-            connection.ssh.execCommand('pwd')
-                .then(result => resolve(result.stdout))
-                .catch(err => {reject(err)});
-        } else reject('Not connected')
-    })
 }
 
 /**
@@ -403,7 +404,7 @@ async function deleteFile(directory, file) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
-            return connection.ssh.execCommand(`cd ${directory} && rm -r '${file}'`)
+            return ssh().execCommand(`cd ${directory} && rm -r '${file}'`)
                 .then(_ => resolve())
                 .catch(err => {reject(err)});
         } else reject('Not connected');
@@ -453,6 +454,8 @@ function storeSession(session) {
                 privateKey: session.privateKey,
                 passphrase: session.passphrase
             });
+
+            // TODO: Encrypt the data before writing it to the file.
 
             // Write back to file
             fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) => {

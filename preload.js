@@ -52,8 +52,6 @@ contextBridge.exposeInMainWorld('ssh',  {
         return ipcRenderer.invoke('rename-file', directory, file, newName)
     },
 
-    currentDirectory: async () => ipcRenderer.invoke('list-directory'),
-
     /** @param {string} directory
      *  @param {string} file */
     getFileInfo: async (directory, file) => ipcRenderer.invoke('get-file-info', directory, file),
@@ -65,7 +63,7 @@ contextBridge.exposeInMainWorld('ssh',  {
 })
 
 contextBridge.exposeInMainWorld('events', {
-    on: (event, callback) => ipcRenderer.on(event, (e, args) => callback(args))
+    on: (event, callback) => ipcRenderer.on(event, (e, ...args) => callback(...args))
 });
 
 contextBridge.exposeInMainWorld('terminal', {
