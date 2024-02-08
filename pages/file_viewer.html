@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/terminal.css">
     <link rel="stylesheet" href="../css/file_viewer.css">
-    <link rel="stylesheet" href="../css/loading_spinner.css">
     <link rel="stylesheet" href="../css/file_viewer_items.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/terminal.js"></script>
@@ -23,6 +22,7 @@
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu">
             <div class="context-menu-item" id="ctx-open">Open</div>
+            <div class="context-menu-item" id="ctx-info">Show Info</div>
             <div class="context-menu-item" id="ctx-execute">Execute</div>
             <div class="context-menu-item" id="ctx-rename">Rename</div>
             <div class="context-menu-item" id="ctx-delete">Delete</div>
@@ -89,8 +89,9 @@
                 </div>
             </div>
             <div class="process-loading"></div>
-            <div class="progress-bar file-transfer-progress"></div>
-            <div class="progress-bar file-download-progress"></div>
+            <div class="progress-bars">
+
+            </div>
         </div>
     </div>
 </body>

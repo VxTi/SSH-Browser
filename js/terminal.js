@@ -2,6 +2,7 @@
  | Here lies the implementation of inner terminal. |
  ** - - - - - - - - - - - - - - - - - - - - - - - **/
 
+const logging = {}
 
 /**
  * History of the terminal commands.
@@ -36,7 +37,8 @@ $(document).ready(() => {
                 e.target.value = terminalHistory[Math.min(terminalHistory.length - 1, ++terminalHistoryIndex)] || '';
                 break;
             default:
-                if (e.ctrl) {
+                if (e.ctrlKey) {
+                    logging && window.logger.log("Sending escape key");
                     window.terminal.execute(terminalDir, `\x1b${e.target.value}`)
                     return;
                 }

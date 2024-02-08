@@ -268,8 +268,8 @@ async function uploadFiles(directory, files) {
                 concurrency: 5,
                 transferOptions: {
                     step: (transfer_count, chunk, total) => {
-                        mainWindow.webContents.send('file-transfer-progress',
-                            {progress: 100 * transfer_count / total, finished: transfer_count === total});
+                        mainWindow.webContents.send('process-status',
+                            {type: 'upload', progress: 100 * transfer_count / total, finished: transfer_count === total});
                     }
                 }
             })
@@ -324,15 +324,13 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
                 ssh.requestShell({term: process.env.TERM || 'vt100'})
                     .then((stream) => {
                         stream.on('data', data => {
-                            console.log(`Received[${data}]`)
                             mainWindow.webContents.send('message-received', data.toString());
                         }).stderr.on('data', data => {
                             mainWindow.webContents.send('message-received', data.toString());
                         });
                         ipcMain.handle('cmd', async (_, cwd, command) => {
-                            console.log(`Sent[${command.replaceAll('\n', ' ')}]`)
                             stream.pause();
-                            stream.write(command + '\r\n');
+                            stream.write(command + '\n');
                             stream.resume();
                         })
                     })

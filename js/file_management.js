@@ -43,6 +43,67 @@ $(document).ready(() => {
         if (selected)
             window.ssh.downloadFile(selected.dataset.path, selected.dataset.name);
     })
+    // When the user clicks on the screen outside a file element, hide the context menu.
+    $(document).on('click', _ => $('.context-menu').removeClass('active'));
+
+    // When a user double-clicks on the document, we deselect all files and hide the file information.
+    $(document).on('dblclick', () => {
+        $('.file-information').addClass('hidden');
+        $('.file.selected').removeClass('selected');
+    })
+
+    /** Context menu - Right-clicking*/
+    $(document).on('contextmenu', async (event) => {
+        if (!document.hasFocus())
+            return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        // Select potential file
+        let target = event.target.parentElement || event.target;
+        let isFile = target.classList.contains('file');
+        let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
+
+        // Which items are enabled in the context menu
+        /** @type {HTMLElement[]} */
+        let enabled = [];
+
+        if (isFile) {
+            target.classList.add('selected');
+            enabled.push(
+                ...['copy', 'cut', 'delete', 'rename', 'download']
+                    .map(e => document.getElementById('ctx-' + e))
+            );
+        }
+
+        // If there's something in the clipboard, we enable the 'paste' action.
+        if (hasClipboard)
+            enabled.push(document.getElementById('ctx-paste'));
+
+        // Disable all context actions first.
+        $('.context-menu-item').addClass('disabled');
+
+
+        // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
+        // First, check whether it has a 'context-menu' dataset property.
+        if (target.dataset.hasOwnProperty('contextMenu')) {
+            let items = target.dataset.contextMenu.split(' ');
+            items.forEach(ctxMenuItem => {
+                let element = document.getElementById('ctx-' + ctxMenuItem.trim());
+
+                if (element)
+                    enabled.push(element);
+            })
+        }
+
+        enabled.forEach(e => e.classList.remove('disabled'));
+
+        let menu = document.querySelector('.context-menu');
+        menu.style.left = event.clientX + 'px';
+        menu.style.top = event.clientY + 'px';
+        if (enabled.length > 0)
+            menu.classList.add('active');
+    });
 });
 
 /**
@@ -62,20 +123,13 @@ function loadFileViewer() {
         return;
     }
 
-    // If the current directory ends with a '/', remove it.
-    // This is for formatting purposes.
-    if (currentDir.endsWith('/'))
-        currentDir = currentDir.substring(0, currentDir.length - 1);
-
-    let pathSegments = currentDir.split('/') || [''];
-
-    console.log(pathSegments)
-
     // Remove all previous segments from previous queries
 
     $('.path-separator, .path-arrow, .path-separator, .file').remove();
 
     let pathContainer = document.querySelector('.path-section');
+
+    let pathSegments = currentDir.split('/') || [''];
 
     // Add all the path segments to the path container
     // These are just directories
@@ -85,22 +139,23 @@ function loadFileViewer() {
         /** Path segment element on the bottom of the page **/
         let directory = document.createElement('div');
         directory.classList.add('path-separator');
-        directory.dataset.path = pathSegments.slice(0, i + 1).join('/');
-        directory.innerText = seg;
-        if (seg.length === 0) {
-            directory.dataset.path = '/';
-            directory.innerText = 'root';
-        }
 
+        // We'd like to set the 'dataset.path' to the current path.
+        // If we're on the root folder, e.g. currentDir == '/', pathSegments = ['', ''].
+        // We want to turn the path into just '/'.
+        directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
+        directory.dataset.name = seg;
+        directory.innerText = seg;
+        console.log(seg);
 
         directory.addEventListener('click', () => navigateTo(directory.dataset.path))
-        pathContainer.appendChild(directory);
 
         /** Directory separator arrow **/
         let arrow = document.createElement('div');
         arrow.classList.add('path-arrow');
-        arrow.innerHTML = '';
+
         pathContainer.appendChild(arrow);
+        pathContainer.appendChild(directory);
     }
 
     // Clear all previously shown files and show all
@@ -261,68 +316,6 @@ function loadFileElements(directory = currentDir, clearOld = true) {
 
     // Add all files to the file container
     files.forEach(file => fileContainer.appendChild(createFileElement(file)));
-
-    // When the user clicks on the screen outside a file element, hide the context menu.
-    $(document).on('click', _ => $('.context-menu').removeClass('active'));
-
-    // When a user double-clicks on the document, we deselect all files and hide the file information.
-    $(document).on('dblclick', () => {
-        $('.file-information').addClass('hidden');
-        $('.file.selected').removeClass('selected');
-    })
-
-    /** Context menu - Right-clicking*/
-    $(document).on('contextmenu', async (event) => {
-        if (!document.hasFocus())
-            return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        // Select potential file
-        let target = event.target.parentElement || event.target;
-        let isFile = target.classList.contains('file');
-        let hasClipboard = await navigator.clipboard.readText().then(text => text.length > 0);
-
-        // Which items are enabled in the context menu
-        /** @type {HTMLElement[]} */
-        let enabled = [];
-
-        if (isFile) {
-            target.classList.add('selected');
-            enabled.push(
-                ...['copy', 'cut', 'delete', 'rename', 'download']
-                    .map(e => document.getElementById('ctx-' + e))
-            );
-        }
-
-        // If there's something in the clipboard, we enable the 'paste' action.
-        if (hasClipboard)
-            enabled.push(document.getElementById('ctx-paste'));
-
-        // Disable all context actions first.
-        $('.context-menu-item').addClass('disabled');
-
-
-        // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
-        // First, check whether it has a 'context-menu' dataset property.
-        if (target.dataset.hasOwnProperty('contextMenu')) {
-            let items = target.dataset.contextMenu.split(' ');
-            items.forEach(ctxMenuItem => {
-                let element = document.getElementById('ctx-' + ctxMenuItem.trim());
-
-                if (element)
-                    enabled.push(element);
-            })
-        }
-
-        enabled.forEach(e => e.classList.remove('disabled'));
-
-        let menu = document.querySelector('.context-menu');
-        menu.style.left = event.clientX + 'px';
-        menu.style.top = event.clientY + 'px';
-        if (enabled.length > 0)
-            menu.classList.add('active');
-    });
 }
 
 /**
@@ -495,19 +488,34 @@ async function checkFsDifferences() {
         .catch(_ => console.log(_));
 }
 
-
 /**
- * Event handling of file transfer progress.
- * This updates the progress bar in the file viewer accordingly.
+ * Event handler for the process status event.
+ * This can be uploading, downloading, or something else.
+ * Once called, the method will look for the target element and update the progress bar accordingly.
+ * If the element does not exist, it will be created. If the process is finished, the element will be removed.
+ * @param {{type: string, progress: number, finished: boolean}} status The status of the process
  */
-window.events.on('file-transfer-progress', (status) => {
-    let fileTransferElement = $('.file-transfer-progress');
-    fileTransferElement.css('--progress', status.progress)
-    fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
-});
+window.events.on('process-status', (status) => {
 
-window.events.on('file-download-progress', (status) => {
-    let fileTransferElement = $('.file-download-progress');
-    fileTransferElement.css('--progress', status.progress)
-    fileTransferElement.css('visibility', status.finished ? 'hidden' : 'visible');
-})
+    // Check whether the provided argument has all the necessary properties.
+    if (status.hasOwnProperty('type') && typeof status.type === 'string' &&
+        status.hasOwnProperty('progress') && typeof status.progress === 'number' &&
+        status.hasOwnProperty('finished') && typeof status.finished === 'boolean') {
+
+        // Get the target element
+        let target = document.getElementById(`#pgb-${status.type}`);
+
+        // If the target element does not exist, we create it.
+        if (target.length == null && !status.finished) {
+
+            target = document.createElement('div');
+            target.classList.add('progress-bar');
+            target.id = `pgb-${status.type}`;
+            document.querySelector('.progress-bars').appendChild(target);
+        }
+        target.style.setProperty('--progress', status.progress);
+        if (status.finished) {
+            target.remove();
+        }
+    }
+});
