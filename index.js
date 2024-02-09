@@ -238,7 +238,6 @@ async function getFileInfo(directory, fileName) {
  */
 async function uploadFiles(directory, files) {
     [directory] = fmtPaths(directory);
-    files = fmtPaths(...files);
     return new Promise((resolve, reject) => {
         if (files.length === 0)
             return resolve('No files to upload');

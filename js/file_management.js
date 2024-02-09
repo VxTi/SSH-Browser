@@ -27,12 +27,15 @@ $(document).ready(() => {
 
     fileContainer = document.querySelector('.file-container');
 
+    $
+
     // Load in the files from the current directory
     // If this fails, we redirect the user to the main menu.
     busy(true);
     window.ssh.startingDir()
         .then(res => {
             currentDir = res.path;
+            document.querySelector('.file-section').dataset.path = res.path;
             storeFiles(res.files, res.path);
             loadFileViewer();
         })
@@ -63,7 +66,7 @@ $(document).ready(() => {
         event.stopImmediatePropagation();
 
         // Select potential file
-        let target = event.target.parentElement || event.target;
+        let target = event.target.parentElement/*event.target;*/
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
@@ -439,6 +442,7 @@ function navigateTo(target) {
     // If we're already on there, don't proceed.
     if (target === currentDir)
         return;
+    document.querySelector('.file-section').dataset.path = target;
 
     busy(true);
     window.ssh

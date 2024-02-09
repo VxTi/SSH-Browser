@@ -16,7 +16,7 @@ $(document).ready(() => {
     $('#ssh-login').on('click', () => {
 
         // Check if there's actually input in the fields
-        if (!host.value || !username.value) {
+        if (host.value.length === 0 || username.value.length === 0) {
             let errorContainer = $('.error-message');
             errorContainer.css('visibility', 'visible');
             errorContainer.text('Please enter a valid host and username.');
