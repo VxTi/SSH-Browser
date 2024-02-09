@@ -36,6 +36,10 @@ class File {
         this.#refElement = element;
     }
 
+    get refElement() {
+        return this.#refElement;
+    }
+
     /**
      * Getter for file size, in bytes.
      * @returns {number}
@@ -134,9 +138,12 @@ class File {
      */
     rename(newName) {
         if (!this.exists)
-            return;
-        window.ssh.renameFile(this.path, this.name, newName)
-            .then(() => this.name = newName)
+            throw new Error("Error whilst attempting to rename file: File does not exist.");
+        return window.ssh.renameFile(this.path, this.name, newName)
+            .then(() => {
+                this.name = newName;
+                this.#refElement.querySelector('.file-name').innerText = newName;
+            })
     }
 
 }

@@ -133,7 +133,7 @@ ipcMain.on('log', (_, args) => console.log(args));
 async function createDirectory(directory, name) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd ${directory} && mkdir '${name}'`)
+            ssh().execCommand(`cd '${directory}' && mkdir '${name}'`)
                 .then(result => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -165,7 +165,7 @@ async function viewStartingDir() {
 async function renameFile(directory, file, newName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd ${directory} && mv ${file} ${newName}`)
+            ssh().execCommand(`cd '${directory}' && mv '${file}' '${newName}'`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -203,7 +203,7 @@ async function downloadFile(remotePath, fileName) {
 async function getFileInfo(directory, fileName) {
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd ${directory} && ls -l -d '${fileName}'`)
+            ssh().execCommand(`cd '${directory}' && ls -l -d '${fileName}'`)
                 .then(result => {
                     let arguments = result.stdout.split(' ');
                     resolve({
@@ -387,7 +387,7 @@ async function listFiles(path) {
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
         if (sshConnected()) {
-            return ssh().execCommand(`cd ${path} && ls`)
+            return ssh().execCommand(`cd '${path}' && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => {reject(err)});
         } else reject('Not connected');
@@ -406,7 +406,7 @@ async function deleteFile(directory, file) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
-            return ssh().execCommand(`cd ${directory} && rm -r '${file}'`)
+            return ssh().execCommand(`cd '${directory}' && rm -r '${file}'`)
                 .then(_ => resolve())
                 .catch(err => {reject(err)});
         } else reject('Not connected');

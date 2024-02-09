@@ -1,8 +1,12 @@
 let busy = (state) => {$('.process-loading').css('visibility', state ? 'visible' : 'hidden')};
 
+/** @type {string | undefined} */
 let currentUser = undefined
 
 let fileContainer = null
+
+/** @type {File | null} */
+let fileRenameTarget = null;
 
 /**
  * History of user navigation
@@ -71,6 +75,7 @@ $(document).ready(() => {
         if (target.classList.contains('file')) {
             $('.file').removeClass('selected');
             target.classList.add('selected');
+            fileRenameTarget = getFile(target.dataset.path, target.dataset.name);
             ctxTarget = [...document.querySelectorAll('.file.selected')];
             enabled.push(
                 ...['info', 'delete', 'rename', 'download', 'cpy-path']
@@ -80,7 +85,6 @@ $(document).ready(() => {
 
         // Disable all context actions first.
         $('.context-menu-item').addClass('disabled');
-
 
         // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
         // First, check whether it has a 'context-menu' dataset property.
@@ -94,12 +98,16 @@ $(document).ready(() => {
             })
         }
         enabled.forEach(e => e.classList.remove('disabled'));
+        // If there's any enabled items, we show the context menu.
+        if (enabled.length > 0) {
+            let menu = document.querySelector('.context-menu');
 
-        let menu = document.querySelector('.context-menu');
-        menu.style.left = event.clientX + 'px';
-        menu.style.top = event.clientY + 'px';
-        if (enabled.length > 0)
+            // Moving the context menu to the cursor's position
+            menu.style.left = event.clientX + 'px';
+            menu.style.top = event.clientY + 'px';
+
             menu.classList.add('active');
+        }
     });
 
     /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
@@ -111,8 +119,7 @@ $(document).ready(() => {
             // Filter out all elements that don't have a path and name (non-files)
             ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
             Promise.all(ctxTarget.map(e => window.ssh.downloadFile(e.dataset.path, e.dataset.name)))
-                .then(_ => console.log('Downloaded file'))
-                .catch(_ => console.log('Error occurred whilst attempting to download file', _));
+                .catch(_ => console.error('Error occurred whilst attempting to download file', _));
         }
     })
 
@@ -135,6 +142,7 @@ $(document).ready(() => {
         }
     })
 
+    // Copy file path
     $('#ctx-cpy-path').on('click', () => {
         // Filter out all elements that don't have a path (non-files / directories)
         ctxTarget = ctxTarget.filter(e => e.dataset.path);
@@ -144,9 +152,51 @@ $(document).ready(() => {
         }
     })
 
+    let renameFileInput = $('#file-rename');
+    $('#ctx-rename').on('click', () => {
+        if (fileRenameTarget !== null) {
+            renameFileInput.addClass('active');
+            renameFileInput.val(fileRenameTarget.name);
+            let fileNameElement = fileRenameTarget.refElement.querySelector('.file-name');
+            fileNameElement.style.opacity = 0;
+            renameFileInput.css('left', fileNameElement.offsetLeft);
+            renameFileInput.css('top', fileNameElement.offsetTop);
+            renameFileInput.focus();
+        }
+    })
+
+    // Create new directory (Context menu)
     $('#ctx-new-dir').on('click', () => mkdir());
 
+    // Create new directory (Action bar)
     $('#action-add-dir').on('click', () => mkdir());
+
+    renameFileInput.on('keypress', (e) => {
+        // If there isn't any file targetted for renaming, we hide the input and return.
+        e.stopImmediatePropagation()
+        if (fileRenameTarget == null) {
+            renameFileInput.removeClass('active')
+            return;
+        }
+
+        switch (e.key) {
+            case 'Enter':
+                e.preventDefault();
+                fileRenameTarget.rename(e.target.value)
+                    .then(_ => {
+                        renameFileInput.removeClass('active');
+                        fileRenameTarget.refElement.querySelector('.file-name').style.opacity = 1;
+                        fileRenameTarget = null;
+                        loadFileViewer();
+                    })
+                    .catch(_ => console.log('Error occurred whilst attempting to rename file', _))
+                break;
+            case 'Escape':
+                fileRenameTarget = null;
+                renameFileInput.removeClass('active');
+                break;
+        }
+    })
 
     // Add file filtering functionality
     let filter = $('#file-filter');

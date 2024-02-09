@@ -15,6 +15,8 @@ function storeFiles(files, path, forceLoad = false, loadFileInfo = false) {
     if (files === undefined || path === undefined || files.length === 0)
         return;
 
+    console.log(path);
+
     // Convert 'files' parameter to an array if it isn't one already.
     files = Array.isArray(files) ? files : files.split('\n');
 

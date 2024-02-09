@@ -9,6 +9,9 @@ Once complete, one can compile the program using 'npm run build_(os)'
 
 The build files can then be found in 'release-builds'.
 
+> <b>NOTE:</b> This application currently only has support for Unix based SSH servers.
+> Future compatibility with Windows servers is planned.
+
 ## How to use the software 
 
 Once successfully built, you'll find yourself on the homepage.

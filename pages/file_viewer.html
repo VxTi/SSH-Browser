@@ -42,11 +42,12 @@
             <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
         </div>
         <div class="file-section" data-context-menu="new-dir cpy-path">
-            <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
+            <input type="text" id="file-rename" class="file-rename" name="rename-file" placeholder="Rename file">
 
             <!-- Container displaying file contents -->
             <div class="file-container scrollbar no-drag" data-path></div>
 
+            <!-- File information -->
             <div class="file-information hidden">
                 <div class="file-information-resize" title="Double-click to hide"></div> <!-- Resize bar -->
                 <div class="flex f-column f-nowrap f-m-center">
@@ -55,33 +56,36 @@
                     <div class="f-i-params grid-2-3">
                         <div class="file-info">Date modified:</div>
                         <span class="file-info" id="file-info-modified"></span>
-                        <div class="file-info file-info-created-by">Created by</div>
+                        <div class="file-info">Created by</div>
                         <span class="file-info" id="file-info-owner"></span>
-                        <div class="file-info file-info-size">Size:</div>
+                        <div class="file-info">Size:</div>
                         <span class="file-info" id="file-info-size"></span>
                     </div>
                     <div class="file-info file-accessibility">
                         <span class="al-s-c">Accessibility</span>
                         <div class="file-info grid-2-3">
                             <span class="f-access-title">User</span>
-                            <span class="file-info-perm-value" id="file-info-perm-user"></span>
+                            <span id="file-info-perm-user"></span>
                             <span class="f-access-title">Group</span>
-                            <span class="file-info-perm-value" id="file-info-perm-group"></span>
+                            <span id="file-info-perm-group"></span>
                             <span class="f-access-title">Other</span>
-                            <span class="file-info-perm-value" id="file-info-perm-other"></span>
+                            <span id="file-info-perm-other"></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Terminal container -->
         <div class="terminal container" id="terminal">
             <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
             <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
             <div class="terminal-content scrollbar"></div>
             <input type="text" name="terminal-input" id="terminal-input" class="terminal-input input-box user-interact" placeholder="Enter command">
         </div>
+        <!-- Directory path container  -->
         <div class="path-container">
             <div class="path-section">
+                <!-- Back and forth navigation arrows -->
                 <div class="navigate-arrows">
                     <div class="arrow navigate-back" title="Navigate backward"></div>
                     <div class="arrow navigate-forward" title="Navigate forward"></div>
