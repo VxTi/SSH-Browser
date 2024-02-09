@@ -2,6 +2,8 @@ let busy = (state) => {$('.process-loading').css('visibility', state ? 'visible'
 
 let currentUser = undefined
 
+let fileContainer = null
+
 /**
  * History of user navigation
  */
@@ -12,12 +14,17 @@ let navigationHistoryIndex = 0;
 let ctxTarget = [];
 
 $(document).ready(() => {
+    // Add loading animation (bottom right)
     addLoadingSpinner($('.process-loading')[0]);
     $('#back-main').on('click', () => window.location.href = '../index.html');
 
     // Resizing of the file information section
-    $('.file-information-resize').on('dblclick', _ => $('.file-information').toggleClass('hidden'))
+    $('.file-information-resize').on('dblclick', _ => $('.file-information').addClass('hidden'))
 
+    fileContainer = document.querySelector('.file-container');
+
+    // Load in the files from the current directory
+    // If this fails, we redirect the user to the main menu.
     busy(true);
     window.ssh.startingDir()
         .then(res => {
@@ -31,6 +38,7 @@ $(document).ready(() => {
         })
         .finally(_ => {busy(false)});
 
+    // Periodically refresh the page to check for incoming changes.
     setInterval(checkFsDifferences, 3000);
 
     // When the user clicks on the screen outside a file element, hide the context menu.
@@ -43,6 +51,8 @@ $(document).ready(() => {
      | Context menu (Right-clicking)   |
      ** - - - - - - - - - - - - - - - **/
     $(document).on('contextmenu', async (event) => {
+        // If the document isn't focused we can't check for context menu interaction.
+        // Errors will be thrown otherwise.
         if (!document.hasFocus())
             return;
         event.preventDefault();
@@ -50,7 +60,6 @@ $(document).ready(() => {
 
         // Select potential file
         let target = event.target.parentElement || event.target;
-        let isFile = target.classList.contains('file');
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
@@ -58,11 +67,13 @@ $(document).ready(() => {
 
         ctxTarget = [target];
 
-        if (isFile) {
+        // Check if the clicked-on element is a file
+        if (target.classList.contains('file')) {
+            $('.file').removeClass('selected');
             target.classList.add('selected');
             ctxTarget = [...document.querySelectorAll('.file.selected')];
             enabled.push(
-                ...['info', 'delete', 'rename', 'download']
+                ...['info', 'delete', 'rename', 'download', 'cpy-path']
                     .map(e => document.getElementById('ctx-' + e))
             );
         }
@@ -121,6 +132,15 @@ $(document).ready(() => {
         if (ctxTarget.length > 0) {
             ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
             showPreview(ctxTarget.map(e => e.dataset.name), ctxTarget[0].dataset.path);
+        }
+    })
+
+    $('#ctx-cpy-path').on('click', () => {
+        // Filter out all elements that don't have a path (non-files / directories)
+        ctxTarget = ctxTarget.filter(e => e.dataset.path);
+        if (ctxTarget.length > 0) {
+            navigator.clipboard.writeText(ctxTarget[0].dataset.path)
+                .catch(_ => console.log('Error occurred whilst attempting to copy path', _));
         }
     })
 
@@ -262,7 +282,7 @@ $(document).ready(() => {
                 // get current files in currentDir, map paths to file objects and add to fileCache
                 getFiles(currentDir).push(...pathArr.map(p =>
                     new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
-                loadFileElements(currentDir, true);
+                loadFileElements();
             })
             .finally(_ => {busy(false)});
     });
@@ -322,22 +342,22 @@ function loadFileViewer() {
 
     // Clear all previously shown files and show all
     // files in the current working directory.
-    loadFileElements(currentDir, true);
+    loadFileElements();
 }
 
 /**
  * Method for loading all files in the currently selected directory.
  * This method converts the files in 'fileCache[currentDir]' into elements.
+ * @param {string} path The path in which the files are located at. Default is the current directory.
+ * @param {boolean} clearOld Whether to remove all previously shown files or not. Default is true.
  */
-function loadFileElements(directory = currentDir, clearOld = true) {
+function loadFileElements(path = currentDir, clearOld = true) {
 
     // remove all old files if
     if (clearOld) $('.file').remove();
 
-    let fileContainer = document.querySelector('.file-container');
-
     // Add all files to the file container
-    getFiles(directory).forEach(file => fileContainer.appendChild(createFileElement(file)));
+    getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
 }
 
 /**

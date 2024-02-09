@@ -239,12 +239,12 @@
     word-wrap: break-word;
     overflow: hidden;
     visibility: visible;
-    transition: width 0.1s ease-in-out;
+    transition: width 0.2s ease-in-out;
 }
 
 .file-information.hidden {
     display: block;
-    width: 10px;
+    width: 0;
 }
 
 /* Change cursor to resize left when window is closed */

@@ -22,12 +22,13 @@
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu">
             <div class="context-menu-item" id="ctx-open">Open</div>
+            <div class="context-menu-item" id="ctx-execute">Execute</div>
             <div class="context-menu-item" id="ctx-new-dir">New directory</div>
             <div class="context-menu-item" id="ctx-info">Show Info</div>
-            <div class="context-menu-item" id="ctx-execute">Execute</div>
             <div class="context-menu-item" id="ctx-rename"><s>Rename</s></div>
             <div class="context-menu-item" id="ctx-delete">Delete</div>
             <div class="context-menu-item" id="ctx-download">Download</div>
+            <div class="context-menu-item" id="ctx-cpy-path">Copy path</div>
         </div>
         <div class="action-container">
             <div class="back-button" id="back-main" title="Return to main menu"></div>
@@ -39,11 +40,11 @@
             <div class="action action-delete" id="action-delete-file" title="Delete the currently selected file"></div>
             <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
         </div>
-        <div class="file-section" data-context-menu="new-dir">
+        <div class="file-section" data-context-menu="new-dir cpy-path">
             <input type="text" class="file-rename" name="rename-file" placeholder="Rename file">
 
             <!-- Container displaying file contents -->
-            <div class="file-container scrollbar no-drag"></div>
+            <div class="file-container scrollbar no-drag" data-path></div>
 
             <div class="file-information hidden">
                 <div class="file-information-resize" title="Double-click to hide"></div> <!-- Resize bar -->
