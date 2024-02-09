@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>SSH Browser</title>
@@ -16,6 +16,7 @@
     <script src="../js/file/file_caching.js"></script>
     <script src="../js/file_management.js"></script>
     <script src="../js/loading_spinner.js"></script>
+    <script>document.querySelector('html').dataset['theme'] = localStorage.theme || 'dark' </script>
 </head>
 <body>
     <div class="navigator"></div>

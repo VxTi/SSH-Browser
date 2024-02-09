@@ -123,12 +123,14 @@ $(document).ready(() => {
         }
     })
 
+    let renameFileInput = $('#file-rename');
     const mkdir = () => {
-        console.log("creating directory")
         let files = getFiles(currentDir);
         let name = 'New Directory';
         for (let i = 1; files.find(f => f.name === name); i++)
             name = `New Directory (${i})`;
+
+        console.log("Creating dir["+name+"]")
 
         window.ssh.createDirectory(currentDir, name)
             .catch(_ => console.log('Error occurred whilst attempting to create new directory', _));
@@ -152,7 +154,6 @@ $(document).ready(() => {
         }
     })
 
-    let renameFileInput = $('#file-rename');
     $('#ctx-rename').on('click', () => {
         if (fileRenameTarget !== null) {
             renameFileInput.addClass('active');

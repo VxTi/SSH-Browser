@@ -131,11 +131,19 @@ ipcMain.on('log', (_, args) => console.log(args));
  * @returns {Promise<*>} Resolved promise when directory creation is successful; rejected promise when an error occurs.
  */
 async function createDirectory(directory, name) {
+    [directory] = fmtPaths(directory);
+    console.log(`Attempting to create dir at [${directory}] with name [${name}]`)
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd '${directory}' && mkdir '${name}'`)
-                .then(result => resolve())
-                .catch(err => reject(err));
+            ssh().execCommand(`cd ${directory} && mkdir '${name}'`)
+                .then(_ => {
+                    console.log("Directory successfully created");
+                    resolve()
+                })
+                .catch(err => {
+                    console.log("An error occurred whilst attempting to create directory:", err);
+                    reject(err)
+                });
         } else reject('Not connected');
     })
 }
@@ -163,9 +171,10 @@ async function viewStartingDir() {
  * @returns {Promise<void | Error>} Resolved promise when file renaming is successful; rejected promise when an error occurs.
  */
 async function renameFile(directory, file, newName) {
+    [directory, file, newName] = fmtPaths(directory, file, newName);
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd '${directory}' && mv '${file}' '${newName}'`)
+            ssh().execCommand(`cd ${directory} && mv ${file} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -179,6 +188,7 @@ async function renameFile(directory, file, newName) {
  * @returns {Promise<unknown>}
  */
 async function downloadFile(remotePath, fileName) {
+    [remotePath, fileName] = fmtPaths(remotePath, fileName);
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
             console.log('Downloading file: ' + remotePath + '/' + fileName + ' to ' + downloadPath)
@@ -201,9 +211,11 @@ async function downloadFile(remotePath, fileName) {
  * @returns {Promise<{permissions: string, owner: string, fileSize: number, lastModified: Date} | Error>}
  */
 async function getFileInfo(directory, fileName) {
+    [directory, fileName] = fmtPaths(directory, fileName)
+
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
-            ssh().execCommand(`cd '${directory}' && ls -l -d '${fileName}'`)
+            ssh().execCommand(`cd ${directory} && ls -l -d ${fileName}`)
                 .then(result => {
                     let arguments = result.stdout.split(' ');
                     resolve({
@@ -225,6 +237,8 @@ async function getFileInfo(directory, fileName) {
  * @returns {Promise<*>} Resolved promise when file uploading is successful; rejected promise when an error occurs.
  */
 async function uploadFiles(directory, files) {
+    [directory] = fmtPaths(directory);
+    files = fmtPaths(...files);
     return new Promise((resolve, reject) => {
         if (files.length === 0)
             return resolve('No files to upload');
@@ -377,6 +391,7 @@ async function openFiles() {
  * Rejects when the path is not a string or when there's no active connection, or an error occurs.
  */
 async function listFiles(path) {
+    [path] = fmtPaths(path);
     return new Promise((resolve, reject) => {
 
         // Check whether the provided argument is a string or not.
@@ -387,7 +402,7 @@ async function listFiles(path) {
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
         if (sshConnected()) {
-            return ssh().execCommand(`cd '${path}' && ls`)
+            return ssh().execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
                 .catch(err => {reject(err)});
         } else reject('Not connected');
@@ -401,12 +416,13 @@ async function listFiles(path) {
  * @returns {Promise<void | Error>} Resolved promise when file deletion is successful; rejected promise when an error occurs.
  */
 async function deleteFile(directory, file) {
+    [directory] = fmtPaths(directory);
     return new Promise((resolve, reject) => {
         if (sshConnected()) {
             console.error("Attempting to remove file: " + file + " from directory: " + directory);
 
             // Remove file.
-            return ssh().execCommand(`cd '${directory}' && rm -r '${file}'`)
+            return ssh().execCommand(`cd ${directory} && rm -r '${file}'`)
                 .then(_ => resolve())
                 .catch(err => {reject(err)});
         } else reject('Not connected');
@@ -465,4 +481,8 @@ function storeSession(session) {
             })
         }
     })
+}
+
+function fmtPaths(...path) {
+    return path.map(p => p.replaceAll(' ', '\\ '));
 }
