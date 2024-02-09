@@ -1,7 +1,12 @@
 
 $(document).ready(() => {
     // Get the input fields
-    let [host, username, password, port, privateKey, passphrase] = $('#ssh-host, #ssh-username, #ssh-password, #ssh-port, #ssh-private-key, #ssh-passphrase')
+    let [host, username, password, port, privateKey, passphrase]
+        = ['ssh-host', 'ssh-username', 'ssh-password', 'ssh-port', 'ssh-private-key', 'ssh-passphrase']
+        .map(id => document.getElementById(id));
+
+    // = [...$('#ssh-host, #ssh-username, #ssh-password, #ssh-port, #ssh-private-key, #ssh-passphrase')]
+
 
     $('#ssh-show-password').on('click', () => {
         let e = $('#ssh-password');
@@ -15,8 +20,12 @@ $(document).ready(() => {
     // Add the login functionality
     $('#ssh-login').on('click', () => {
 
+        console.log(host.value, username.value, password.value);
+        console.log(host.value.length, username.value.length, password.value.length)
+
         // Check if there's actually input in the fields
         if (host.value.length === 0 || username.value.length === 0) {
+            console.log(host, username)
             let errorContainer = $('.error-message');
             errorContainer.css('visibility', 'visible');
             errorContainer.text('Please enter a valid host and username.');

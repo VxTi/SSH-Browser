@@ -54,12 +54,8 @@ function addSession(session) {
         delete_button.style.setProperty('--delete-pos-y', `${session_element.offsetTop + session_element.offsetHeight + 4}px`);
         delete_button.style.visibility = 'visible';
         delete_button.onclick = () => {
-            window.ssh.sessions.delete(session.host, session.username)
-                .then(() => {
-                    session_container.removeChild(session_element);
-                    delete_button.style.visibility = 'hidden';
-                })
-                .catch(e => console.error(e));
+            window.ssh.sessions.delete(session.host, session.username);
+            session_element.remove();
         }
     })
 }

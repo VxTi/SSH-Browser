@@ -62,7 +62,8 @@ contextBridge.exposeInMainWorld('ssh',  {
 
     sessions: {
         get: async () => ipcRenderer.invoke('retrieve-sessions'),
-        currentSession: () => ipcRenderer.sendSync('current-session')
+        currentSession: () => ipcRenderer.sendSync('current-session'),
+        delete: async (host, username) => ipcRenderer.invoke('delete-session', host, username)
     }
 })
 

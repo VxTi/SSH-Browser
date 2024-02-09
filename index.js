@@ -14,7 +14,7 @@ let currentConnection = 0;
 let sessionsPath = path.join(__dirname, 'sessions.json');
 let mainWindow = null;
 
-let log;
+let log = console.log;
 
 let _clog = console.log;
 console.log = function(...args) { _clog(`${new Date().toLocaleDateString('en-UK')} |`, ...args); }
@@ -121,6 +121,8 @@ ipcMain.on('current-session', (event) => {
     if (!sshConnected()) return event.returnValue = null;
     event.returnValue = {username: sshCurrent().username, host: sshCurrent().host, port: sshCurrent().port};
 })
+
+ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
 ipcMain.on('log', (_, args) => console.log(args));
 
@@ -313,6 +315,8 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
     return new Promise((resolve, reject) => {
         let cur = sshCurrent();
 
+        port = port || 22;
+
         // If the connection is already active and one is
         // trying to connect with the same credentials, resolve the promise.
         if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port) {
@@ -454,14 +458,15 @@ function storeSession(session) {
 
     // Get previous data
     fs.readFile(sessionsPath, (error, data) => {
-        if (error)
+        if (error) {
+            console.error(error);
             throw error;
+        }
         // Parse previous data
         let sessions = JSON.parse(data.toString());
 
         // Check if the connection is already in the sessions file, if not, add it.
-        if (!sessions.some(session => session.host === session.host && session.username === session.username)) {
-
+        if (!sessions.some(ses => ses.host === session.host && ses.username === session.username && ses.port === session.port)) {
             // Add new data
             sessions.push({
                 host: session.host,
@@ -472,9 +477,34 @@ function storeSession(session) {
                 passphrase: session.passphrase
             });
 
+            // 192.168.238.76 
+            //  blackbananaman
             // TODO: Encrypt the data before writing it to the file.
 
             // Write back to file
+            fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) => {
+                if (err) {
+                    console.error("An error occurred whilst attempting to write file:", err);
+                    throw err;
+                }
+            })
+        }
+    })
+}
+
+/**
+ * Method for deleting a session from the sessions file.
+ * @param {string} host The host of the session to delete.
+ * @param {string} username The username of the session to delete.
+ */
+function deleteSession(host, username) {
+    fs.readFile(sessionsPath, (error, data) => {
+        if (error)
+            throw error;
+        let sessions = JSON.parse(data.toString());
+        let index = sessions.findIndex(session => session.host === host && session.username === username);
+        if (index !== -1) {
+            sessions.splice(index, 1);
             fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) => {
                 if (err) throw err;
             })
