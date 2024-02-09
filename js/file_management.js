@@ -381,10 +381,9 @@ function getFileThumbnail(file) {
  * @param {string | File} target The directory to navigate to.
  */
 function navigateTo(target) {
-    if (target instanceof File) {
-        // Convert to viable path
+
+    if (target instanceof File) // Convert to viable path
         target = target.path + (target.directory ? '/' + target.name : '')
-    }
 
     // If we're already on there, don't proceed.
     if (target === currentDir)

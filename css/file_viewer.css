@@ -34,7 +34,7 @@
     justify-content: flex-start;
     align-items: center;
     background-color: var(--theme-2);
-    border-top: 1px solid var(--theme-5);
+    border-top: 1px solid var(--border-1);
 }
 
 .path-section > .folder {
@@ -112,7 +112,7 @@
     left: -1%;
     top: -1%;
     transform: translateX(28%);
-    background-color: var(--theme-3);
+    background-color: var(--theme-2);
     z-index: 99;
 }
 
@@ -218,7 +218,7 @@
     display: block;
     width: var(--file-navigator-height);
     height: var(--file-navigator-height);
-    font-size: 1.9rem;
+    font-size: 1.0rem;
     position: absolute;
     align-self: flex-end;
     float: right;

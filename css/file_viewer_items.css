@@ -47,16 +47,12 @@
     width: var(--file-element-size);
     height: var(--file-element-size);
     background-position: center;
-    background-size: cover;
+    background-size: contain;
     background-repeat: no-repeat;
 }
 
-/* Background image for directory */
 .file-directory { background-image: url('../assets/file_icons/folder_icon.png'); }
-
-/* Background image for executable file */
 .file-executable { background-image: url('../assets/file_icons/executable_icon.png'); }
-
 .file-js { background-image: url('../assets/file_icons/javascript_icon.png'); }
 .file-css { background-image: url('../assets/file_icons/css_icon.png'); }
 .file-html { background-image: url('../assets/file_icons/html_icon.png'); }

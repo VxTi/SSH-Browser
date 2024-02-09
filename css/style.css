@@ -40,17 +40,17 @@
 }
 
 html[data-theme="light"] {
-    --theme-1: #dddddd;
-    --theme-2: #a0a0a0;
+    --theme-1: #fff;
+    --theme-2: #ddd;
     --theme-3: #909090;
     --theme-4: #2358C9;
     --theme-5: #b0b0b0;
 
-    --border-2: #000;
+    --border-2: #ddd;
     --border-1: #999;
 
-    --text-color: #111;
-    --text-color-2: #777;
+    --text-color: #000;
+    --text-color-2: #222;
 
 }
 
