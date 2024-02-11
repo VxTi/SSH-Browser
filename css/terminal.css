@@ -52,6 +52,7 @@
     font-size: 0.65rem;
     flex-wrap: wrap;
     line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 /* The container for output */

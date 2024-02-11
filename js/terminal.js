@@ -19,6 +19,23 @@ const maxHeight = '80vh';
 
 let terminalContent;
 
+const ANSI = {
+    bold: {
+        regex: /\x1b\[1m/g,
+        active: false
+    },
+    underline: {
+        regex: /\x1b\[4m/g,
+        active: false
+    },
+    reset: {
+        regex: /\x1b\[0m/g,
+    },
+    color: {
+        regex: /\x1b\[\d{1,2}m/g
+    },
+}
+
 $(document).ready(() => {
 
     terminalContent = document.querySelector('.terminal-content');
@@ -77,24 +94,15 @@ $(document).ready(() => {
 
 /**
  * Function for printing message(s) to the virtual terminal.
- * @param {string | string[]} messages The message(s) to display. Can be either a single string or an array
- * @param {string} color The color to give the message. Default is white.
+ * @param {string} message The message(s) to display. Can be either a single string or an array
  */
-function println(messages, color = undefined) {
-    if (!Array.isArray(messages))
-        messages = messages.split('\n');
+function println(message) {
 
-    messages.forEach(messageContent => {
-        let messageElement = document.createElement('div');
-        // TODO: Add support for ANSI escape codes.
+    // Clear screen ANSI code.
+    if (/(\x1b\[H\x1b\[2J\x1b\[3J)+/g.test(message)) {
+        terminalContent.innerHTML = '';
+    } else terminalContent.innerHTML += message;
 
-        messageElement.innerHTML = messageContent;
-
-        messageElement.classList.add('terminal-output')
-        if (typeof color !== 'undefined')
-            messageElement.style.color = color;
-        terminalContent?.appendChild(messageElement);
-    })
     terminalContent.scrollTop = terminalContent.scrollHeight;
 }
 window.events.on('message-received', message => println(message))

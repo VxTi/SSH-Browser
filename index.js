@@ -5,6 +5,14 @@ const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
+const ansiHtml = require('ansi-to-html')
+const filter = new ansiHtml({
+    fg: '#fff',
+    bg: '#000',
+    newline: false,
+    escapeXML: false,
+    stream: false
+})
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
@@ -265,7 +273,7 @@ async function uploadFiles(directory, files) {
                     /**
                      * TODO - Compress directory and upload as a single file
                      */
-                    ssh().putDirectory(path, directory, {
+                    ssh().putDirectory(path, directory + '/' + path.split('/').pop(), {
                         recursive: true,
                         concurrency: 5,
                         transferOptions: opt
@@ -350,12 +358,12 @@ async function sshConnect(host, username, password, port = 22, privateKey = null
                 connections.push(connection);
                 currentConnection = connections.length - 1;
 
-                ssh.requestShell({term: process.env.TERM || 'vt100'})
+                ssh.requestShell({term: process.env.TERM || 'xterm-256color'})
                     .then((stream) => {
                         stream.on('data', data => {
-                            mainWindow.webContents.send('message-received', data.toString());
+                            mainWindow.webContents.send('message-received', filter.toHtml(data.toString()));
                         }).stderr.on('data', data => {
-                            mainWindow.webContents.send('message-received', data.toString());
+                            mainWindow.webContents.send('message-received', filter.toHtml(data.toString()));
                         });
                         ipcMain.removeHandler('cmd');
                         ipcMain.handle('cmd', async (_, command) => {
