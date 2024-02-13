@@ -5,11 +5,12 @@
 }
 
 :root {
-    --theme-1: #22252A;
+    --theme-1:#22252A;
     --theme-2: #282C33;
     --theme-3: #292C33;
     --theme-4: #2358C9;
     --theme-5: #4D5052;
+    --theme-6: #1E1F22;
 
     --border-1: #000;
     --border-2: #343840;
@@ -36,7 +37,7 @@
 
     --back-button-size: 30px;
     --back-button-padding: 3px;
-    --back-button-margin: 15px;
+    --back-button-margin: 5px;
 }
 
 html[data-theme="light"] {
@@ -262,28 +263,35 @@ body {
     align-self: center;
 }
 
-.back-button {
+.nav-btn {
     width: var(--back-button-size);
     height: var(--back-button-size);
     margin: var(--back-button-margin);
     padding: var(--back-button-padding);
     position: relative;
     cursor: pointer;
-    background-size: 80%;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 999;
-    background-image: url('../assets/left_arrow.png');
     transition: scale 0.2s ease-in-out;
 }
 
+.btn-back {
+    background-image: url('../assets/left_arrow.png');
+}
 
-.back-button:hover {
+.btn-forward {
+    background-image: url('../assets/right_arrow.png');
+}
+
+
+.btn-back:hover {
     scale: 0.95;
 }
 
 .container {
-    background-color: var(--theme-1);
+    background-color: var(--theme-6);
     border-radius: var(--default-rounding);
     border: 1px solid var(--border-2);
     outline: 1px solid var(--border-1);
@@ -292,4 +300,10 @@ body {
 .user-interact {
     border: 1px solid var(--border-2);
     border-radius: 0;
+}
+
+.icon {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
 }

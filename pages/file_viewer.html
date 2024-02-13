@@ -16,7 +16,7 @@
     <script src="../js/file/file_caching.js"></script>
     <script src="../js/file_management.js"></script>
     <script src="../js/loading_spinner.js"></script>
-    <script>document.querySelector('html').dataset['theme'] = localStorage.theme || 'dark' </script>
+    <script>document.documentElement.dataset['theme'] = localStorage.theme || 'dark'</script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -32,16 +32,20 @@
             <div class="context-menu-item" id="ctx-download">Download</div>
             <div class="context-menu-item" id="ctx-cpy-path">Copy path</div>
         </div>
+        <!-- File viewer action container -->
         <div class="action-container">
-            <div class="back-button" id="back-main" title="Return to main menu"></div>
 
-            <input type="text" name="filter" placeholder="Filter" id="file-filter">
+            <div class="nav-btn btn-back" id="navigate-back" title="Navigate backward"></div>
+            <div class="nav-btn btn-forward" id="navigate-forward" title="Navigate forward"></div>
+
+            <input type="text" name="filter" placeholder="Find a file" id="file-filter" title="Enter which file you're looking for.">
             <div class="action action-home" id="action-home" title="Navigate to home directory"></div>
             <div class="action action-add-dir" id="action-add-dir" title="Create a new directory"></div>
             <div class="action action-refresh" id="action-refresh" title="Refresh the content of the current directory"></div>
             <div class="action action-delete" id="action-delete-file" title="Delete the currently selected file"></div>
             <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
         </div>
+
         <div class="file-section" data-context-menu="new-dir cpy-path">
             <input type="text" id="file-rename" class="file-rename" name="rename-file" placeholder="Rename file">
 
@@ -86,11 +90,8 @@
         <!-- Directory path container  -->
         <div class="path-container">
             <div class="path-section">
-                <!-- Back and forth navigation arrows -->
-                <div class="navigate-arrows">
-                    <div class="arrow navigate-back" title="Navigate backward"></div>
-                    <div class="arrow navigate-forward" title="Navigate forward"></div>
-                </div>
+                <!-- Home menu button -->
+                <div class="action home-button" id="log-out" title="Log out"></div>
             </div>
             <div class="process-loading"></div>
             <div class="progress-bars"></div>

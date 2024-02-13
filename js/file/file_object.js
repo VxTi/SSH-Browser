@@ -11,7 +11,7 @@ class File {
     #lastModified = undefined;  // Last modified date of the file
     #fileSize = 0;              // Size of the file in bytes
     #exists = true;             // Whether the file exists on the server
-    /** @type HTMLElement */
+    /** @type Element */
     #refElement = undefined;    // Reference element of the file
     name;                       // Name of the file
 
@@ -36,6 +36,10 @@ class File {
         this.#refElement = element;
     }
 
+    /**
+     * Getter for the reference element.
+     * @returns {Element}
+     */
     get refElement() {
         return this.#refElement;
     }
@@ -67,7 +71,7 @@ class File {
 
     /**
      * Getter for last modified date.
-     * @returns {Date}
+     * @returns {String}
      */
     get lastModified() { return this.#lastModified; }
 

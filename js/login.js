@@ -7,11 +7,12 @@ $(document).ready(() => {
 
     // = [...$('#ssh-host, #ssh-username, #ssh-password, #ssh-port, #ssh-private-key, #ssh-passphrase')]
 
-
-    $('#ssh-show-password').on('click', () => {
+    let showPass = $('#ssh-show-password');
+    showPass.on('click', () => {
         let e = $('#ssh-password');
         e.attr('type', e.attr('type') === 'password' ? 'text' : 'password');
-        $(this).toggleClass('password-invisible');
+        showPass.toggleClass('password-invisible');
+        showPass.toggleClass('password-visible');
     })
 
     // Add the back button functionality

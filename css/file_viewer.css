@@ -69,7 +69,6 @@
     margin: 0;
     background-color: var(--theme-5);
     clip-path: polygon(44.75% 24.25%, 70.5% 50%, 70.5% 50%, 44.75% 74.25%, 39.38% 68.54%, 58.83% 49.08%, 39.38% 29.63%);
-
 }
 
 .action-container {
@@ -78,6 +77,8 @@
     display: flex;
     flex-flow: row nowrap;
     justify-content: flex-end;
+    flex: 1 1 0px;
+    flex-basis: 100%;
     align-items: center;
     background-color: var(--theme-1);
     border-bottom: 1px solid var(--theme-5);
@@ -128,6 +129,12 @@
 .navigate-forward {
     background-color: var(--theme-5);
     transform: rotate(-135deg);
+}
+
+.home-button {
+    background-image: url('../assets/log_out_icon.png');
+    width: var(--file-navigator-height);
+    height: var(--file-navigator-height);
 }
 
 .navigate-arrows {

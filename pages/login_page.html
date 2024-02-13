@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/login_page.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/login.js"></script>
-    <script>document.querySelector('html').dataset['theme'] = localStorage.theme || 'dark' </script>
+    <script>document.documentElement.dataset['theme'] = localStorage.theme || 'dark'</script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -18,7 +18,7 @@
 
             <!-- Login text boxes for connecting with SSH -->
             <div class="title-container">
-                <div class="back-button" id="ssh-back-button"></div>
+                <div class="btn-back" id="ssh-back-button"></div>
                 <h1 class="title-text">Login to SSH</h1>
             </div>
             <div class="host-input">

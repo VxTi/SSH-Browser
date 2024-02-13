@@ -20,14 +20,12 @@ let ctxTarget = [];
 $(document).ready(() => {
     // Add loading animation (bottom right)
     addLoadingSpinner($('.process-loading')[0]);
-    $('#back-main').on('click', () => window.location.href = '../index.html');
+    $('#log-out').on('click', () => window.location.href = '../index.html');
 
     // Resizing of the file information section
     $('.file-information-resize').on('dblclick', _ => $('.file-information').addClass('hidden'))
 
     fileContainer = document.querySelector('.file-container');
-
-    $
 
     // Load in the files from the current directory
     // If this fails, we redirect the user to the main menu.
