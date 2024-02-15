@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 
+
 /**
  * Methods for interacting with the SSH connection.
  */
@@ -44,7 +45,7 @@ contextBridge.exposeInMainWorld('ssh',  {
 
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
-    startingDir: async () => ipcRenderer.invoke('view-starting-directory'),
+    startingDir: async () => ipcRenderer.invoke('starting-directory'),
 
     /** @param {string} directory */
     listFiles: async (directory) => ipcRenderer.invoke('list-files', directory),

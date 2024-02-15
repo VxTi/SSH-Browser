@@ -247,6 +247,8 @@ body {
     align-items: center;
 }
 
+
+
 .grid {
     display: grid;
 }
@@ -285,6 +287,10 @@ body {
     background-image: url('../assets/right_arrow.png');
 }
 
+.fill-content {
+    width: 100%;
+    height: 100%;
+}
 
 .btn-back:hover {
     scale: 0.95;

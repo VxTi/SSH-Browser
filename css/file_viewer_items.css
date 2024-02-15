@@ -59,6 +59,7 @@
 .file-json { background-image: url('../assets/file_icons/json_icon.png'); }
 .file-md { background-image: url('../assets/file_icons/markdown_icon.png'); }
 .file-txt { background-image: url('../assets/file_icons/plaintext_icon.png'); }
+.file-compressed { background-image: url('../assets/file_icons/file_compressed_icon.png'); }
 
 /* Background image for normal file */
 .file-ordinary { background-image: url('../assets/file_icons/file_icon.png'); }
