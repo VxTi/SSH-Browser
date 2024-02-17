@@ -23,6 +23,7 @@
     justify-content: center;
     align-items: center;
     user-select: none;
+    border-top: 1px solid var(--border-1);
 }
 
 .path-section {
@@ -34,7 +35,7 @@
     justify-content: flex-start;
     align-items: center;
     background-color: var(--theme-2);
-    border-top: 1px solid var(--border-1);
+
 }
 
 .path-section > .folder {
@@ -74,11 +75,11 @@
 .action-container {
     width: 100vw;
     height: var(--file-navigator-height);
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: flex-end;
-    flex: 1 1 0px;
-    flex-basis: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, var(--file-navigator-height)) 7fr repeat(5, var(--file-navigator-height));
+    grid-template-rows: var(--file-navigator-height) 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
     align-items: center;
     background-color: var(--theme-1);
     border-bottom: 1px solid var(--theme-5);
@@ -133,8 +134,6 @@
 
 .home-button {
     background-image: url('../assets/log_out_icon.png');
-    width: var(--file-navigator-height);
-    height: var(--file-navigator-height);
 }
 
 .navigate-arrows {
@@ -167,14 +166,6 @@
     background-color: var(--theme-4);
 }
 
-/** Container for special actions, like filtering, creating and deleting files **/
-.action-container {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: flex-end;
-    align-items: center;
-}
-
 /** Action in the action container - Deletion  **/
 .action-delete { background-image: url('../assets/delete_icon.png'); }
 
@@ -190,8 +181,8 @@
 .action {
     margin: calc(0.5 * var(--file-navigator-action-margin));
     padding: calc(0.5 * var(--file-navigator-action-margin));
-    width: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
-    height: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
+    width: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 4);
+    height: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 4);
     border-radius: var(--file-navigator-action-margin);
     background-size: contain;
     background-position: center;

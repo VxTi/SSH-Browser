@@ -37,7 +37,9 @@ $(document).ready(() =>
     window.ssh.startingDir()
         .then(res =>
         {
+            /** Current dir is defined in file_caching.js **/
             currentDir = res.path;
+            homeDir = res.path;
             document.querySelector('.file-section').dataset.path = res.path;
             storeFiles(res.files, res.path);
             loadFileViewer();
@@ -231,19 +233,16 @@ $(document).ready(() =>
     filter.val(''); // reset previous input
     filter.blur(); // remove focus from the input
     filter.on('input', () =>
-    {
         $('.file').each((i, file) =>
         {
             file = $(file);
             file.toggleClass('hidden', file.data('name').indexOf(filter.val()) < 0);
-        })
-    });
+        }))
 
     /**
      * Functionality for the 'refresh' button in the action bar
      */
-    document.getElementById('action-refresh')
-        .onclick = () =>
+    $('#action-refresh').on('click', () =>
     {
         busy(true);
         window.ssh.listFiles(currentDir)
@@ -255,12 +254,12 @@ $(document).ready(() =>
         {
             busy(false)
         });
-    };
+    })
 
     /**
      * Functionality for the 'add file' button in the action bar
      */
-    document.getElementById('action-add-file').onclick = () =>
+    $('#action-add-file').on('click', () =>
     {
 
         busy(true);
@@ -275,12 +274,12 @@ $(document).ready(() =>
                         busy(false)
                     });
             })
-    };
+    })
 
     /**
      * Functionality for the 'delete file' button in the action bar
      */
-    document.getElementById('action-delete-file').onclick = () =>
+    $('#action-delete-file').on('click', () =>
     {
         let selected = [...document.querySelectorAll('.file.selected')];
         if (selected.length === 0)
@@ -311,25 +310,11 @@ $(document).ready(() =>
             {
                 busy(false)
             });
-    };
+    })
 
 
     /** Functionality for the 'home' button */
-    document.getElementById('action-home').onclick = () =>
-    {
-        busy(true);
-        window.ssh.startingDir()
-            .then(res =>
-            {
-                currentDir = res.path;
-                storeFiles(res.files, currentDir);
-                loadFileViewer();
-            })
-            .finally(_ =>
-            {
-                busy(false)
-            });
-    };
+    $('#action-home').on('click', () => navigateTo(homeDir))
 
     /**
      * Add keyboard functionality.
@@ -512,7 +497,7 @@ function navigateTo(target)
         .listFiles(target) // Retrieve files from selected directory
         .then(result =>
         {
-            navigationHistory.push(currentDir);
+            navigationHistory.push({from: currentDir, to: target});
             storeFiles(result, target);
             currentDir = target;
             loadFileViewer(); // reload the file viewer

@@ -1,6 +1,7 @@
 /** @type {Map<string, File[]>} */
 const fileCache = new Map();
-let currentDir = '~';
+let currentDir = null;
+let homeDir = null;
 
 
 /**

@@ -29,8 +29,6 @@
 
 /* Styles for a generic file displaying in the file viewer */
 .file {
-    --indent: 1;
-    --indent-size: 20px;
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
@@ -60,8 +58,6 @@
 .file-md { background-image: url('../assets/file_icons/markdown_icon.png'); }
 .file-txt { background-image: url('../assets/file_icons/plaintext_icon.png'); }
 .file-compressed { background-image: url('../assets/file_icons/file_compressed_icon.png'); }
-
-/* Background image for normal file */
 .file-ordinary { background-image: url('../assets/file_icons/file_icon.png'); }
 
 .hidden {
@@ -84,7 +80,6 @@
     height: var(--file-column-height);
     margin-top: 0;
     margin-bottom: 0;
-    padding-left: calc(var(--indent) * var(--indent-size));
 }
 
 .file.r-columns:hover {

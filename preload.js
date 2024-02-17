@@ -76,31 +76,14 @@ contextBridge.exposeInMainWorld('terminal', {
     execute: async (command) => ipcRenderer.invoke('cmd', command)
 });
 
-/**
- * Methods for controlling the window.
- */
-contextBridge.exposeInMainWorld('frame', {
-    minimize: () => {
-        ipcRenderer.send('window-minimize')
-    },
-    maximize: () => {
-        ipcRenderer.send('window-maximize')
-    },
-    /** @param {number} x
-     *  @param {number} y */
-    resize: (x, y) => {
-        ipcRenderer.send('window-resize', x, y)
-    },
-    /** @param {boolean} state */
-    resizable: (state) => {
-        ipcRenderer.send('window-resizable', state)
-    },
-});
-
 contextBridge.exposeInMainWorld('logger', {
     /** @param {string} message
      *  @param {...any} args */
     log: (message, ...args) => {
         ipcRenderer.send('log', message, args);
     }
+})
+
+contextBridge.exposeInMainWorld('config', {
+    get: async (file) => ipcRenderer.invoke('get-config', file),
 })

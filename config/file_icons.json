@@ -1,0 +1,89 @@
+[
+    {
+        "id": "css",
+        "resource": "css_icon.png",
+        "extensions": [
+            "css"
+        ]
+    },
+    {
+        "id": "html",
+        "resource": "html_icon.png",
+        "extensions": [
+            "html"
+        ]
+    },
+    {
+        "id": "js",
+        "resource": "js_icon.png",
+        "extensions": [
+            "js", "mjs"
+        ]
+    },
+    {
+        "id": "json",
+        "resource": "json_icon.png",
+        "extensions": [
+            "json"
+        ]
+    },
+    {
+        "id": "md",
+        "resource": "md_icon.png",
+        "extensions": [
+            "md", "markdown"
+        ]
+    },
+    {
+        "id": "directory",
+        "resource": "folder_icon.png",
+        "extensions": []
+    },
+    {
+        "id": "txt",
+        "resource": "txt_icon.png",
+        "extensions": [
+            "txt"
+        ]
+    },
+    {
+        "id": "unknown",
+        "resource": "file_icon.png",
+        "extensions": []
+    },
+    {
+        "id": "compressed",
+        "resource": "file_compressed_icon.png",
+        "extensions": [
+            "zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz"
+        ]
+    },
+    {
+        "id": "executable",
+        "resource": "file_executable_icon.png",
+        "extensions": [
+            "exe", "msi", "bat", "sh", "cmd"
+        ]
+    },
+    {
+        "id": "image",
+        "resource": "file_image_icon.png",
+        "extensions": [
+            "png", "jpg", "jpeg", "gif", "bmp", "tiff", "webp", "svg"
+        ]
+    },
+    {
+        "id": "pdf",
+        "resource": "file_pdf_icon.png",
+        "extensions": [
+            "pdf"
+        ]
+    },
+    {
+        "id": "video",
+        "resource": "file_video_icon.png",
+        "extensions": [
+            "mp4", "webm", "mkv", "flv", "avi", "mov", "wmv", "mpg", "mpeg", "3gp", "ogv"
+        ]
+    }
+]

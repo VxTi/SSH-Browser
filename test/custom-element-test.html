@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-load-icons>
+<head>
+    <meta charset="UTF-8">
+    <title>SSH FTP Client</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/file_viewer.css">
+    <link rel="stylesheet" href="../css/file_viewer_items.css">
+    <script src="../js/basis.js"></script>
+    <script src="../js/custom_elements/file_element.js"></script>
+</head>
+<body>
+    <div class="content flex f-column f-d-center f-m-center">
+        <script>
+            const fileElement = document.createElement('file-element');
+            fileElement.setAttribute('path', '/home/username');
+            fileElement.setAttribute('name', 'Test File')
+            fileElement.setAttribute('type', 'css')
+            fileElement.setAttribute('selected', '')
+            document.querySelector('.content').appendChild(fileElement);
+        </script>
+    </div>
+</body>
+</html>

@@ -2,9 +2,9 @@ const {app, BrowserWindow, ipcMain, dialog} = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
-const {NodeSSH} = require('node-ssh')
+const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
-const {exec} = require('child_process')
+const { exec} = require('child_process')
 
 const filter = new ansiHtml({newline: false, escapeXML: false, stream: false})
 
@@ -51,8 +51,10 @@ function createWindow()
     // Show the window buttons on macOS
     if (OS.isMac) window.setWindowButtonVisibility(true);
 
-    window.loadFile('./index.html')
-        .catch((err) => console.error(err));
+    window.loadFile("./test/custom-element-test.html")
+
+    /*window.loadFile('./index.html')
+        .catch((err) => console.error(err));*/
     return window;
 }
 
@@ -396,12 +398,6 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) => {
     })
 });
 
-/** Event handler for resizing the main window **/
-ipcMain.on('window-resize', (_, width, height) => mainWindow.setSize(width, height))
-
-/** Event handler for minimizing the main window **/
-ipcMain.on('window-minimize', _ => mainWindow.minimize());
-
 ipcMain.on('current-session', (event) =>
 {
     if (!sshConnected()) return event.returnValue = null;
@@ -411,6 +407,8 @@ ipcMain.on('current-session', (event) =>
 ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
 ipcMain.on('log', (_, args) => console.log(args));
+
+ipcMain.handle('get-config', (_, file) => loadConfig(file));
 
 /**
  * Method for checking the status of the current SSH connection.
@@ -534,9 +532,9 @@ function fmtPaths(...path)
     return path.map(p => p.replaceAll(' ', '\\ '));
 }
 
-function loadConfig()
+function loadConfig(file)
 {
-    let configPath = path.join(__dirname, 'config.json');
+    let configPath = path.join(__dirname, 'config', file);
     if (!fs.existsSync(configPath))
         fs.writeFileSync(configPath, JSON.stringify({}));
     return JSON.parse(fs.readFileSync(configPath).toString());
