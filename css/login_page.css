@@ -34,7 +34,7 @@
     background-repeat: no-repeat;
     z-index: 999;
     transition: background-image 0.2s ease-in-out;
-    background-image: url('../assets/eye_opened.svg');
+    background-image: url('../resources/eye_opened.svg');
 }
 
 .select-private-key {
@@ -49,7 +49,7 @@
     background-size: 75%;
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url('../assets/three_dots_icon.png');
+    background-image: url('../resources/three_dots_icon.png');
 }
 
 .password-input .input-box {
@@ -57,7 +57,7 @@
 }
 
 /** Image for button for password visibility, hide password (image) **/
-.password-invisible { background-image: url('../assets/eye_closed.svg'); }
+.password-invisible { background-image: url('../resources/eye_closed.svg'); }
 
 
 /** Container for text input and toggle password button **/

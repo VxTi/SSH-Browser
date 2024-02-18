@@ -15,7 +15,7 @@
     },
     {
         "id": "js",
-        "resource": "js_icon.png",
+        "resource": "javascript_icon.png",
         "extensions": [
             "js", "mjs"
         ]
@@ -29,19 +29,19 @@
     },
     {
         "id": "md",
-        "resource": "md_icon.png",
+        "resource": "markdown_icon.png",
         "extensions": [
             "md", "markdown"
         ]
     },
     {
-        "id": "directory",
+        "id": "dir",
         "resource": "folder_icon.png",
         "extensions": []
     },
     {
         "id": "txt",
-        "resource": "txt_icon.png",
+        "resource": "plaintext_icon.png",
         "extensions": [
             "txt"
         ]
@@ -60,14 +60,14 @@
     },
     {
         "id": "executable",
-        "resource": "file_executable_icon.png",
+        "resource": "executable_icon.png",
         "extensions": [
             "exe", "msi", "bat", "sh", "cmd"
         ]
     },
     {
         "id": "image",
-        "resource": "file_image_icon.png",
+        "resource": "image_icon.png",
         "extensions": [
             "png", "jpg", "jpeg", "gif", "bmp", "tiff", "webp", "svg"
         ]

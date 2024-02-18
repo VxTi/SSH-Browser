@@ -14,7 +14,7 @@ class FileElement extends HTMLElement {
     static #defaultWidth = '50px';
     static #defaultHeight = '50px';
 
-    static #resourceLocation = '../assets/file_icons/';
+    static #resourceLocation = '../resources/file_icons/';
 
     constructor() {
         super();
@@ -24,13 +24,16 @@ class FileElement extends HTMLElement {
         styles.textContent = `
             .file {
                 display: flex;
+                width: calc(1.5 * ${FileElement.#defaultWidth});
                 flex-flow: column nowrap;
                 align-items: center;
                 color: var(--text-color--, #fff);
                 font-family: var(--font--, Arial);
+                margin: 10px;
             }
-            .file[selected] {
-                background-color: var(--highlight-color--, #000);
+            file-element[selected=""] .file {
+                background-color: var(--selected-color--, #000);
+                padding: 40px;
             }
             .file-icon {
                 display: flex;
@@ -45,8 +48,6 @@ class FileElement extends HTMLElement {
             }   
             .file-name { text-align: center; margin: 10px; font-size: 0.8rem; }
         `
-
-
         let mainElement = document.createElement('div');
         mainElement.classList.add('file');
         mainElement.draggable = true;
@@ -89,14 +90,13 @@ class FileElement extends HTMLElement {
         this.shadowRoot.querySelector('.file-name').innerText = this.getAttribute('name');
         this.#directory = this.hasAttribute('directory');
         this.#fileType = this.getAttribute('type');
-        this.#setThumbnail(this.#fileType);
     }
 
     /**
      * Callback for when the element has been removed from the DOM.
      */
     disconnectedCallback() {
-
+        // TODO: Implement
     }
 
     /**
@@ -113,13 +113,8 @@ class FileElement extends HTMLElement {
 
     #setThumbnail(extension)
     {
-        let newType = window.iconMap?.find(icon => icon.extensions.includes(extension));
-        if (newType) {
-            let fileIcon = this.shadowRoot.querySelector('.file-icon');
-            fileIcon.style.backgroundImage = `url(${FileElement.#resourceLocation + newType.resource})`;
-        } else {
-
-        }
+        let fileIcon = this.shadowRoot.querySelector('.file-icon');
+        fileIcon.style.backgroundImage = `url(${window.getIcon(extension)})`;
     }
 }
 

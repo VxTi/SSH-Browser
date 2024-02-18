@@ -159,7 +159,7 @@ class File
             return;
 
         // Load the file info
-        window.ssh.getFileInfo(this.path, this.name)
+        return window.ssh.getFileInfo(this.path, this.name)
             .then(info =>
             {
                 this.#fileSize = info.fileSize;

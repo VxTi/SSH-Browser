@@ -39,7 +39,7 @@ function createWindow()
         transparent: true,
         titleText: 'SSH Client',
         titleBarOverlay: false,
-        icon: './assets/app_icon.png',
+        icon: './resources/app_icon.png',
         titleBarStyle: 'hiddenInset',
         webPreferences: {
             nodeIntegration: true,
@@ -51,10 +51,8 @@ function createWindow()
     // Show the window buttons on macOS
     if (OS.isMac) window.setWindowButtonVisibility(true);
 
-    window.loadFile("./test/custom-element-test.html")
-
-    /*window.loadFile('./index.html')
-        .catch((err) => console.error(err));*/
+    window.loadFile('./index.html')
+        .catch((err) => console.error(err));
     return window;
 }
 
@@ -534,8 +532,8 @@ function fmtPaths(...path)
 
 function loadConfig(file)
 {
-    let configPath = path.join(__dirname, 'config', file);
+    let configPath = path.join(__dirname, 'data', file);
     if (!fs.existsSync(configPath))
-        fs.writeFileSync(configPath, JSON.stringify({}));
+        throw new Error("Provided config file does not exist.")
     return JSON.parse(fs.readFileSync(configPath).toString());
 }

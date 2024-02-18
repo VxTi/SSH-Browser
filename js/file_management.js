@@ -62,7 +62,8 @@ $(document).ready(() =>
     $(document).on('click', _ => $('.context-menu').removeClass('active'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
-    $(document).on('dblclick', () => $('.file.selected').removeClass('selected'))
+    $(document).on('dblclick', () => $('file-element[selected]').each((i, e) =>
+        e.removeAttribute('selected')))
 
     /** - - - - - - - - - - - - - - - **
      | Context menu (Right-clicking)   |
@@ -77,21 +78,21 @@ $(document).ready(() =>
         event.stopImmediatePropagation();
 
         // Select potential file
-        let target = event.target.parentElement/*event.target;*/
+        let targetElement = event.target
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
         let enabled = [];
 
-        ctxTarget = [target];
+        ctxTarget = [targetElement];
 
         // Check if the clicked-on element is a file
-        if (target.classList.contains('file'))
+        if (targetElement instanceof FileElement)
         {
             $('.file').removeClass('selected');
-            target.classList.add('selected');
-            fileRenameTarget = getFile(target.dataset.path, target.dataset.name);
-            ctxTarget = [...document.querySelectorAll('.file.selected')];
+            targetElement.setAttribute('selected', '');
+            fileRenameTarget = getFile(targetElement.dataset.path, targetElement.dataset.name);
+            ctxTarget = [...document.querySelectorAll('file-element[selected]')];
             enabled.push(
                 ...['info', 'delete', 'rename', 'download', 'cpy-path']
                     .map(e => document.getElementById('ctx-' + e))
@@ -99,13 +100,13 @@ $(document).ready(() =>
         }
 
         // Disable all context actions first.
-        $('.context-menu-item').addClass('disabled');
+        $('.ctx-item').addClass('disabled');
 
         // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
         // First, check whether it has a 'context-menu' dataset property.
-        if (target.dataset.hasOwnProperty('contextMenu'))
+        if (targetElement.dataset.hasOwnProperty('contextMenu'))
         {
-            let items = target.dataset.contextMenu.split(' ');
+            let items = targetElement.dataset.contextMenu.split(' ');
             items.forEach(ctxMenuItem =>
             {
                 let element = document.getElementById('ctx-' + ctxMenuItem.trim());
@@ -160,8 +161,13 @@ $(document).ready(() =>
     {
         if (ctxTarget.length > 0)
         {
-            ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
-            showPreview(ctxTarget.map(e => e.dataset.name), ctxTarget[0].dataset.path);
+           // $('file-element[selected]').each((i, e) => e.removeAttribute('selected'));
+
+            ctxTarget = ctxTarget.filter(e => e.hasAttribute('path') && e.hasAttribute('name'))
+            showPreview(
+                ctxTarget.map(e => e.getAttribute('name')),
+                ctxTarget[0].getAttribute('path')
+            );
         }
     })
 
@@ -321,27 +327,65 @@ $(document).ready(() =>
      * Example, moving through files with arrow keys,
      * Deleting files, etc.
      */
-    document.addEventListener('keydown', (e) =>
+    $(document).on('keydown', (e) =>
     {
-        let selected = document.querySelector('.file.selected');
-        if (!selected)
-            return;
+        let selected = $('file-element[selected]')
 
         let next = null;
-
-        if (e.key === 'ArrowLeft')
-            next = selected.previousElementSibling;
-        else if (e.key === 'ArrowRight')
-            next = selected.nextElementSibling;
-        else if (e.key === 'Escape')
-            document.querySelectorAll('.file.selected').forEach(e => e.classList.remove('selected'));
+        switch (e.key)
+        {
+            case 'Enter':
+                // If the selected file is a directory, we open it.
+                if (selected.length === 1 && selected.first().prop('directory'))
+                    navigateTo(selected.first().attr('path') + '/' + selected.first().attr('name'));
+                break;
+            case 'Delete':
+                // If the CTRL (macOS) or CTRL (Windows) key is pressed, we delete the file.
+                if (e.ctrlKey || e.metaKey)
+                    $('#action-delete-file').trigger('click');
+                break;
+            case 'ArrowLeft':
+                next = selected.prev()
+                if (selected.length === 0 || next.length === 0)
+                    next = $('file-element').last();
+                break;
+            case 'ArrowRight':
+                next = selected.next()
+                if (selected.length === 0 || next.length === 0)
+                    next = $('file-element').first();
+                break;
+            case 'ArrowUp':
+                break;
+            case 'ArrowDown':
+                    break;
+            case 'Escape':
+                selected.removeAttr('selected');
+                break;
+            case 'i':
+                if (e.ctrlKey || e.metaKey)
+                {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    ctxTarget = [selected.get(0)];
+                    $('#ctx-info').trigger('click');
+                }
+                break;
+            case 'r':
+                if (e.ctrlKey || e.metaKey)
+                {
+                    //e.preventDefault();
+                    //e.stopImmediatePropagation();
+                    ctxTarget = [selected.get(0)];
+                    $('#action-refresh').trigger('click');
+                }
+                break;
+        }
 
         if (next)
         {
-            if (!e.shiftKey) selected.classList.remove('selected');
-            next.classList.add('selected');
-            let files = [];
-            document.querySelectorAll('.file.selected').forEach(e => files.push(e.dataset.name))
+            if (!e.shiftKey)
+                selected.removeAttr('selected');
+            next.attr('selected', '');
         }
     });
     // Add drag and drop functionality
@@ -380,6 +424,22 @@ $(document).ready(() =>
                 busy(false)
             });
     });
+    $('#navigate-back').on('click', () =>
+    {
+        if (navigationHistoryIndex > 0)
+        {
+            navigationHistoryIndex--;
+            navigateTo(navigationHistory[navigationHistoryIndex].from);
+        }
+    })
+    $('#navigate-forward').on('click', () =>
+    {
+        if (navigationHistoryIndex < navigationHistory.length - 1)
+        {
+            navigationHistoryIndex++;
+            navigateTo(navigationHistory[navigationHistoryIndex].to);
+        }
+    })
 });
 
 /**
@@ -403,7 +463,7 @@ function loadFileViewer()
 
     // Remove all previous segments from previous queries
 
-    $('.path-separator, .path-arrow, .path-separator, .file').remove();
+    $('.path-separator, .path-arrow, .path-separator, file-element').remove();
 
     let pathContainer = document.querySelector('.path-section');
 
@@ -452,7 +512,7 @@ function loadFileElements(path = currentDir, clearOld = true)
 {
 
     // remove all old files if
-    if (clearOld) $('.file').remove();
+    if (clearOld) $('file-element').remove();
 
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
@@ -498,6 +558,7 @@ function navigateTo(target)
         .then(result =>
         {
             navigationHistory.push({from: currentDir, to: target});
+            navigationHistoryIndex++
             storeFiles(result, target);
             currentDir = target;
             loadFileViewer(); // reload the file viewer
@@ -524,28 +585,12 @@ function createFileElement(file)
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
 
-    let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'dll'];
-    let isExecutable = executables.indexOf(file.name.substring(file.name.lastIndexOf('.') + 1)) >= 0;
-
-    let fileElement = document.createElement('div');
-    fileElement.classList.add('file', 'r-icons', file.directory ? 'directory' : 'ordinary');
-    fileElement.dataset.path = file.path;
-    fileElement.dataset.name = file.name;
-    fileElement.title = file.name;
-    fileElement.dataset.contextMenu = `${file.directory ? 'paste' : ''} ${isExecutable ? 'execute' : ''}`
-    fileElement.draggable = true;
-    file.reference(fileElement);
-
-    let fileIcon = document.createElement('div');
-
-    fileIcon.classList.add('file-icon', getFileThumbnail(file));
-    fileElement.appendChild(fileIcon);
-
-    // Add the file name to the file element
-    let fileTitle = document.createElement('span');
-    fileTitle.classList.add('file-name');
-    fileTitle.innerHTML = formatFileName(file.name);
-    fileElement.appendChild(fileTitle);
+    let fileElement = document.createElement('file-element');
+    fileElement.setAttribute('name', file.name);
+    fileElement.setAttribute('path', file.path);
+    fileElement.setAttribute('type', file.directory ? 'dir' : file.name.substring(file.name.lastIndexOf('.') + 1));
+    if (file.directory)
+        fileElement.setAttribute('directory', '')
 
     /** File interact functionality **/
 
@@ -558,10 +603,10 @@ function createFileElement(file)
     {
 
         // Deselect all other files
-        $('.file').removeClass('selected');
+        $('file-element').removeAttr('selected');
         $('.context-menu').removeClass('active');
 
-        fileElement.classList.add('selected');
+        fileElement.setAttribute('selected', '');
 
         // Prevent further propagation of the event.
         event.preventDefault();
@@ -578,7 +623,6 @@ function createFileElement(file)
  */
 function showPreview(files, directory = currentDir)
 {
-
     if (files.length === 0)
         return;
 
@@ -587,21 +631,21 @@ function showPreview(files, directory = currentDir)
 
     // TODO: Fix this
     // Remove all previous classes and add the correct one
-    preview.classList.forEach(c => preview.classList.remove(c));
     preview.classList.add('file-info-preview');
-    preview.classList.add(getFileThumbnail(files[0]));
+    let fileType = files[0].lastIndexOf('.') < 0 ? 'dir' : files[0].substring(files[0].lastIndexOf('.') + 1)
+    preview.style.backgroundImage = `url(${window.getIcon(fileType)})`;
 
     (async () =>
     {
         // If there's only one file, we can show all information about it.
         let file = getFile(directory, files[0]);
+        if (!file)
+            throw new Error("File not found")
         if (!file.loaded)
         {
             busy(true);
-            await file.loadInfo().finally(_ =>
-            {
-                busy(false)
-            }); // Load file info
+            // Load file info
+            await file.loadInfo()?.finally(_ => busy(false)) || busy(false);
         }
 
         /** Show file info **/

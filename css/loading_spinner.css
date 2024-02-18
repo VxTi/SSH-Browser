@@ -6,7 +6,7 @@
     opacity: 1;
   }
   100% {
-    opacity: 0.8;
+    opacity: 0.4;
   }
 }
 .spinner {
@@ -21,7 +21,7 @@
   position: absolute;
   left: 4px;
   bottom: 6px;
-  width: 4px;
+  width: 3px;
   height: 8px;
   border-radius: 2px;
   background-color: transparent;
@@ -34,56 +34,56 @@
   transform: rotate(45deg);
   -webkit-animation-delay: 0.1875s;
   animation-delay: 0.1875s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(2) {
   transform: rotate(90deg);
   -webkit-animation-delay: 0.375s;
   animation-delay: 0.375s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(3) {
   transform: rotate(135deg);
   -webkit-animation-delay: 0.5625s;
   animation-delay: 0.5625s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(4) {
   transform: rotate(180deg);
   -webkit-animation-delay: 0.75s;
   animation-delay: 0.75s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(5) {
   transform: rotate(225deg);
   -webkit-animation-delay: 0.9375s;
   animation-delay: 0.9375s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(6) {
   transform: rotate(270deg);
   -webkit-animation-delay: 1.125s;
   animation-delay: 1.125s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(7) {
   transform: rotate(315deg);
   -webkit-animation-delay: 1.3125s;
   animation-delay: 1.3125s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 .blade:nth-child(8) {
   transform: rotate(360deg);
   -webkit-animation-delay: 1.5s;
   animation-delay: 1.5s;
-  background-color: var(--theme-3);
+  background-color: var(--theme-5);
 }
 
 /*# sourceMappingURL=loading_spinner.css.map */

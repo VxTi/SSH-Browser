@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-load-icons>
 <head>
     <meta charset="UTF-8">
     <title>SSH Browser</title>
@@ -7,30 +7,30 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/terminal.css">
     <link rel="stylesheet" href="../css/file_viewer.css">
-    <link rel="stylesheet" href="../css/file_viewer_items.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
+    <script src="../js/basis.js"></script>
+    <script src="../js/custom_elements/file_element.js"></script>
     <script src="../js/terminal.js"></script>
     <script src="../js/file/file_permissions_object.js"></script>
     <script src="../js/file/file_object.js"></script>
     <script src="../js/file/file_caching.js"></script>
     <script src="../js/file_management.js"></script>
     <script src="../js/loading_spinner.js"></script>
-    <script>document.documentElement.dataset['theme'] = localStorage.theme || 'dark'</script>
 </head>
 <body>
     <div class="navigator"></div>
     <div class="content">
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu">
-            <div class="context-menu-item" id="ctx-open">Open</div>
-            <div class="context-menu-item" id="ctx-execute">Execute</div>
-            <div class="context-menu-item" id="ctx-new-dir">New directory</div>
-            <div class="context-menu-item" id="ctx-info">Show Info</div>
-            <div class="context-menu-item" id="ctx-rename">Rename</div>
-            <div class="context-menu-item" id="ctx-delete">Delete</div>
-            <div class="context-menu-item" id="ctx-download">Download</div>
-            <div class="context-menu-item" id="ctx-cpy-path">Copy path</div>
+            <div class="ctx-item" id="ctx-open">Open</div>
+            <div class="ctx-item" id="ctx-execute">Execute</div>
+            <div class="ctx-item" id="ctx-new-dir">New directory</div>
+            <div class="ctx-item" id="ctx-info">Show Info</div>
+            <div class="ctx-item" id="ctx-rename">Rename</div>
+            <div class="ctx-item" id="ctx-delete">Delete</div>
+            <div class="ctx-item" id="ctx-download">Download</div>
+            <div class="ctx-item" id="ctx-cpy-path">Copy path</div>
         </div>
         <!-- File viewer action container -->
         <div class="action-container">
@@ -39,6 +39,17 @@
             <div class="action nav-btn btn-forward" id="navigate-forward" title="Navigate forward"></div>
 
             <input type="text" name="filter" placeholder="Find a file" id="file-filter" title="Enter which file you're looking for.">
+
+            <div class="action action-scripts">
+                <span>Scripts</span>
+                <div class="run-script icon"></div>
+                <div class="action-script-container flex f-column">
+                    <div class="action-script" id="script-new">New Script</div>
+                    <div class="action-script" id="script-1">Script 1</div>
+                    <div class="action-script" id="script-2">Script 2</div>
+                </div>
+            </div>
+
             <div class="action action-home" id="action-home" title="Navigate to home directory"></div>
             <div class="action action-add-dir" id="action-add-dir" title="Create a new directory"></div>
             <div class="action action-refresh" id="action-refresh" title="Refresh the content of the current directory"></div>
@@ -46,11 +57,11 @@
             <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
         </div>
 
-        <div class="file-section" data-context-menu="new-dir cpy-path">
+        <div class="file-section">
             <input type="text" id="file-rename" class="file-rename" name="rename-file" placeholder="Rename file">
 
             <!-- Container displaying file contents -->
-            <div class="file-container scrollbar no-drag"></div>
+            <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path"></div>
 
             <!-- File information -->
             <div class="file-information hidden">

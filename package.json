@@ -14,10 +14,8 @@
   "author": "Luca Warmenhoven",
   "private": true,
   "dependencies": {
-    "ansi-html": "^0.0.9",
     "ansi-to-html": "^0.7.2",
     "electron-wix-msi": "^5.0.0",
-    "jquery": "^3.7.1",
     "menu": "^0.2.5",
     "node-ssh": "^13.1.0",
     "update-electron-app": "^3.0.0"

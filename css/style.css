@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'San Francisco';
     font-weight: 400;
-    src: url('../assets/fonts/sf-pro.otf') format('opentype');
+    src: url('../resources/fonts/sf-pro.otf') format('opentype');
 }
 
 :root {
@@ -202,7 +202,7 @@ body {
     color: #900;
     text-shadow: #000 1px 1px;
     font-family: var(--font);
-    visibility: hidden
+    visibility: hidden;
 }
 
 .inner-content {
@@ -233,6 +233,10 @@ body {
 
 .f-d-center {
     align-items: center;
+}
+
+.f-start {
+    justify-content: flex-start;
 }
 
 .center-x {
@@ -280,11 +284,11 @@ body {
 }
 
 .btn-back {
-    background-image: url('../assets/left_arrow.png');
+    background-image: url('../resources/left_arrow.png');
 }
 
 .btn-forward {
-    background-image: url('../assets/right_arrow.png');
+    background-image: url('../resources/right_arrow.png');
 }
 
 .fill-content {
