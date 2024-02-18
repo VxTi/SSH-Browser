@@ -15,13 +15,12 @@
     width: 100vw;
     height: var(--file-navigator-height);
     position: relative;
-    display: flex;
-    flex-flow: column nowrap;
-    background-color: var(--theme-2);
-    opacity: 1;
-    z-index: 2;
-    justify-content: center;
+    display: grid;
+    grid-template-rows: var(--file-navigator-height);
+    grid-template-columns: var(--file-navigator-height) calc(100vw - 100px - 2 * var(--file-navigator-height)) var(--file-navigator-height) 100px;
     align-items: center;
+    justify-items: center;
+    background-color: var(--theme-1);
     user-select: none;
     border-top: 1px solid var(--border-1);
 }
@@ -30,12 +29,10 @@
     width: 100%;
     height: 100%;
     display: flex;
-    position: absolute;
+    position: relative;
     flex-flow: row nowrap;
     justify-content: flex-start;
     align-items: center;
-    background-color: var(--theme-2);
-
 }
 
 .path-section > .folder {
@@ -219,9 +216,9 @@
     width: var(--action-size);
     height: var(--action-size);
 }
-file-element[selected] {
-    background-color: var(--theme-5, #000);
-}
+file-element { border: 1px solid transparent; border-radius: 5px; }
+file-element[selected] { background-color: var(--theme-5); }
+file-element[dragover] { border-color: var(--theme-4); }
 
 .action-script-container {
     position: absolute;
@@ -332,15 +329,12 @@ file-element[selected] {
     border-radius: 4px;
 }
 
-.f-access-title {
-    width: 40px;
-}
+.f-access-title { width: 40px; }
 
 .grid-2-3 {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 40px 70px;
     grid-template-rows: repeat(3, 1fr);
-    grid-gap: 0;
     font-size: 0.7rem;
     font-family: var(--font);
     color: var(--text-color);
@@ -401,27 +395,22 @@ file-element[selected] {
     opacity: 1;
 }
 
-.ctx-item.disabled {
-    display: none;
-}
+.ctx-item.disabled { display: none; }
 
-.ctx-item:hover {
-    background-color: var(--theme-5);
-}
+.ctx-item:hover { background-color: var(--theme-5); }
 
 .progress-bars {
     display: flex;
     flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    width: 100px;
+    height: var(--file-navigator-height);
 }
 
 .progress-bar {
-    --progress: 0;
+    --progress: 0; /* Progress indicator. Ranges from 0 to 100 inclusively. */
     position: relative;
-    align-self: flex-end;
     display: block;
     width: 80px;
     height: 4px;

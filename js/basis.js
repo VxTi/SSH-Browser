@@ -38,3 +38,16 @@
             .catch(err => window.logger.log('Error loading file_icons.json: ', err));
     }
 })()
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-lang]')
+        .forEach(element => {
+            let key = element.dataset.lang
+            element.innerText = window.config.getLang(key)
+        })
+    document.querySelectorAll('[data-lang-title]')
+        .forEach(element => {
+            let key = element.dataset.langTitle
+            element.title = window.config.getLang(key)
+        })
+})

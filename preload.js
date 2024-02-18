@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 
+let availableLanguages = null
 
 /**
  * Methods for interacting with the SSH connection.
@@ -53,9 +54,17 @@ contextBridge.exposeInMainWorld('ssh',  {
     /** @param {string} directory
      *  @param {string} file
      *  @param {string} newName */
-    renameFile: async (directory, file, newName) => {
-        return ipcRenderer.invoke('rename-file', directory, file, newName)
-    },
+    renameFile: async (directory, file, newName) =>
+        ipcRenderer.invoke('rename-file', directory, file, newName)
+    ,
+
+    /** @param {string} fileName
+     * @param {string} srcPath
+     * @param {string} dstPath
+     */
+    moveFile: async (fileName, srcPath, dstPath) =>
+        ipcRenderer.invoke('move-file', fileName, srcPath, dstPath)
+    ,
 
     /** @param {string} directory
      *  @param {string} file */
@@ -81,9 +90,21 @@ contextBridge.exposeInMainWorld('logger', {
      *  @param {...any} args */
     log: (message, ...args) => {
         ipcRenderer.send('log', message, args);
+    },
+    error: (message, ...args) => {
+        ipcRenderer.send('log', `\x1b[38;2;200;0;0m${message}\x1b[0m`, args);
     }
 })
 
 contextBridge.exposeInMainWorld('config', {
+    /** @param {string} file */
     get: async (file) => ipcRenderer.invoke('get-config', file),
+
+    getLang: (key) => {
+        if (!availableLanguages)
+            availableLanguages = ipcRenderer.sendSync('get-languages')
+        let language = availableLanguages.hasOwnProperty(localStorage.language) ?
+            availableLanguages[localStorage.language] : availableLanguages['lang_en'];
+        return language.hasOwnProperty(key) ? language[key] : key;
+    }
 })

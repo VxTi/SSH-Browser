@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let addSessionElement = document.createElement('div');
             addSessionElement.classList.add('session-element', 'add-session', 'user-interact');
             addSessionElement.onclick = () => window.location.href = './pages/login_page.html';
+            addSessionElement.title = window.config.getLang('create_session_tooltip')
             document.querySelector('.session-content').appendChild(addSessionElement);
         })
 });
@@ -26,6 +27,7 @@ function addSession(session) {
     let session_element = document.createElement('div');
     session_element.classList.add('session-element', 'user-interact');
     session_container.appendChild(session_element);
+    session_element.title = window.config.getLang('join_session_tooltip')
 
     let session_host = document.createElement('span');
     session_host.classList.add('session-name');

@@ -63,7 +63,10 @@ $(document).ready(() =>
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
     $(document).on('dblclick', () => $('file-element[selected]').each((i, e) =>
-        e.removeAttribute('selected')))
+    {
+        e.removeAttribute('selected')
+        $('.file-information').addClass('hidden')
+    }))
 
     /** - - - - - - - - - - - - - - - **
      | Context menu (Right-clicking)   |
@@ -82,17 +85,18 @@ $(document).ready(() =>
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
-        let enabled = [];
+        let enabled = []
 
         ctxTarget = [targetElement];
 
         // Check if the clicked-on element is a file
         if (targetElement instanceof FileElement)
         {
-            $('.file').removeClass('selected');
-            targetElement.setAttribute('selected', '');
-            fileRenameTarget = getFile(targetElement.dataset.path, targetElement.dataset.name);
-            ctxTarget = [...document.querySelectorAll('file-element[selected]')];
+            document.querySelectorAll('file-element')
+                .forEach(e => e.removeAttribute('selected'))
+            targetElement.setAttribute('selected', '')
+            fileRenameTarget = getFile(targetElement.getAttribute('path'), targetElement.getAttribute('name'))
+            ctxTarget = [...document.querySelectorAll('file-element[selected]')]
             enabled.push(
                 ...['info', 'delete', 'rename', 'download', 'cpy-path']
                     .map(e => document.getElementById('ctx-' + e))
@@ -132,38 +136,16 @@ $(document).ready(() =>
     /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
 
     // Downloading a selected file
-    $('#ctx-download').on('click', () =>
-    {
-        // Check if there's anything selected
-        if (ctxTarget.length > 0)
-        {
-            // Filter out all elements that don't have a path and name (non-files)
-            ctxTarget = ctxTarget.filter(e => e.dataset.path && e.dataset.name)
-            Promise.all(ctxTarget.map(e => window.ssh.downloadFile(e.dataset.path, e.dataset.name)))
-                .catch(_ => window.logger.log('Error occurred whilst attempting to download file', _));
-        }
-    })
+    $('#ctx-download').on('click', () => downloadSelected())
 
     let renameFileInput = $('#file-rename');
-    const mkdir = () =>
-    {
-        let files = getFiles(currentDir);
-        let name = 'New Directory';
-        for (let i = 1; files.find(f => f.name === name); i++)
-            name = `New Directory (${i})`;
-
-        window.ssh.createDirectory(currentDir, name)
-            .catch(_ => window.logger.log('Error occurred whilst attempting to create new directory', _));
-    }
 
     // Viewing the information of a selected file
     $('#ctx-info').on('click', () =>
     {
         if (ctxTarget.length > 0)
         {
-           // $('file-element[selected]').each((i, e) => e.removeAttribute('selected'));
-
-            ctxTarget = ctxTarget.filter(e => e.hasAttribute('path') && e.hasAttribute('name'))
+            ctxTarget = ctxTarget.filter(e => e && e.hasAttribute('path') && e.hasAttribute('name'))
             showPreview(
                 ctxTarget.map(e => e.getAttribute('name')),
                 ctxTarget[0].getAttribute('path')
@@ -190,7 +172,7 @@ $(document).ready(() =>
             renameFileInput.addClass('active');
             renameFileInput.val(fileRenameTarget.name);
             let fileNameElement = fileRenameTarget.refElement.querySelector('.file-name');
-            fileNameElement.style.opacity = 0;
+            fileNameElement.style.opacity = '0';
             renameFileInput.css('left', fileNameElement.offsetLeft);
             renameFileInput.css('top', fileNameElement.offsetTop);
             renameFileInput.focus();
@@ -198,10 +180,10 @@ $(document).ready(() =>
     })
 
     // Create new directory (Context menu)
-    $('#ctx-new-dir').on('click', () => mkdir());
+    $('#ctx-new-dir').on('click', createDirectory);
 
     // Create new directory (Action bar)
-    $('#action-add-dir').on('click', () => mkdir());
+    $('#action-add-dir').on('click', createDirectory);
 
     renameFileInput.on('keypress', (e) =>
     {
@@ -221,7 +203,7 @@ $(document).ready(() =>
                     .then(_ =>
                     {
                         renameFileInput.removeClass('active');
-                        fileRenameTarget.refElement.querySelector('.file-name').style.opacity = 1;
+                        fileRenameTarget.refElement.querySelector('.file-name').style.opacity = '1';
                         fileRenameTarget = null;
                         loadFileViewer();
                     })
@@ -235,89 +217,27 @@ $(document).ready(() =>
     })
 
     // Add file filtering functionality
-    let filter = $('#file-filter');
-    filter.val(''); // reset previous input
-    filter.blur(); // remove focus from the input
-    filter.on('input', () =>
-        $('.file').each((i, file) =>
+    $('#file-filter').on('input', (event) =>
+        $('file-element').each((i, file) =>
         {
-            file = $(file);
-            file.toggleClass('hidden', file.data('name').indexOf(filter.val()) < 0);
+            if (file.getAttribute('name').indexOf(event.target.value) < 0)
+                file.setAttribute('hidden', '')
+            else
+                file.removeAttribute('hidden');
         }))
 
-    /**
-     * Functionality for the 'refresh' button in the action bar
-     */
-    $('#action-refresh').on('click', () =>
-    {
-        busy(true);
-        window.ssh.listFiles(currentDir)
-            .then(result =>
-            {
-                storeFiles(result, currentDir, true);
-                loadFileViewer();
-            }).finally(_ =>
-        {
-            busy(false)
-        });
-    })
+    /** Functionality for the 'refresh' button in the action bar */
+    $('#action-refresh').on('click', reloadContent);
 
     /**
      * Functionality for the 'add file' button in the action bar
      */
-    $('#action-add-file').on('click', () =>
-    {
-
-        busy(true);
-        window.ssh.selectFiles()
-            .then(files =>
-            {
-                if (files.length < 1)
-                    return;
-                window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
-                    .finally(_ =>
-                    {
-                        busy(false)
-                    });
-            })
-    })
+    $('#action-add-file').on('click', addFiles);
 
     /**
      * Functionality for the 'delete file' button in the action bar
      */
-    $('#action-delete-file').on('click', () =>
-    {
-        let selected = [...document.querySelectorAll('.file.selected')];
-        if (selected.length === 0)
-            return;
-
-        busy(true);
-
-        // Remove all selected files from the server
-        Promise.all(selected.map(file => window.ssh.deleteFile(file.dataset.path, file.dataset.name)))
-            .then(_ =>
-            {
-                // Remove previously selected files from the file viewer
-                selected.forEach(e => e.remove());
-
-                // Retrieve files and filter out the deleted ones.
-                let files = getFiles(currentDir);
-                files.forEach((file, i) =>
-                {
-                    if (selected.find(e => e.dataset.name === file.name))
-                        files.splice(i, 1);
-                });
-
-                // Update the file map
-                fileCache[currentDir] = files;
-
-            })
-            .finally(_ =>
-            {
-                busy(false)
-            });
-    })
-
+    $('#action-delete-file').on('click', deleteSelected);
 
     /** Functionality for the 'home' button */
     $('#action-home').on('click', () => navigateTo(homeDir))
@@ -332,37 +252,38 @@ $(document).ready(() =>
         let selected = $('file-element[selected]')
 
         let next = null;
+        let specialFunction = e.ctrlKey || e.metaKey;
         switch (e.key)
         {
-            case 'Enter':
+            case 'Enter': /** TODO: Add keybind settings */
                 // If the selected file is a directory, we open it.
                 if (selected.length === 1 && selected.first().prop('directory'))
                     navigateTo(selected.first().attr('path') + '/' + selected.first().attr('name'));
                 break;
-            case 'Delete':
+            case 'Backspace': /** TODO: Add keybind settings */
                 // If the CTRL (macOS) or CTRL (Windows) key is pressed, we delete the file.
-                if (e.ctrlKey || e.metaKey)
-                    $('#action-delete-file').trigger('click');
+                if (specialFunction)
+                    deleteSelected()
                 break;
-            case 'ArrowLeft':
+            case 'ArrowLeft': /** TODO: Add keybind settings */
                 next = selected.prev()
                 if (selected.length === 0 || next.length === 0)
                     next = $('file-element').last();
                 break;
-            case 'ArrowRight':
+            case 'ArrowRight': /** TODO: Add keybind settings */
                 next = selected.next()
                 if (selected.length === 0 || next.length === 0)
                     next = $('file-element').first();
                 break;
-            case 'ArrowUp':
+            case 'ArrowUp': /** TODO: Add keybind settings */
                 break;
-            case 'ArrowDown':
+            case 'ArrowDown': /** TODO: Add keybind settings */
                     break;
-            case 'Escape':
+            case 'Escape': /** TODO: Add keybind settings */
                 selected.removeAttr('selected');
                 break;
-            case 'i':
-                if (e.ctrlKey || e.metaKey)
+            case 'i': /** TODO: Add keybind settings and optimize */
+                if (specialFunction)
                 {
                     e.preventDefault();
                     e.stopImmediatePropagation();
@@ -370,13 +291,29 @@ $(document).ready(() =>
                     $('#ctx-info').trigger('click');
                 }
                 break;
-            case 'r':
-                if (e.ctrlKey || e.metaKey)
+            case 'r': /** TODO: Add keybind settings and optimize */
+                if (specialFunction)
                 {
-                    //e.preventDefault();
-                    //e.stopImmediatePropagation();
-                    ctxTarget = [selected.get(0)];
-                    $('#action-refresh').trigger('click');
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    ctxTarget = [selected.get(0)]
+                    reloadContent()
+                }
+                break;
+            case 'o': /** TODO: Add keybind settings and optimize */
+                if (specialFunction)
+                {
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    addFiles()
+                }
+                break;
+            case 'd': /** TODO: Add keybind settings and optimize */
+                if (specialFunction)
+                {
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    downloadSelected()
                 }
                 break;
         }
@@ -399,11 +336,11 @@ $(document).ready(() =>
     // This will upload the files to the server.
     document.addEventListener('drop', (event) =>
     {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
         if (event.dataTransfer.files.length === 0)
             return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
 
         /** @type {string[]} */
         let pathArr = [];
@@ -414,7 +351,7 @@ $(document).ready(() =>
         window.ssh.uploadFiles(currentDir, pathArr)
             .then(_ =>
             {
-                // get current files in currentDir, map paths to file objects and add to fileCache
+                // Update the file cache with the new files
                 getFiles(currentDir).push(...pathArr.map(p =>
                     new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements();
@@ -516,25 +453,6 @@ function loadFileElements(path = currentDir, clearOld = true)
 
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
-}
-
-/**
- * Retrieves the appropriate file icon for the given file, as a string (css class)
- * @param {File | string} file
- * @returns {string} The appropriate file icon class for CSS.
- */
-function getFileThumbnail(file)
-{
-    if (file instanceof File)
-        file = file.name;
-    let executables = ['exe', 'sh', 'bat', 'dylib', 'so', 'dll'];
-    let compressed = ['zip', '7z', 'gz', 'tar', 'rar', 'bz2', 'xz'];
-    let acceptedExtensions = ['css', 'html', 'js', 'json', 'txt', 'md'];
-    let isExecutable = executables.indexOf(file.substring(file.lastIndexOf('.') + 1)) >= 0;
-    let isCompressed = compressed.indexOf(file.substring(file.lastIndexOf('.') + 1)) >= 0;
-    return file.indexOf('.') < 0 ? 'file-directory' : isExecutable ? 'file-executable' : isCompressed ? 'file-compressed' :
-        acceptedExtensions.indexOf(file.substring(file.lastIndexOf('.') + 1)) >= 0 ? 'file-' + file.substring(file.lastIndexOf('.') + 1) : 'file-ordinary';
-
 }
 
 /**
@@ -707,7 +625,6 @@ window.events.on('process-status', (status) =>
         status.hasOwnProperty('progress') && typeof status.progress === 'number' &&
         status.hasOwnProperty('finished') && typeof status.finished === 'boolean')
     {
-
         // Get the target element
         let target = document.getElementById(`pgb-${status.type}`);
 
@@ -718,7 +635,6 @@ window.events.on('process-status', (status) =>
         {
             if (target == null)
             {
-
                 target = document.createElement('div');
                 target.classList.add('progress-bar');
                 target.id = `pgb-${status.type}`;
@@ -728,3 +644,98 @@ window.events.on('process-status', (status) =>
         }
     }
 });
+
+/**
+ * Function for refreshing the content of the file viewer.
+ */
+function reloadContent()
+{
+    busy(true);
+    window.ssh.listFiles(currentDir)
+        .then(result =>
+        {
+            storeFiles(result, currentDir, true);
+            loadFileViewer();
+        })
+        .finally(_ =>
+        {
+            busy(false)
+        });
+}
+
+/**
+ * Function for downloading the currently selected files.
+ */
+function downloadSelected()
+{
+    let selectedFiles = [...document.querySelectorAll('file-element[selected]')];
+    if (selectedFiles.length === 0)
+        return;
+
+    busy(true);
+    Promise.all(selectedFiles.map((element) =>
+        window.ssh.downloadFile(element.getAttribute('path'), element.getAttribute('name'))))
+        .catch(e => window.logger.error('Error occurred whilst attempting to download file', e))
+        .finally(_ =>
+        {
+            busy(false)
+        });
+}
+
+/**
+ * Function for deleting the currently selected files.
+ */
+function deleteSelected()
+{
+
+    let selected = [...document.querySelectorAll('file-element[selected]')];
+    if (selected.length === 0)
+        return;
+
+    busy(true);
+    Promise.all(selected.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
+        .then(_ =>
+        {
+            // Remove them from the DOM
+            // Automatic file system reloading will take care
+            // of file cache updates.
+            selected.forEach(e => e.remove());
+        })
+        .catch(e => window.logger.error('Error occurred whilst attempting to delete file', e))
+        .finally(_ =>
+        {
+            busy(false)
+        });
+}
+
+/**
+ * Function for creating a new directory
+ */
+function createDirectory()
+{
+    let files = getFiles(currentDir);
+    let name = 'New Directory';
+    for (let i = 1; files.find(f => f.name === name); i++)
+        name = `New Directory (${i})`;
+    window.ssh.createDirectory(currentDir, name)
+        .catch(_ => window.logger.log('Error occurred whilst attempting to create new directory', _));
+}
+
+/**
+ * Function for uploading files from the local file system to the remote file system.
+ */
+function addFiles()
+{
+    busy(true);
+    window.ssh.selectFiles()
+        .then(files =>
+        {
+            if (files.length < 1)
+                return;
+            window.ssh.uploadFiles(currentDir, files) // TODO: Error handling
+                .finally(_ =>
+                {
+                    busy(false)
+                });
+        })
+}

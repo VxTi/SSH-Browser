@@ -8,6 +8,14 @@ const { exec} = require('child_process')
 
 const filter = new ansiHtml({newline: false, escapeXML: false, stream: false})
 
+const languages = JSON.parse('{' + fs.readdirSync(path.join(__dirname, 'data', 'lang'))
+    .filter(file => file.endsWith('.json')) // Filter out non-JSON files
+    .map(file =>
+        `\"${file.split('/').pop().split('.')[0]}\": ` + // Name of the language as key (e.g. lang_en)
+        fs.readFileSync(path.join(__dirname, 'data', 'lang', file)).toString()
+    )
+    .join(',') + '}')
+
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
 let connections = [];
@@ -246,6 +254,8 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
     })
 })
 
+ipcMain.on('get-languages', (event) => event.returnValue = languages);
+
 /**
  *  Event handler for uploading multiple files
  *  @param {string} directory The directory to upload the files to.
@@ -320,7 +330,19 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
     })
 })
 
-/** Event handler for renaming a file on the remote server. */
+ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) => {
+    [fileName, srcPath, dstPath] = fmtPaths(fileName, srcPath, dstPath);
+    return new Promise((resolve, reject) =>
+    {
+        if (sshConnected())
+        {
+            ssh().execCommand(`mv ${path.join(srcPath, fileName)} ${path.join(dstPath, fileName)}`)
+                .then(_ => resolve())
+                .catch(err => reject(err));
+        } else reject('Not connected');
+    })
+})
+
 ipcMain.handle('rename-file', async (_, directory, fileName, newName) => {
     [directory, fileName, newName] = fmtPaths(directory, fileName, newName);
     return new Promise((resolve, reject) =>

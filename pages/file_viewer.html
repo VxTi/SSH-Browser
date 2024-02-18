@@ -35,8 +35,8 @@
         <!-- File viewer action container -->
         <div class="action-container">
 
-            <div class="action nav-btn btn-back" id="navigate-back" title="Navigate backward"></div>
-            <div class="action nav-btn btn-forward" id="navigate-forward" title="Navigate forward"></div>
+            <div class="action nav-btn btn-back" id="navigate-back" data-lang-title="navigate_back_tooltip"></div>
+            <div class="action nav-btn btn-forward" id="navigate-forward" data-lang-title="navigate_forward_tooltip"></div>
 
             <input type="text" name="filter" placeholder="Find a file" id="file-filter" title="Enter which file you're looking for.">
 
@@ -92,7 +92,7 @@
             </div>
         </div>
         <!-- Terminal container -->
-        <div class="terminal container" id="terminal">
+        <div class="terminal container" id="terminal" hidden="hidden">
             <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
             <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
             <div class="terminal-content scrollbar terminal-output"></div>
@@ -100,14 +100,9 @@
         </div>
         <!-- Directory path container  -->
         <div class="path-container">
-            <div class="path-section">
-                <!-- Home menu button -->
-                <div class="action home-button" id="log-out" title="Log out"></div>
-            </div>
-            <div class="process-indicator">
-                <span class="process-text">Loading</span>
-                <div class="process-loading"></div>
-            </div>
+            <div class="action home-button" id="log-out" title="Log out"></div>
+            <div class="path-section"></div>
+            <div class="process-loading"></div>
             <div class="progress-bars"></div>
         </div>
     </div>
