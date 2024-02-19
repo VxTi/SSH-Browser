@@ -30,7 +30,7 @@ jobs:
           npm run build_macos
           git config --global user.name 'VxTi'
           git config --global user.email '${{ secrets.EMAIL }}'
-          git add .
+          git add release_builds/*
           git commit -m "Build Application on ${{ matrix.os }}"
           git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
 
@@ -40,7 +40,7 @@ jobs:
           npm run build_win
           git config --global user.name 'VxTi'
           git config --global user.email '${{ secrets.EMAIL }}'
-          git add .
+          git add release_builds/*
           git commit -m "Build Application on ${{ matrix.os }}"
           git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
 
@@ -51,6 +51,6 @@ jobs:
           npm run build_linux
           git config --global user.name 'VxTi'
           git config --global user.email '${{ secrets.EMAIL }}'
-          git add .
+          git add release_builds/*
           git commit -m "Build Application on ${{ matrix.os }}"
           git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
