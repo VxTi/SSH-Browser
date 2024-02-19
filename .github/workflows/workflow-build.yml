@@ -1,20 +1,27 @@
+name: Build
+
 on:
   push:
     branches: [ "main" ]
 
   jobs:
     build:
-      runs-on: [ubuntu-latest, windows-latest, macos-latest]
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          os: [ubuntu-latest, windows-latest, macos-latest]
       steps:
-        - name: Set up Node.js
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Configure Node.js
           uses: actions/setup-node@v3
           with:
             node-version: ${{ env.NODE_VERSION }}
-            cache: 'npm'
 
         - name: Installing Dependencies
-          run: |
-            npm install
+          run: npm ci
+
         - name: Building
           run: |
             npm run build_macos
