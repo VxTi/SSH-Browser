@@ -400,7 +400,7 @@ function loadFileViewer()
 
     // Remove all previous segments from previous queries
 
-    $('.path-separator, .path-arrow, .path-separator, file-element').remove();
+    $('.path-arrow, file-element').remove();
 
     let pathContainer = document.querySelector('.path-section');
 
@@ -415,27 +415,39 @@ function loadFileViewer()
         let seg = pathSegments[i];
 
         /** Path segment element on the bottom of the page **/
-        let directory = document.createElement('div');
+        /*let directory = document.createElement('div');
         directory.classList.add('path-separator');
+        directory.setAttribute('directory', '')
 
         directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
         directory.dataset.name = seg;
         directory.innerText = seg;
         if (i === 0)
-            directory.innerText = 'root';
+            directory.innerText = 'root';*/
 
-        directory.addEventListener('click', () => navigateTo(directory.dataset.path))
+        // Check if the file-element is defined, if not, we throw an error.
+        // This is to prevent the file viewer from breaking.
+
+        let pathElement = document.createElement('file-element');
+        pathElement.setAttribute('name', seg)
+        if (i === 0)
+            pathElement.setAttribute('nick-name', 'root')
+        pathElement.setAttribute('path', pathSegments.slice(0, i + 1).join('/').trim() || '/')
+        pathElement.setAttribute('directory', '')
+        pathElement.setAttribute('type', 'dir')
+        pathElement.setAttribute('path-segment', '')
+        pathElement.classList.add('path-separator');
+
+        pathElement.addEventListener('click', () => navigateTo(pathElement.getAttribute('path')))
 
         /** Directory separator arrow **/
         let arrow = document.createElement('div');
         arrow.classList.add('path-arrow');
-
         pathContainer.appendChild(arrow);
-        pathContainer.appendChild(directory);
+        pathContainer.appendChild(pathElement);
     }
 
-    // Clear all previously shown files and show all
-    // files in the current working directory.
+    // Load all files in the current directory
     loadFileElements();
 }
 
@@ -448,8 +460,8 @@ function loadFileViewer()
 function loadFileElements(path = currentDir, clearOld = true)
 {
 
-    // remove all old files if
-    if (clearOld) $('file-element').remove();
+    // Remove all old files from the file container (excluding path segments)
+    if (clearOld) $('file-element:not(.path-separator)').remove();
 
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));

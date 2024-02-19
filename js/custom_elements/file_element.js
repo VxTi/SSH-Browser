@@ -6,82 +6,12 @@
  */
 class FileElement extends HTMLElement
 {
-
-    /** @type boolean */
-    #directory
-    /** @type string */
-    #fileType
-
-    _dropTarget = null
-
     static #defaultSize = '50px';
+    static #containerHeight = '25px'
 
     constructor()
     {
         super();
-        let shadowRoot = this.attachShadow({mode: 'open'});
-
-        let styles = document.createElement('style');
-        styles.textContent = `
-            .file {
-                display: flex;
-                width: calc(1.5 * ${FileElement.#defaultSize});
-                flex-flow: column nowrap;
-                align-items: center;
-                color: var(--text-color--, #fff);
-                font-family: var(--font--, Arial);
-                margin: 10px;
-                
-            }
-            file-element[selected=""] .file {
-                background-color: var(--selected-color--, #000);
-                padding: 40px;
-            }
-            .file-icon {
-                display: flex;
-                flex-flow: column nowrap;
-                justify-content: center;
-                align-items: center;
-                width: ${FileElement.#defaultSize};
-                height: ${FileElement.#defaultSize};
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;   
-            }   
-            .file-name { text-align: center; margin: 10px; font-size: 0.8rem; }
-        `
-        let mainElement = document.createElement('div');
-        mainElement.classList.add('file');
-        mainElement.draggable = true;
-
-        let fileIcon = document.createElement('div');
-
-        fileIcon.classList.add('file-icon');
-
-        // Add the file name to the file element
-        let fileTitle = document.createElement('span');
-        fileTitle.classList.add('file-name');
-
-        this.addEventListener('dragstart', this._dragStart.bind(this));
-        this.addEventListener('dragend', this._dragEnd.bind(this));
-        this.addEventListener('dragover', this._dragOver.bind(this));
-        this.addEventListener('drop', this._drop.bind(this));
-        this.addEventListener('dragleave', this._dragLeave.bind(this));
-
-
-        mainElement.appendChild(fileIcon);
-        mainElement.appendChild(fileTitle);
-        shadowRoot.appendChild(mainElement);
-        shadowRoot.appendChild(styles);
-    }
-
-    /**
-     * Getter for whether this file is a directory
-     * @returns {boolean}
-     */
-    get directory()
-    {
-        return this.hasAttribute('directory');
     }
 
     /**
@@ -91,7 +21,9 @@ class FileElement extends HTMLElement
      */
     static get observedAttributes()
     {
-        return ['name', 'type', 'path', 'executable', 'selected'];
+        return [
+            'name', 'type', 'path', 'path-segment'
+        ];
     }
 
     /**
@@ -99,9 +31,43 @@ class FileElement extends HTMLElement
      */
     connectedCallback()
     {
-        this.shadowRoot.querySelector('.file-name').innerText = this.getAttribute('name');
-        this.#directory = this.hasAttribute('directory');
-        this.#fileType = this.getAttribute('type');
+        const shadow = this.attachShadow({mode: 'open'});
+        let styles = document.createElement('style');
+        styles.textContent =
+           `.center {display: flex;flex-flow: column nowrap;align-items: center;justify-content: center;}
+            .file {color: var(--text-color--, #fff);font-family: var(--font--, Arial);min-width: calc(1.5 * ${FileElement.#defaultSize});margin: 5px;cursor: pointer;flex-shrink: 1 0 auto;}
+            .file-icon {background-size: contain;background-repeat: no-repeat;background-position: center;width: ${FileElement.#defaultSize};height: ${FileElement.#defaultSize};}
+            .file.path-segment {flex-flow: row nowrap;justify-content: flex-start;height: ${FileElement.#containerHeight};width: max-content; margin: 0 2px; }
+            .file.path-segment .file-icon {width: ${FileElement.#containerHeight};height: ${FileElement.#containerHeight};}
+            .file-name { text-align: center; margin: 5px; font-size: 0.8rem; overflow-wrap: anywhere;}
+            .file.path-segment .file-name { overflow-wrap: break-word; }`
+
+        let mainElement = document.createElement('div');
+        mainElement.classList.add('center', 'file');
+        mainElement.draggable = true;
+        if (this.hasAttribute('path-segment'))
+            mainElement.classList.add('path-segment')
+
+        let fileIcon = document.createElement('div');
+        fileIcon.classList.add('center', 'file-icon');
+        fileIcon.style.backgroundImage = `url(${window.getIcon(this.getAttribute('type'))})`
+
+        // Add the file name to the file element
+        let fileTitle = document.createElement('span');
+        fileTitle.classList.add('file-name');
+        fileTitle.innerText = this.hasAttribute('nick-name') ?
+            this.getAttribute('nick-name') : this.getAttribute('name') || '';
+
+        this.addEventListener('dragstart', this._dragStart.bind(this));
+        this.addEventListener('dragend', this._dragEnd.bind(this));
+        this.addEventListener('dragover', this._dragOver.bind(this));
+        this.addEventListener('drop', this._drop.bind(this));
+        this.addEventListener('dragleave', this._dragLeave.bind(this));
+
+        mainElement.appendChild(fileIcon);
+        mainElement.appendChild(fileTitle);
+        shadow.appendChild(mainElement);
+        shadow.appendChild(styles);
     }
 
     /**
@@ -117,13 +83,19 @@ class FileElement extends HTMLElement
      */
     attributeChangedCallback(name, oldValue, newValue)
     {
+        if (!this.isConnected)
+            return;
+
         switch (name)
         {
             case 'name':
-                this.shadowRoot.querySelector('.file-name').innerText = (newValue);
+                this.shadowRoot.querySelector('.file-name').innerText = newValue;
                 break;
             case 'type':
                 this.#setThumbnail(newValue);
+                break;
+            case 'path-segment':
+                this.shadowRoot.querySelector('.file').classList.add('path-segment');
                 break;
         }
     }
@@ -134,8 +106,8 @@ class FileElement extends HTMLElement
      */
     #setThumbnail(extension)
     {
-        let fileIcon = this.shadowRoot.querySelector('.file-icon');
-        fileIcon.style.backgroundImage = `url(${window.getIcon(extension)})`;
+        this.shadowRoot.querySelector('.file-icon')
+            .style.backgroundImage = `url(${window.getIcon(extension)})`;
     }
 
     /**
@@ -146,6 +118,7 @@ class FileElement extends HTMLElement
     _dragStart(event)
     {
         this.setAttribute('dragging', '');
+        event.dataTransfer.setDragImage(this.shadowRoot.querySelector('.file-icon'), 0, 0);
     }
 
     /**
@@ -166,8 +139,10 @@ class FileElement extends HTMLElement
      */
     _dragOver(event)
     {
+        let sourceDragTarget = document.querySelector('[dragging]');
         // Check if the element it's dragging over has the 'directory' attribute and if it's not already dragging
-        if (this.hasAttribute('directory') && !this.hasAttribute('dragging'))
+        if (this.hasAttribute('directory') && !this.hasAttribute('dragging')
+            && sourceDragTarget instanceof FileElement && sourceDragTarget.getAttribute('path') !== this.getAttribute('path'))
         {
             this.setAttribute('dragover', '')
             event.dataTransfer.dropEffect = 'copy'
@@ -201,7 +176,8 @@ class FileElement extends HTMLElement
         if (sourceDragTarget instanceof FileElement) {
             let sourceName = sourceDragTarget.getAttribute('name');
             let sourcePath = sourceDragTarget.getAttribute('path');
-            let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name')    ;
+            let targetPath = this.getAttribute('path')
+            console.log(`Moving ${sourceName} from ${sourcePath} to ${targetPath}`)
             window.ssh.moveFile(sourceName, sourcePath, targetPath)
                 .then(() => sourceDragTarget.remove()) // Remove the source element
                 .catch(console.error);

@@ -25,7 +25,6 @@
         window.config.get('file_icons.json')
             .then(content =>
             {
-                window.logger.log("Loaded file icon map")
                 window['iconMap'] = content
                 window.resourceLocation = '../resources/file_icons/'
                 window.getIcon = function(extension) {
