@@ -1,4 +1,8 @@
 {
+    "join_session": "Selecteer een SSH Sessie",
+    "delete_session": "Verwijder",
+    "create_session_tooltip":  "Creëer een nieuwe SSH Sessie",
+    "join_session_tooltip": "Selecteer een bestaande SSH Sessie",
     "refresh_page": "Herlaad pagina",
     "delete_file": "Verwijder geselcteerde bestand(en)",
     "create_dir": "Creëer nieuwe map",

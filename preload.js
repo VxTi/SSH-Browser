@@ -100,6 +100,8 @@ contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
     get: async (file) => ipcRenderer.invoke('get-config', file),
 
+    keybinds: () => ipcRenderer.sendSync('get-keybinds'),
+
     getLang: (key) => {
         if (!availableLanguages)
             availableLanguages = ipcRenderer.sendSync('get-languages')

@@ -166,6 +166,7 @@ class File
                 this.#lastModified = info.lastModified;
                 this.#owner = info.owner;
                 this.#permissions.update(info.permissions);
+                this.#loaded = true;
             });
     }
 

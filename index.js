@@ -16,6 +16,8 @@ const languages = JSON.parse('{' + fs.readdirSync(path.join(__dirname, 'data', '
     )
     .join(',') + '}')
 
+const keybinds = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'keybinds.json')).toString())
+
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
 let connections = [];
@@ -255,6 +257,8 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
 })
 
 ipcMain.on('get-languages', (event) => event.returnValue = languages);
+
+ipcMain.on('get-keybinds', (event) => event.returnValue = keybinds);
 
 /**
  *  Event handler for uploading multiple files

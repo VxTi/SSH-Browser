@@ -6,7 +6,7 @@
     --file-navigator-action-margin: 5px;
 
     --file-information-width: 280px;
-
+    --action-size: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 4);
     --file-container-height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
 }
 
@@ -53,10 +53,11 @@
 }
 
 .action-container {
+    --segment-size:  calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2);
     width: 100vw;
     height: var(--file-navigator-height);
     display: grid;
-    grid-template-columns: repeat(2, calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2)) 7fr 1fr repeat(5, calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2));
+    grid-template-columns: repeat(2, var(--segment-size)) 7fr calc(3 * var(--segment-size)) repeat(5, var(--segment-size));
     grid-template-rows: var(--file-navigator-height) 1fr;
     grid-gap: 0;
     align-items: center;
@@ -118,7 +119,6 @@
 
 /** Generic action class **/
 .action {
-    --action-size: calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 4);
     margin: calc(0.5 * var(--file-navigator-action-margin));
     padding: calc(0.5 * var(--file-navigator-action-margin));
     width: var(--action-size);
@@ -159,7 +159,7 @@
     line-height: 1.5;
     display: flex;
     flex-flow: row nowrap;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -168,6 +168,9 @@
     width: var(--action-size);
     height: var(--action-size);
 }
+
+.run-script:hover { background-color: var(--theme-3); }
+
 file-element { border: 1px solid transparent; border-radius: 5px; }
 file-element[selected] { background-color: var(--theme-5); }
 [dragover] { border-color: var(--theme-4); }
@@ -322,7 +325,7 @@ file-element[selected] { background-color: var(--theme-5); }
     display: block;
     background-color: var(--theme-1);
     border: 1px solid var(--theme-5);
-    outline: 1px solid #000;
+    outline: 1px solid rgb(0, 0, 0);
     z-index: 9999;
     visibility: hidden;
     border-radius: 5px;
@@ -344,6 +347,7 @@ file-element[selected] { background-color: var(--theme-5); }
     border-radius: 4px;
     cursor: pointer;
     opacity: 1;
+    min-width: 100px;
 }
 
 .ctx-item.disabled { display: none; }

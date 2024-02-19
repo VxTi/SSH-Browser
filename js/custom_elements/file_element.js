@@ -71,14 +71,6 @@ class FileElement extends HTMLElement
     }
 
     /**
-     * Callback for when the element has been removed from the DOM.
-     */
-    disconnectedCallback()
-    {
-        // TODO: Implement
-    }
-
-    /**
      * Callback for when an attribute has changed
      */
     attributeChangedCallback(name, oldValue, newValue)
@@ -140,14 +132,19 @@ class FileElement extends HTMLElement
     _dragOver(event)
     {
         let sourceDragTarget = document.querySelector('[dragging]');
-        // Check if the element it's dragging over has the 'directory' attribute and if it's not already dragging
+        let sourcePath = sourceDragTarget.getAttribute('path') + '/' + sourceDragTarget.getAttribute('name')
+        let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name')
+
         if (this.hasAttribute('directory') && !this.hasAttribute('dragging')
-            && sourceDragTarget instanceof FileElement && sourceDragTarget.getAttribute('path') !== this.getAttribute('path'))
+            && sourcePath !== targetPath && sourceDragTarget instanceof FileElement)
         {
             this.setAttribute('dragover', '')
             event.dataTransfer.dropEffect = 'copy'
-        } else {
+        }
+        else
+        {
             event.dataTransfer.dropEffect = 'none';
+            console.log('Cannot drag over: ', sourcePath, targetPath)
         }
 
         event.preventDefault();
@@ -176,8 +173,8 @@ class FileElement extends HTMLElement
         if (sourceDragTarget instanceof FileElement) {
             let sourceName = sourceDragTarget.getAttribute('name');
             let sourcePath = sourceDragTarget.getAttribute('path');
-            let targetPath = this.getAttribute('path')
-            console.log(`Moving ${sourceName} from ${sourcePath} to ${targetPath}`)
+            let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name');
+            window.logger.log('Moving file from', sourcePath, 'to', targetPath)
             window.ssh.moveFile(sourceName, sourcePath, targetPath)
                 .then(() => sourceDragTarget.remove()) // Remove the source element
                 .catch(console.error);

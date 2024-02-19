@@ -13,12 +13,71 @@ let fileRenameTarget = null;
 
 /**
  * History of user navigation
+ * @type {Array<{from: string, to: string}>}
  */
 let navigationHistory = [];
 let navigationHistoryIndex = 0;
 
 // Which element the context menu is targeting
 let ctxTarget = [];
+
+registerKeybindMappings({
+    'create_directory': createDirectory,
+    'download_file': downloadSelected,
+    'delete_file': deleteSelected,
+    'reload_page': reloadContent,
+    'file_info': showFileInfo,
+    'open_file': addFiles,
+    'navigate_home': () => navigateTo(homeDir),
+    'select_all_files': () => $('file-element:not([path-segment])').attr('selected', ''),
+    'deselect_all_files': () => $('file-element[selected]').removeAttr('selected'),
+    'navigate_back': () => {
+        if (navigationHistoryIndex > 0)
+        {
+            navigationHistoryIndex--;
+            navigateTo(navigationHistory[navigationHistoryIndex].from);
+        }
+    },
+    'navigate_forward': () => {
+        if (navigationHistoryIndex < navigationHistory.length - 1)
+        {
+            console.log('Navigate forward with keybinds')
+            navigationHistoryIndex++;
+            navigateTo(navigationHistory[navigationHistoryIndex].to);
+        }
+    },
+    'navigate_directory': () => {
+        let selected = $('file-element[selected]:not(.path-separator)');
+        if (selected.length === 1)
+            navigateTo(selected.attr('path') + '/' + selected.attr('name'))
+    },
+    'select_next_file': () => {
+        let selected = $('file-element[selected]:not(.path-separator)');
+        let next = selected.next()
+        if (selected.length === 0 || next.length === 0)
+            next = $('file-element:not(.path-separator)').first();
+        selected.removeAttr('selected');
+        next.attr('selected', '');
+    },
+    'select_previous_file': () =>
+    {
+        let selected = $('file-element[selected]:not(.path-separator)');
+        let next = selected.prev()
+        if (selected.length === 0 || next.length === 0)
+            next = $('file-element:not(.path-separator)').last();
+        selected.removeAttr('selected');
+        next.attr('selected', '');
+    },
+    'invert_selection': () => {
+        $('file-element').each((i, e) =>
+        {
+            if (e.hasAttribute('selected'))
+                e.removeAttribute('selected')
+            else
+                e.setAttribute('selected', '')
+        })
+    }
+})
 
 $(document).ready(() =>
 {
@@ -129,6 +188,14 @@ $(document).ready(() =>
             menu.style.left = event.clientX + 'px';
             menu.style.top = event.clientY + 'px';
 
+            // Make sure the context menu fits within screen boundaries.
+            let clientRect = menu.getBoundingClientRect();
+            if (clientRect.right > window.innerWidth)
+                menu.style.left = (window.innerWidth - clientRect.width) + 'px';
+
+            if (clientRect.bottom > window.innerHeight)
+                menu.style.top = (window.innerHeight - clientRect.height) + 'px';
+
             menu.classList.add('active');
         }
     });
@@ -143,14 +210,15 @@ $(document).ready(() =>
     // Viewing the information of a selected file
     $('#ctx-info').on('click', () =>
     {
-        if (ctxTarget.length > 0)
+        showFileInfo()
+        /*if (ctxTarget.length > 0)
         {
             ctxTarget = ctxTarget.filter(e => e && e.hasAttribute('path') && e.hasAttribute('name'))
             showPreview(
                 ctxTarget.map(e => e.getAttribute('name')),
                 ctxTarget[0].getAttribute('path')
             );
-        }
+        }*/
     })
 
     // Copy file path
@@ -171,6 +239,8 @@ $(document).ready(() =>
         {
             renameFileInput.addClass('active');
             renameFileInput.val(fileRenameTarget.name);
+
+            // TODO: Fix this
             let fileNameElement = fileRenameTarget.refElement.querySelector('.file-name');
             fileNameElement.style.opacity = '0';
             renameFileInput.css('left', fileNameElement.offsetLeft);
@@ -247,42 +317,44 @@ $(document).ready(() =>
      * Example, moving through files with arrow keys,
      * Deleting files, etc.
      */
-    $(document).on('keydown', (e) =>
+    /*$(document).on('keydown', (e) =>
     {
-        let selected = $('file-element[selected]')
+        let selected = $('.file-container file-element[selected]')
 
         let next = null;
         let specialFunction = e.ctrlKey || e.metaKey;
+
         switch (e.key)
         {
-            case 'Enter': /** TODO: Add keybind settings */
+            case 'Enter': /!** TODO: Add keybind settings *!/
                 // If the selected file is a directory, we open it.
                 if (selected.length === 1 && selected.first().prop('directory'))
                     navigateTo(selected.first().attr('path') + '/' + selected.first().attr('name'));
+                else console.log('huh?', selected.first().prop('directory'))
                 break;
-            case 'Backspace': /** TODO: Add keybind settings */
+            case 'Backspace': /!** TODO: Add keybind settings *!/
                 // If the CTRL (macOS) or CTRL (Windows) key is pressed, we delete the file.
                 if (specialFunction)
                     deleteSelected()
                 break;
-            case 'ArrowLeft': /** TODO: Add keybind settings */
+            case 'ArrowLeft': /!** TODO: Add keybind settings *!/
                 next = selected.prev()
                 if (selected.length === 0 || next.length === 0)
-                    next = $('file-element').last();
+                    next = $('.file-container file-element').last();
                 break;
-            case 'ArrowRight': /** TODO: Add keybind settings */
+            case 'ArrowRight': /!** TODO: Add keybind settings *!/
                 next = selected.next()
                 if (selected.length === 0 || next.length === 0)
-                    next = $('file-element').first();
+                    next = $('.file-container file-element').first();
                 break;
-            case 'ArrowUp': /** TODO: Add keybind settings */
+            case 'ArrowUp': /!** TODO: Add keybind settings *!/
                 break;
-            case 'ArrowDown': /** TODO: Add keybind settings */
+            case 'ArrowDown': /!** TODO: Add keybind settings *!/
                     break;
-            case 'Escape': /** TODO: Add keybind settings */
+            case 'Escape': /!** TODO: Add keybind settings *!/
                 selected.removeAttr('selected');
                 break;
-            case 'i': /** TODO: Add keybind settings and optimize */
+            case 'i': /!** TODO: Add keybind settings and optimize *!/
                 if (specialFunction)
                 {
                     e.preventDefault();
@@ -291,7 +363,7 @@ $(document).ready(() =>
                     $('#ctx-info').trigger('click');
                 }
                 break;
-            case 'r': /** TODO: Add keybind settings and optimize */
+            case 'r': /!** TODO: Add keybind settings and optimize *!/
                 if (specialFunction)
                 {
                     e.preventDefault()
@@ -300,7 +372,7 @@ $(document).ready(() =>
                     reloadContent()
                 }
                 break;
-            case 'o': /** TODO: Add keybind settings and optimize */
+            case 'o': /!** TODO: Add keybind settings and optimize *!/
                 if (specialFunction)
                 {
                     e.preventDefault()
@@ -308,7 +380,7 @@ $(document).ready(() =>
                     addFiles()
                 }
                 break;
-            case 'd': /** TODO: Add keybind settings and optimize */
+            case 'd': /!** TODO: Add keybind settings and optimize *!/
                 if (specialFunction)
                 {
                     e.preventDefault()
@@ -324,7 +396,7 @@ $(document).ready(() =>
                 selected.removeAttr('selected');
             next.attr('selected', '');
         }
-    });
+    });*/
     // Add drag and drop functionality
     document.addEventListener('dragover', (e) =>
     {
@@ -740,4 +812,36 @@ function addFiles()
                     busy(false)
                 });
         })
+}
+
+async function showFileInfo()
+{
+    let selected = document.querySelectorAll('file-element[selected]:not(.path-separator)');
+    if (selected.length === 0)
+        return;
+
+
+    let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
+    if (file === null)
+        return;
+
+    if (!file.loaded)
+    {
+        busy(true);
+        await file.loadInfo().finally(_ => busy(false))
+    }
+
+    $('.file-information').removeClass('hidden');
+    let fileInfoPreview = $('.file-info-preview')
+    fileInfoPreview.css('background-image', `url(${window.getIcon(selected[0].getAttribute('type'))})`);
+
+    $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
+    $('#file-info-perm-group').text(file.permissions.toString('group'));
+    $('#file-info-perm-other').text(file.permissions.toString('other'));
+
+    $('#file-info-title').text(file.name);
+    $('#file-info-size').text(file.fileSizeString);
+    $('#file-info-owner').text(file?.owner || 'Unknown');
+    $('#file-info-modified').text(file.lastModified || 'Unknown');
+
 }
