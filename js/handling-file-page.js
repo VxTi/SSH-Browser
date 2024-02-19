@@ -21,6 +21,7 @@ let navigationHistoryIndex = 0;
 // Which element the context menu is targeting
 let ctxTarget = [];
 
+// Register all keybind mappings for the file viewer
 registerKeybindMappings({
     'create_directory': createDirectory,
     'download_file': downloadSelected,
@@ -299,104 +300,15 @@ $(document).ready(() =>
     /** Functionality for the 'refresh' button in the action bar */
     $('#action-refresh').on('click', reloadContent);
 
-    /**
-     * Functionality for the 'add file' button in the action bar
-     */
+    /** Functionality for the 'add file' button in the action bar */
     $('#action-add-file').on('click', addFiles);
 
-    /**
-     * Functionality for the 'delete file' button in the action bar
-     */
+    /** Functionality for the 'delete file' button in the action bar */
     $('#action-delete-file').on('click', deleteSelected);
 
     /** Functionality for the 'home' button */
     $('#action-home').on('click', () => navigateTo(homeDir))
 
-    /**
-     * Add keyboard functionality.
-     * Example, moving through files with arrow keys,
-     * Deleting files, etc.
-     */
-    /*$(document).on('keydown', (e) =>
-    {
-        let selected = $('.file-container file-element[selected]')
-
-        let next = null;
-        let specialFunction = e.ctrlKey || e.metaKey;
-
-        switch (e.key)
-        {
-            case 'Enter': /!** TODO: Add keybind settings *!/
-                // If the selected file is a directory, we open it.
-                if (selected.length === 1 && selected.first().prop('directory'))
-                    navigateTo(selected.first().attr('path') + '/' + selected.first().attr('name'));
-                else console.log('huh?', selected.first().prop('directory'))
-                break;
-            case 'Backspace': /!** TODO: Add keybind settings *!/
-                // If the CTRL (macOS) or CTRL (Windows) key is pressed, we delete the file.
-                if (specialFunction)
-                    deleteSelected()
-                break;
-            case 'ArrowLeft': /!** TODO: Add keybind settings *!/
-                next = selected.prev()
-                if (selected.length === 0 || next.length === 0)
-                    next = $('.file-container file-element').last();
-                break;
-            case 'ArrowRight': /!** TODO: Add keybind settings *!/
-                next = selected.next()
-                if (selected.length === 0 || next.length === 0)
-                    next = $('.file-container file-element').first();
-                break;
-            case 'ArrowUp': /!** TODO: Add keybind settings *!/
-                break;
-            case 'ArrowDown': /!** TODO: Add keybind settings *!/
-                    break;
-            case 'Escape': /!** TODO: Add keybind settings *!/
-                selected.removeAttr('selected');
-                break;
-            case 'i': /!** TODO: Add keybind settings and optimize *!/
-                if (specialFunction)
-                {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    ctxTarget = [selected.get(0)];
-                    $('#ctx-info').trigger('click');
-                }
-                break;
-            case 'r': /!** TODO: Add keybind settings and optimize *!/
-                if (specialFunction)
-                {
-                    e.preventDefault()
-                    e.stopImmediatePropagation()
-                    ctxTarget = [selected.get(0)]
-                    reloadContent()
-                }
-                break;
-            case 'o': /!** TODO: Add keybind settings and optimize *!/
-                if (specialFunction)
-                {
-                    e.preventDefault()
-                    e.stopImmediatePropagation()
-                    addFiles()
-                }
-                break;
-            case 'd': /!** TODO: Add keybind settings and optimize *!/
-                if (specialFunction)
-                {
-                    e.preventDefault()
-                    e.stopImmediatePropagation()
-                    downloadSelected()
-                }
-                break;
-        }
-
-        if (next)
-        {
-            if (!e.shiftKey)
-                selected.removeAttr('selected');
-            next.attr('selected', '');
-        }
-    });*/
     // Add drag and drop functionality
     document.addEventListener('dragover', (e) =>
     {
@@ -606,53 +518,6 @@ function createFileElement(file)
 }
 
 /**
- * Function for selecting a file
- * @param {string} directory The directory in which the file resides.
- * @param {string[]} files The file(s) to select, separated by a newline.
- * This also shows all information in the 'file-information' section.
- */
-function showPreview(files, directory = currentDir)
-{
-    if (files.length === 0)
-        return;
-
-    console.log(files, directory)
-
-    let preview = document.querySelector('.file-info-preview');
-    $('.file-information').removeClass('hidden');
-
-    // TODO: Fix this
-    // Remove all previous classes and add the correct one
-    preview.classList.add('file-info-preview');
-    let fileType = files[0].lastIndexOf('.') < 0 ? 'dir' : files[0].substring(files[0].lastIndexOf('.') + 1)
-    preview.style.backgroundImage = `url(${window.getIcon(fileType)})`;
-
-    (async () =>
-    {
-        // If there's only one file, we can show all information about it.
-        let file = getFile(directory, files[0]);
-        if (!file)
-            throw new Error("File not found")
-        if (!file.loaded)
-        {
-            busy(true);
-            // Load file info
-            await file.loadInfo()?.finally(_ => busy(false)) || busy(false);
-        }
-
-        /** Show file info **/
-        $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
-        $('#file-info-perm-group').text(file.permissions.toString('group'));
-        $('#file-info-perm-other').text(file.permissions.toString('other'));
-
-        $('#file-info-title').text(file.name);
-        $('#file-info-size').text(file.fileSizeString);
-        $('#file-info-owner').text(file?.owner || 'Unknown');
-        $('#file-info-modified').text(file.lastModified || 'Unknown');
-    })();
-}
-
-/**
  * Periodically checks the differences between the local and remote file system.
  * If there's any changes, the file viewer will be updated accordingly.
  */
@@ -819,7 +684,6 @@ async function showFileInfo()
     let selected = document.querySelectorAll('file-element[selected]:not(.path-separator)');
     if (selected.length === 0)
         return;
-
 
     let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
     if (file === null)

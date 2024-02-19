@@ -1,8 +1,8 @@
-## Documentation `basis.js`
+## Documentation `general-functionality.js`
 
 ---
 
-The `basis.js` file has the following functionality
+The `general-functionality.js` file has the following functionality
 
 - Load the current theme from local storage and apply it to the page
 - Implement an event listen- and dispatching system

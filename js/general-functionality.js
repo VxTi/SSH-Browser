@@ -38,12 +38,14 @@ let _keybindMappings = [];
                 window.getIcon = function(extension) {
                     extension = extension.toLowerCase().replace(/(\s+)/g, '')
                     return window.resourceLocation +
-                    (window.iconMap.find(icon => icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown'))
-                        .resource
+                    (window.iconMap.find(icon =>
+                        icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown')
+                    )['resource']
                 }
             })
             .catch(err => window.logger.log('Error loading file_icons.json: ', err));
     }
+    keybinds = window.config.keybinds()
 })()
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -57,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let key = element.dataset.langTitle
             element.title = window.config.getLang(key)
         })
-    keybinds = window.config.keybinds()
 })
 
 // Register keydown event to update keybind states
