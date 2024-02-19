@@ -310,7 +310,7 @@ $(document).ready(() =>
     $('#action-home').on('click', () => navigateTo(homeDir))
 
     // Add drag and drop functionality
-    document.addEventListener('dragover', (e) =>
+    $('.file-container').on('dragover', (e) =>
     {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -318,7 +318,7 @@ $(document).ready(() =>
 
     // Drag 'n drop files to the file viewer
     // This will upload the files to the server.
-    document.addEventListener('drop', (event) =>
+    $('.file-container').on('drop', (event) =>
     {
         if (event.dataTransfer.files.length === 0)
             return;
@@ -371,7 +371,6 @@ $(document).ready(() =>
  */
 function loadFileViewer()
 {
-
     if (currentUser === undefined)
         currentUser = window.ssh.sessions.currentSession().username;
 
@@ -383,7 +382,6 @@ function loadFileViewer()
     }
 
     // Remove all previous segments from previous queries
-
     $('.path-arrow, file-element').remove();
 
     let pathContainer = document.querySelector('.path-section');
@@ -430,7 +428,6 @@ function loadFileViewer()
  */
 function loadFileElements(path = currentDir, clearOld = true)
 {
-
     // Remove all old files from the file container (excluding path segments)
     if (clearOld) $('file-element:not(.path-separator)').remove();
 
@@ -444,10 +441,8 @@ function loadFileElements(path = currentDir, clearOld = true)
  */
 function navigateTo(target)
 {
-
     if (target instanceof File) // Convert to viable path
         target = target.path + (target.directory ? '/' + target.name : '')
-
     // If we're already on there, don't proceed.
     if (target === currentDir)
         return;
@@ -486,7 +481,6 @@ function createFileElement(file)
 {
     // Main file element. Here we add all functionality for whenever a user interacts with it.
     // This can be dragging, opening, moving, etc.
-
     let fileElement = document.createElement('file-element');
     fileElement.setAttribute('name', file.name);
     fileElement.setAttribute('path', file.path);
@@ -495,19 +489,15 @@ function createFileElement(file)
         fileElement.setAttribute('directory', '')
 
     /** File interact functionality **/
-
     // When one double-clicks on a file, we open it.
     fileElement.addEventListener('dblclick', _ => navigateTo(file));
 
     // When one clicks on a file, we select it.
-    // If we're in column view, we open the directory.
     fileElement.addEventListener('click', async (event) =>
     {
-
         // Deselect all other files
         $('file-element').removeAttr('selected');
         $('.context-menu').removeClass('active');
-
         fileElement.setAttribute('selected', '');
 
         // Prevent further propagation of the event.
@@ -707,5 +697,4 @@ async function showFileInfo()
     $('#file-info-size').text(file.fileSizeString);
     $('#file-info-owner').text(file?.owner || 'Unknown');
     $('#file-info-modified').text(file.lastModified || 'Unknown');
-
 }

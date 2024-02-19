@@ -137,6 +137,7 @@ function checkSpecificKeybinds(keybindIdentifier, event) {
  * @param {Object<function>} keybinds
  */
 function registerKeybindMappings(keybinds) {
+
     _keybindMappings.push(keybinds)
 }
 

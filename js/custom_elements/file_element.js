@@ -144,7 +144,6 @@ class FileElement extends HTMLElement
         else
         {
             event.dataTransfer.dropEffect = 'none';
-            console.log('Cannot drag over: ', sourcePath, targetPath)
         }
 
         event.preventDefault();
@@ -182,6 +181,7 @@ class FileElement extends HTMLElement
 
         this.removeAttribute('dragover');
         event.preventDefault();
+        event.stopImmediatePropagation();
     }
 }
 
