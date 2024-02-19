@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
 
       - name: Configure Node.js
         uses: actions/setup-node@v3
@@ -26,25 +28,29 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           npm run build_macos
+          git config --global user.name 'VxTi'
+          git config --global user.email '${{ secrets.EMAIL }}'
           git add .
           git commit -m "Build Application on ${{ matrix.os }}"
-          git fetch origin master
-          git push origin HEAD:master
+          git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
 
       - name: Build Application on Windows
         if: matrix.os == 'windows-latest'
         run: |
           npm run build_win
+          git config --global user.name 'VxTi'
+          git config --global user.email '${{ secrets.EMAIL }}'
           git add .
           git commit -m "Build Application on ${{ matrix.os }}"
-          git fetch origin master
-          git push origin HEAD:master
+          git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
+
 
       - name: Build Application on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
           npm run build_linux
+          git config --global user.name 'VxTi'
+          git config --global user.email '${{ secrets.EMAIL }}'
           git add .
           git commit -m "Build Application on ${{ matrix.os }}"
-          git fetch origin master
-          git push origin HEAD:master
+          git push https://${{ secrets.SECRET_KEY }}@github.com/${{ github.repository }}.git HEAD:master
