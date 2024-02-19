@@ -4,26 +4,26 @@ on:
   push:
     branches: [ "main" ]
 
-  jobs:
-    build:
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          os: [ubuntu-latest, windows-latest, macos-latest]
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
-        - name: Configure Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: ${{ env.NODE_VERSION }}
+    - name: Configure Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14
 
-        - name: Installing Dependencies
-          run: npm ci
+    - name: Installing Dependencies
+      run: npm ci
 
-        - name: Building
-          run: |
-            npm run build_macos
-            npm run build_win
-            npm run build_linux
+    - name: Build Application
+      run: |
+        npm run build_macos
+        npm run build_win
+        npm run build_linux
