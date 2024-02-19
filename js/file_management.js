@@ -414,31 +414,18 @@ function loadFileViewer()
     {
         let seg = pathSegments[i];
 
-        /** Path segment element on the bottom of the page **/
-        /*let directory = document.createElement('div');
-        directory.classList.add('path-separator');
-        directory.setAttribute('directory', '')
-
-        directory.dataset.path = pathSegments.slice(0, i + 1).join('/').trim() || '/';
-        directory.dataset.name = seg;
-        directory.innerText = seg;
-        if (i === 0)
-            directory.innerText = 'root';*/
-
-        // Check if the file-element is defined, if not, we throw an error.
-        // This is to prevent the file viewer from breaking.
-
         let pathElement = document.createElement('file-element');
         pathElement.setAttribute('name', seg)
         if (i === 0)
             pathElement.setAttribute('nick-name', 'root')
-        pathElement.setAttribute('path', pathSegments.slice(0, i + 1).join('/').trim() || '/')
+        pathElement.setAttribute('path', pathSegments.slice(0, i).join('/').trim() || '/')
         pathElement.setAttribute('directory', '')
         pathElement.setAttribute('type', 'dir')
         pathElement.setAttribute('path-segment', '')
         pathElement.classList.add('path-separator');
 
-        pathElement.addEventListener('click', () => navigateTo(pathElement.getAttribute('path')))
+        pathElement.addEventListener('click', () =>
+            navigateTo(pathElement.getAttribute('path') + '/' + pathElement.getAttribute('name')))
 
         /** Directory separator arrow **/
         let arrow = document.createElement('div');
@@ -556,6 +543,8 @@ function showPreview(files, directory = currentDir)
 {
     if (files.length === 0)
         return;
+
+    console.log(files, directory)
 
     let preview = document.querySelector('.file-info-preview');
     $('.file-information').removeClass('hidden');
