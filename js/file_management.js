@@ -492,6 +492,7 @@ function navigateTo(target)
             storeFiles(result, target);
             currentDir = target;
             loadFileViewer(); // reload the file viewer
+            $('.path-section').animate({scrollLeft: $('.path-section').width()}, 300)
             window.terminal.execute(`cd '${target}'`) // Change directory in the terminal
         })
         .catch(_ =>

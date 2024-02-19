@@ -39,11 +39,6 @@
     display: none;
 }
 
-/** File path segment. Can be seen as a directory **/
-.path-separator {
-    color: var(--text-color-2);
-}
-
 .path-separator:hover {
     background-color: var(--theme-5);
 }
@@ -63,8 +58,6 @@
     display: grid;
     grid-template-columns: repeat(2, calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2)) 7fr 1fr repeat(5, calc(var(--file-navigator-height) - var(--file-navigator-action-margin) * 2));
     grid-template-rows: var(--file-navigator-height) 1fr;
-    grid-column-gap: 0;
-    grid-row-gap: 0;
     grid-gap: 0;
     align-items: center;
     background-color: var(--theme-1);
@@ -82,33 +75,6 @@
     overflow: hidden;
 }
 
-
-.arrow {
-    background-color: var(--theme-5);
-    width: 10px;
-    height: 10px;
-    transform: rotate(45deg);
-    z-index: 2;
-}
-
-.arrow:after {
-    content: "";
-    display: block;
-    position: relative;
-    width: 80%;
-    height: 80%;
-    left: -1%;
-    top: -1%;
-    transform: translateX(28%);
-    background-color: var(--theme-2);
-    z-index: 99;
-}
-
-.arrow:hover {
-    cursor: pointer;
-    background-color: var(--theme-4);
-}
-
 .navigate-back {
     background-color: var(--theme-5);
 }
@@ -118,9 +84,7 @@
     transform: rotate(-135deg);
 }
 
-.home-button {
-    background-image: url('../resources/log_out_icon.png');
-}
+.home-button { background-image: url('../resources/log_out_icon.png'); }
 
 .navigate-arrows {
     display: flex;
@@ -169,7 +133,7 @@
 
 .action:hover {
     cursor: pointer;
-    background-color: var(--theme-2);
+    background-color: var(--theme-5);
 }
 .action:active { background-color: var(--theme-3); }
 
