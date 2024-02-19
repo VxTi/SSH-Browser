@@ -10,20 +10,20 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Configure Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 14
+      - name: Configure Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
 
-    - name: Installing Dependencies
-      run: npm ci
+      - name: Installing Dependencies
+        run: npm ci
 
-    - name: Build Application
-      run: |
-        npm run build_macos
-        npm run build_win
-        npm run build_linux
+      - name: Build Application
+        run: |
+          npm run build_macos
+          npm run build_win
+          npm run build_linux
