@@ -17,10 +17,10 @@ jobs:
       - name: Configure Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Installing Dependencies
-        run: npm ci --save-dev
+        run: npm ci
 
       - name: Build Application
         run: |
