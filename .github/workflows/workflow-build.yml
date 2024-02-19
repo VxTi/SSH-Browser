@@ -24,12 +24,27 @@ jobs:
 
       - name: Build Application on macOS
         if: matrix.os == 'macos-latest'
-        run: npm run build_macos
+        run: |
+          npm run build_macos
+          git add .
+          git commit -m "Build Application on ${{ matrix.os }}"
+          git fetch origin master
+          git push origin HEAD:master
 
       - name: Build Application on Windows
         if: matrix.os == 'windows-latest'
-        run: npm run build_win
+        run: |
+          npm run build_win
+          git add .
+          git commit -m "Build Application on ${{ matrix.os }}"
+          git fetch origin master
+          git push origin HEAD:master
 
       - name: Build Application on Linux
         if: matrix.os == 'ubuntu-latest'
-        run: npm run build_linux
+        run: |
+          npm run build_linux
+          git add .
+          git commit -m "Build Application on ${{ matrix.os }}"
+          git fetch origin master
+          git push origin HEAD:master
