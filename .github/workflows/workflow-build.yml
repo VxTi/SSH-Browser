@@ -20,7 +20,7 @@ jobs:
           node-version: 14
 
       - name: Installing Dependencies
-        run: npm ci
+        run: npm ci --save-dev
 
       - name: Build Application
         run: |
