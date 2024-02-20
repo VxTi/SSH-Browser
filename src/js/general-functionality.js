@@ -7,6 +7,8 @@ let keybinds = null;
 /** @type {Array<Object<function>>} */
 let _keybindMappings = [];
 
+let languages;
+
 (() => {
     // Set the theme to the user's preference
     document.documentElement.dataset['theme'] = localStorage.theme || 'dark'
@@ -20,7 +22,7 @@ let _keybindMappings = [];
         window.eventQueue[event].push(callback)                     // Add callback to queue
     })
 
-    // Emit an event to all registered event listeners
+    // Ensure that the emit function is registered
     window.emit || (window.emit = function(/** @type string */event, /** @type any */...args) {
         if (window.eventQueue && window.eventQueue[event])          // If the event queue exists and the event has listeners
             window.eventQueue[event].forEach(callback => callback(...args))  // call them.
@@ -34,10 +36,10 @@ let _keybindMappings = [];
             .then(content =>
             {
                 window['iconMap'] = content
-                window.resourceLocation = '../resources/file_icons/'
+                window.iconLocation = '../resources/file_icons/'
                 window.getIcon = function(extension) {
                     extension = extension.toLowerCase().replace(/(\s+)/g, '')
-                    return window.resourceLocation +
+                    return window.iconLocation +
                     (window.iconMap.find(icon =>
                         icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown')
                     )['resource']
@@ -45,19 +47,24 @@ let _keybindMappings = [];
             })
             .catch(err => window.logger.log('Error loading file_icons.json: ', err));
     }
-    keybinds = window.config.keybinds()
+    keybinds = window.config.get('keybinds')
+    languages = window.config.get('languages');
+    console.log(languages)
+    languages = languages[localStorage.language || (localStorage.language = 'english')] || languages['english']
+    if (!languages)
+        throw new Error('No languages found')
 })()
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-lang]')
         .forEach(element => {
             let key = element.dataset.lang
-            element.innerText = window.config.getLang(key)
+            element.innerText = languages[element.dataset.lang] || element.dataset.lang;
         })
     document.querySelectorAll('[data-lang-title]')
         .forEach(element => {
             let key = element.dataset.langTitle
-            element.title = window.config.getLang(key)
+            element.title = languages[element.dataset.langTitle] || element.dataset.langTitle;
         })
 })
 
@@ -100,11 +107,11 @@ function checkSpecificKeybinds(keybindIdentifier, event) {
         return
     Object.entries(keybinds[keybindIdentifier])
         .forEach(([keybind, value]) => {
-        if (!value.combination) // If there is no combination, continue
+        if (!value['combination']) // If there is no combination property, continue
             return
 
         // Combinations are separated by '|' in the keybinds.json file
-        let combinations = value.combination.split('|')
+        let combinations = value['combination'].split('|')
         for (let combination of combinations)
         {
             let keys = combination.split('+')

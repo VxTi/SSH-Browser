@@ -1,7 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 
-let availableLanguages = null
-
 /**
  * Methods for interacting with the SSH connection.
  */
@@ -63,8 +61,7 @@ contextBridge.exposeInMainWorld('ssh',  {
      * @param {string} dstPath
      */
     moveFile: async (fileName, srcPath, dstPath) =>
-        ipcRenderer.invoke('move-file', fileName, srcPath, dstPath)
-    ,
+        ipcRenderer.invoke('move-file', fileName, srcPath, dstPath),
 
     /** @param {string} directory
      *  @param {string} file */
@@ -98,15 +95,5 @@ contextBridge.exposeInMainWorld('logger', {
 
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
-    get: async (file) => ipcRenderer.invoke('get-config', file),
-
-    keybinds: () => ipcRenderer.sendSync('get-keybinds'),
-
-    getLang: (key) => {
-        if (!availableLanguages)
-            availableLanguages = ipcRenderer.sendSync('get-languages')
-        let language = availableLanguages.hasOwnProperty(localStorage.language) ?
-            availableLanguages[localStorage.language] : availableLanguages['lang_en'];
-        return language.hasOwnProperty(key) ? language[key] : key;
-    }
+    get: (file) => ipcRenderer.sendSync('get-config', file),
 })

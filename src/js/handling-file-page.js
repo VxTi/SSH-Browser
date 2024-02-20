@@ -209,18 +209,7 @@ $(document).ready(() =>
     let renameFileInput = $('#file-rename');
 
     // Viewing the information of a selected file
-    $('#ctx-info').on('click', () =>
-    {
-        showFileInfo()
-        /*if (ctxTarget.length > 0)
-        {
-            ctxTarget = ctxTarget.filter(e => e && e.hasAttribute('path') && e.hasAttribute('name'))
-            showPreview(
-                ctxTarget.map(e => e.getAttribute('name')),
-                ctxTarget[0].getAttribute('path')
-            );
-        }*/
-    })
+    $('#ctx-info').on('click', () => showFileInfo());
 
     // Copy file path
     $('#ctx-cpy-path').on('click', () =>
@@ -233,7 +222,7 @@ $(document).ready(() =>
                 .catch(_ => window.logger.log('Error occurred whilst attempting to copy path', _));
         }
     })
-
+    // FIXME: Not working correctly (Broken after redoing file-element)
     $('#ctx-rename').on('click', () =>
     {
         if (fileRenameTarget !== null)
@@ -250,11 +239,8 @@ $(document).ready(() =>
         }
     })
 
-    // Create new directory (Context menu)
-    $('#ctx-new-dir').on('click', createDirectory);
-
-    // Create new directory (Action bar)
-    $('#action-add-dir').on('click', createDirectory);
+    $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
+    $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
 
     renameFileInput.on('keypress', (e) =>
     {
@@ -310,15 +296,13 @@ $(document).ready(() =>
     $('#action-home').on('click', () => navigateTo(homeDir))
 
     // Add drag and drop functionality
-    $('.file-container').on('dragover', (e) =>
+    $('.file-container')
+        .on('dragover', (e) =>
     {
         e.preventDefault();
         e.stopImmediatePropagation();
-    });
-
-    // Drag 'n drop files to the file viewer
-    // This will upload the files to the server.
-    $('.file-container').on('drop', (event) =>
+    })
+        .on('drop', (event) =>
     {
         if (event.dataTransfer.files.length === 0)
             return;
@@ -345,6 +329,7 @@ $(document).ready(() =>
                 busy(false)
             });
     });
+
     $('#navigate-back').on('click', () =>
     {
         if (navigationHistoryIndex > 0)
@@ -353,6 +338,7 @@ $(document).ready(() =>
             navigateTo(navigationHistory[navigationHistoryIndex].from);
         }
     })
+
     $('#navigate-forward').on('click', () =>
     {
         if (navigationHistoryIndex < navigationHistory.length - 1)

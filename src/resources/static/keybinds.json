@@ -1,43 +1,43 @@
 {
     "file_explorer": {
         "open_file": {
-            "title": "Open File",
+            "title": "file.open",
             "combination": "Control+O|Meta+O"
         },
         "delete_file": {
-            "title": "Delete selected file",
+            "title": "file.delete",
             "combination": "Control+Delete|Meta+Delete"
         },
         "navigate_directory": {
-            "title": "Navigate Directory",
+            "title": "page.navigate.file",
             "combination": "Enter"
         },
         "navigate_home": {
-            "title": "Navigate Home",
+            "title": "page.navigate.home",
             "combination": "Control+H|Meta+H"
         },
         "navigate_back": {
-            "title": "Navigate Back",
+            "title": "page.navigate.back",
             "combination": "Control+ArrowLeft|Meta+ArrowLeft"
         },
         "navigate_forward": {
-            "title": "Navigate Forward",
+            "title": "page.navigate.forward",
             "combination": "Control+ArrowRight|Meta+ArrowRight"
         },
         "file_info": {
-            "title": "File Info",
+            "title": "file.info",
             "combination": "Control+I|Meta+I"
         },
         "select_next_file": {
-            "title": "Select Next File",
+            "title": "file.select.next",
             "combination": "ArrowRight"
         },
         "select_previous_file": {
-            "title": "Select Previous File",
+            "title": "file.select.previous",
             "combination": "ArrowLeft"
         },
         "select_all_files": {
-            "title": "Select All Files",
+            "title": "file.select.all",
             "combination": "Control+A|Meta+A"
         },
         "invert_selection": {
@@ -49,25 +49,25 @@
             "combination": "Control+D|Meta+D"
         },
         "reload_page": {
-            "title": "Reload Page",
+            "title": "page.refresh",
             "combination": "Control+R|Meta+R"
         },
         "deselect_all_files": {
-            "title": "Deselect All Files",
+            "title": "file.select.none",
             "combination": "Control+Shift+A|Meta+Shift+A|Escape"
         },
         "create_directory": {
-            "title": "Create Directory",
+            "title": "file.mkdir",
             "combination": "Control+Shift+N|Meta+Shift+N"
         }
     },
     "global": {
         "new_session": {
-            "title": "New Session",
+            "title": "session.create",
             "combination": "Control+N|Meta+N"
         },
         "close_session": {
-            "title": "Close Session",
+            "title": "session.logout",
             "combination": "Control+W|Meta+W"
         }
     }

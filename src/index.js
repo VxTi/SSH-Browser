@@ -6,30 +6,26 @@ const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
 const { exec} = require('child_process')
 
+const FileNames = { KEYBINDS: 'keybinds.json', SESSIONS: 'sessions.json', LANGUAGES: 'languages.json' }
+
+const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
+
 const filter = new ansiHtml({newline: false, escapeXML: false, stream: false})
-
-const languages = JSON.parse('{' + fs.readdirSync(path.join(__dirname, 'data', 'lang'))
-    .filter(file => file.endsWith('.json')) // Filter out non-JSON files
-    .map(file =>
-        `\"${file.split('/').pop().split('.')[0]}\": ` + // Name of the language as key (e.g. lang_en)
-        fs.readFileSync(path.join(__dirname, 'data', 'lang', file)).toString()
-    )
-    .join(',') + '}')
-
-const keybinds = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'keybinds.json')).toString())
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
 let connections = [];
 let currentConnection = 0;
 
-let sessionsPath = path.join(__dirname, 'sessions.json');
 let mainWindow = null;
 
 let _clog = console.log;
 console.log = (...args) => _clog(`${new Date().toLocaleDateString('en-UK')} |`, ...args);
 
-const downloadPath = app.getPath('downloads');
+function log(...args) {
+    let timeStamp = new Date();
+    console.log(timeStamp.toLocaleDateString('en-UK') + " " + timeStamp.toLocaleTimeString('en-UK'),...args);
+}
 
 const OS = {
     isWindows: os.platform() === 'win32',
@@ -61,29 +57,46 @@ function createWindow()
     // Show the window buttons on macOS
     if (OS.isMac) window.setWindowButtonVisibility(true);
 
-    window.loadFile('./index.html')
+    window.loadFile(path.join(__dirname, 'index.html'))
         .catch((err) => console.error(err));
     return window;
 }
 
+/**
+ * When the app has successfully initialized, we can load some other things.
+ * Example, creating the necessary files in the file system, if not present.
+ */
 app.whenReady().then(() =>
 {
     mainWindow = createWindow()
     mainWindow.setMinimumSize(600, 500);
     app.on('activate', _ =>
     {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        if (BrowserWindow.getAllWindows().length === 0)
+            createWindow()
     })
-    // Check for the existence of the sessions file.
-    // If it does not exist, create it.
-    if (!fs.existsSync(sessionsPath))
+
+    // Create directory for storing SSH client data
+    if (!fs.existsSync(RESOURCES_PATH))
+        fs.mkdirSync(RESOURCES_PATH)
+    console.log(RESOURCES_PATH)
+
+    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)))
     {
-        console.log("Creating sessions file");
-        fs.writeFile(sessionsPath, JSON.stringify([]), (err) =>
-        {
-            if (err) throw err;
-        })
+        let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
+        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
+        log("Created keybinds file")
     }
+
+    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)))
+    {
+        let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
+        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
+        log("Created languages file")
+    }
+
+    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)))
+        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
 })
 
 app.on('window-all-closed', () =>
@@ -107,13 +120,13 @@ ipcMain.handle('open-files', async () => {
 
 /** Event handler for downloading a file from the remote server **/
 ipcMain.handle('download-file', async (_, remotePath, fileName) => {
-    [remotePath, fileName] = fmtPaths(remotePath, fileName);
     return new Promise((resolve, reject) =>
     {
         if (sshConnected())
         {
-            console.log('Downloading file: ' + remotePath + '/' + fileName + ' to ' + downloadPath)
-            ssh().getFile(downloadPath + '/' + fileName, remotePath + '/' + fileName, null, {
+            let localAbsolutePath = path.join(app.getPath('downloads'), fileName);
+            let remoteAbsolutePath = path.join(remotePath, fileName);
+            ssh().getFile(localAbsolutePath, remoteAbsolutePath, null, {
                 step: (transfer_count, chunk, total) =>
                 {
                     mainWindow.webContents.send('process-status',
@@ -192,11 +205,11 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
         if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port)
         {
             currentConnection = connections.indexOf(cur);
-            console.log('Connection already active');
+            log('Connection already active');
             return resolve();
         }
 
-        console.log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+        log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
 
         let connection = {
             ssh: new NodeSSH(),
@@ -224,7 +237,7 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
             {
                 storeSession(connection); // store the session in sessions.json
 
-                console.log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+                log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
 
                 connections.push(connection);
                 currentConnection = connections.length - 1;
@@ -248,7 +261,7 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
                             stream.resume();
                         })
                     })
-                    .catch(e => console.log("An error occurred whilst requesting shell", e))
+                    .catch(e => log("An error occurred whilst requesting shell", e))
                 resolve();
 
             })
@@ -379,7 +392,7 @@ ipcMain.handle('starting-directory', async _ => {
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, dirName) => {
     [directory] = fmtPaths(directory);
-    console.log(`Attempting to create dir at [${directory}] with name [${dirName}]`)
+    log(`Attempting to create dir at [${directory}] with name [${dirName}]`)
     return new Promise((resolve, reject) =>
     {
         if (sshConnected())
@@ -387,7 +400,7 @@ ipcMain.handle('create-directory', async (_, directory, dirName) => {
             ssh().execCommand(`cd ${directory} && mkdir '${dirName}'`)
                 .then(_ =>
                 {
-                    console.log("Directory successfully created");
+                    log("Directory successfully created");
                     resolve()
                 })
                 .catch(err =>
@@ -430,9 +443,14 @@ ipcMain.on('current-session', (event) =>
 
 ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
-ipcMain.on('log', (_, args) => console.log(args));
+ipcMain.on('log', (_, args) => log(args));
 
-ipcMain.handle('get-config', (_, file) => loadConfig(file));
+ipcMain.on('get-config', (event, fileName) => {
+    if (!FileNames[fileName.toUpperCase()])
+        throw new Error('Config file does not exist.');
+
+    event.returnValue = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[fileName.toUpperCase()])).toString());
+});
 
 /**
  * Method for checking the status of the current SSH connection.
@@ -487,7 +505,7 @@ function storeSession(session)
 {
 
     // Get previous data
-    fs.readFile(sessionsPath, (error, data) =>
+    fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
     {
         if (error)
         {
@@ -515,7 +533,7 @@ function storeSession(session)
             // TODO: Encrypt the data before writing it to the file.
 
             // Write back to file
-            fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) =>
+            fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
             {
                 if (err)
                 {
@@ -534,16 +552,17 @@ function storeSession(session)
  */
 function deleteSession(host, username)
 {
-    fs.readFile(sessionsPath, (error, data) =>
+    fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
     {
         if (error)
             throw error;
+
         let sessions = JSON.parse(data.toString());
         let index = sessions.findIndex(session => session.host === host && session.username === username);
         if (index !== -1)
         {
             sessions.splice(index, 1);
-            fs.writeFile(sessionsPath, JSON.stringify(sessions), (err) =>
+            fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
             {
                 if (err) throw err;
             })
@@ -551,15 +570,7 @@ function deleteSession(host, username)
     })
 }
 
-function fmtPaths(...path)
+function fmtPaths(...paths)
 {
-    return path.map(p => p.replaceAll(' ', '\\ '));
-}
-
-function loadConfig(file)
-{
-    let configPath = path.join(__dirname, 'data', file);
-    if (!fs.existsSync(configPath))
-        throw new Error("Provided config file does not exist.")
-    return JSON.parse(fs.readFileSync(configPath).toString());
+    return paths.map(p => p.replaceAll(' ', '\\ '));
 }
