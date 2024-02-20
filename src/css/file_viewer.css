@@ -171,7 +171,8 @@
 
 .run-script:hover { background-color: var(--theme-3); }
 
-file-element { border: 1px solid transparent; border-radius: 5px; }
+file-element { border: 1px solid transparent; border-radius: 5px; margin: 5px; }
+file-element:hover { border-color: var(--theme-5); }
 file-element[selected] { background-color: var(--theme-5); }
 [dragover] { border-color: var(--theme-4); }
 

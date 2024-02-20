@@ -128,6 +128,7 @@ function checkSpecificKeybinds(keybindIdentifier, event) {
                 {
                     if (keybindMapping.hasOwnProperty(keybind) && typeof keybindMapping[keybind] === 'function')
                     {
+                        window.logger.log('Keybind pressed: ' + keybind)
                         keybindMapping[keybind]()
                         keyStates = {} // Reset the key states
                         event.preventDefault()

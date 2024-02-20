@@ -57,7 +57,9 @@ class FileElement extends HTMLElement
         fileTitle.classList.add('file-name');
         fileTitle.innerText = this.hasAttribute('nick-name') ?
             this.getAttribute('nick-name') : this.getAttribute('name') || '';
-        fileTitle.innerText = this.#formatName(fileTitle.innerText);
+
+        if (!this.hasAttribute('path-segment') && !this.hasAttribute('nick-name'))
+            fileTitle.innerText = this.#formatName(this.getAttribute('name'));
 
         this.addEventListener('dragstart', this._dragStart.bind(this));
         this.addEventListener('dragend', this._dragEnd.bind(this));
@@ -100,7 +102,7 @@ class FileElement extends HTMLElement
      * @param {string} name The name of the file to be formatted.
      * @param {number} maxLength The maximum length of the file name. Default is 20.
      */
-    #formatName(name, maxLength= 10) {
+    #formatName(name, maxLength= 12) {
     if (name.length > maxLength) {
         let extensionIndex = name.indexOf('.');
         if (extensionIndex < 0) // Directory ?
