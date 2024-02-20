@@ -4,6 +4,7 @@
     --session-height: 50px;
     --session-margin: 15px 5px;
     --session-rounding: 10px;
+    --session-padding: 0 5px;
 }
 
 .session-container {
@@ -24,11 +25,12 @@
 }
 
 .session-element {
-    width: var(--session-width);
+    min-width: var(--session-width);
     height: var(--session-height);
     border-radius: 3px;
     background-color: var(--theme-1);
     margin: var(--session-margin);
+    padding: var(--session-padding);
     display: flex;
     flex-flow: column wrap;
     justify-content: center;
