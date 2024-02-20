@@ -9,7 +9,7 @@ let _keybindMappings = [];
 
 let languages;
 
-(() => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Set the theme to the user's preference
     document.documentElement.dataset['theme'] = localStorage.theme || 'dark'
 
@@ -32,41 +32,44 @@ let languages;
     // element has the load-icons attribute, load the file_icons.json file
     if (typeof window.iconMap === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons'))
     {
-        window.config.get('file_icons.json')
-            .then(content =>
-            {
-                window['iconMap'] = content
-                window.iconLocation = '../resources/file_icons/'
-                window.getIcon = function(extension) {
-                    extension = extension.toLowerCase().replace(/(\s+)/g, '')
-                    return window.iconLocation +
-                    (window.iconMap.find(icon =>
+        window['iconMap'] = await window.config.get('file_icons');
+        window.iconLocation = '../resources/file_icons/'
+        window.getIcon = function(extension) {
+            extension = extension.toLowerCase().replace(/(\s+)/g, '')
+            return window.iconLocation +
+                (window.iconMap.find(icon =>
                         icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown')
-                    )['resource']
-                }
-            })
-            .catch(err => window.logger.log('Error loading file_icons.json: ', err));
+                )['resource']
+        }
     }
-    keybinds = window.config.get('keybinds')
-    languages = window.config.get('languages');
-    console.log(languages)
+    keybinds = await window.config.get('keybinds')
+    languages = await window.config.get('languages');
     languages = languages[localStorage.language || (localStorage.language = 'english')] || languages['english']
     if (!languages)
         throw new Error('No languages found')
-})()
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-lang]')
-        .forEach(element => {
-            let key = element.dataset.lang
-            element.innerText = languages[element.dataset.lang] || element.dataset.lang;
-        })
-    document.querySelectorAll('[data-lang-title]')
-        .forEach(element => {
-            let key = element.dataset.langTitle
-            element.title = languages[element.dataset.langTitle] || element.dataset.langTitle;
-        })
+    // Load languages onto the page
+    loadPageLanguages();
 })
+
+/**
+ * Function for loading the languages from the languages.json file
+ * and updating them onto the current page.
+ */
+function loadPageLanguages()
+{
+    // Go through all elements with 'data-lang', 'data-lang-title', 'data-lang-value', or 'data-lang-placeholder' attribute
+    // and replace their properties with the corresponding language from the languages file
+    document.querySelectorAll('*:is([data-lang], [data-lang-title], [data-lang-value], [data-lang-placeholder])')
+        .forEach(element => {
+            [['lang', 'innerText'], ['langTitle', 'title'], ['langValue', 'value'], ['langPlaceholder', 'placeholder']]
+                .forEach(([data, attribute]) => {
+                    // Check if the dataset attribute is present
+                    if (element.dataset[data])
+                        element[attribute] = languages[element.dataset[data]] || element.dataset[data];
+                })
+        })
+}
 
 // Register keydown event to update keybind states
 document.addEventListener('keydown', (event) => {

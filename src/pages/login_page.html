@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/login_page.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
+    <script src="../js/general-functionality.js"></script>
     <script src="../js/handling-login-page.js"></script>
-    <script>document.documentElement.dataset['theme'] = localStorage.theme || 'dark'</script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -18,27 +18,27 @@
 
             <!-- Login text boxes for connecting with SSH -->
             <div class="title-container">
-                <div class="nav-btn btn-back" id="ssh-back-button"></div>
-                <h1 class="title-text">Login to SSH</h1>
+                <div class="nav-btn btn-back" id="ssh-back-button" data-lang-title="page.login.return-main.tooltip"></div>
+                <h1 class="title-text" data-lang="page.login.title"></h1>
             </div>
             <div class="host-input">
-                <input type="url" name="host" placeholder="Host" class="input-box user-interact" id="ssh-host" title="Remote address to connect to">
-                <input type="number" name="port" placeholder="Port" class="input-box user-interact" id="ssh-port" data-default="22" title="Port of the remote address (optional)">
+                <input type="url" name="host" class="input-box user-interact" id="ssh-host" data-lang-title="page.login.host.tooltip" data-lang-placeholder="page.login.host.placeholder">
+                <input type="number" name="port" class="input-box user-interact" id="ssh-port" data-default="22" data-lang-title="page.login.port.tooltip" data-lang-placeholder="page.login.port.placeholder">
             </div>
-            <input type="text" name="username" placeholder="Username" class="input-box user-interact" id="ssh-username" title="Username for the remote host">
+            <input type="text" name="username" class="input-box user-interact" id="ssh-username" data-lang-title="page.login.username.tooltip" data-lang-placeholder="page.login.username.placeholder">
 
             <!-- Container for password and show password button-->
             <div class="flex f-nowrap f-row f-d-center f-m-center">
-                <input type="password" name="password" placeholder="Password" class="input-box user-interact" id="ssh-password" title="Password authentication">
-                <input type="button" name="show-password" class="show-password password-invisible" title="Toggle password visibility" id="ssh-show-password">
+                <input type="password" name="password" class="input-box user-interact" id="ssh-password" data-lang-title="page.login.password.tooltip" data-lang-placeholder="page.login.password.placeholder">
+                <input type="button" name="show-password" class="show-password password-invisible" id="ssh-show-password" data-lang-title="page.login.password.visibility">
             </div>
 
             <div class="flex f-nowrap f-row f-d-center f-m-center">
-                <input type="text" name="private-key" placeholder="Private Key (optional)" class="input-box user-interact" id="ssh-private-key" title="Private key for the remote host">
-                <div class="select-private-key" title="Pick file containing private key"></div>
+                <input type="text" name="private-key" class="input-box user-interact" id="ssh-private-key" data-lang-title="page.login.privatekey.tooltip" data-lang-placeholder="page.login.privatekey.placeholder">
+                <div class="select-private-key" data-lang-title="page.login.select-privatekey.tooltip"></div>
             </div>
-            <input type="text" name="passphrase" placeholder="Passphrase (optional)" class="input-box user-interact" id="ssh-passphrase" title="Personal passphrase">
-            <input type="button" value="Login" class="page-button user-interact" id="ssh-login">
+            <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase" data-lang-title="page.login.passphrase.tooltip" data-lang-placeholder="page.login.passphrase.placeholder">
+            <input type="button" class="page-button user-interact" id="ssh-login" data-lang="page.login.connect" data-lang-value="page.login.connect">
         </div>
         <div class="loading"></div>
     </div>

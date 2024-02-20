@@ -50,20 +50,3 @@ function getFiles(path) {
 function getFile(path, name) {
     return fileCache.get(path)?.find(f => f.name === name) || null
 }
-
-/**
- * Method for formatting file names.
- * This is used for when file names are too long to be displayed on the screen.
- * @param {string} name The name of the file to be formatted.
- * @param {number} maxLength The maximum length of the file name. Default is 20.
- */
-function formatFileName(name, maxLength= 10) {
-    if (name.length > maxLength) {
-        let extensionIndex = name.indexOf('.');
-        if (extensionIndex < 0) // Directory ?
-            return name.substring(0, maxLength - 3) + '...';
-
-        return name.substring(0, maxLength - 4) + '...' + name.substring(extensionIndex);
-    }
-    return name;
-}

@@ -35,7 +35,7 @@ class FileElement extends HTMLElement
         let styles = document.createElement('style');
         styles.textContent =
            `.center {display: flex;flex-flow: column nowrap;align-items: center;justify-content: center;}
-            .file {color: var(--text-color--, #fff);font-family: var(--font--, Arial);min-width: calc(1.5 * ${FileElement.#defaultSize});margin: 5px;cursor: pointer;flex-shrink: 1 0 auto;}
+            .file {color: var(--text-color--, #fff);font-family: var(--font--, Arial);width: calc(1.5 * ${FileElement.#defaultSize});margin: 5px;cursor: pointer;flex-shrink: 1 0 auto;}
             .file-icon {background-size: contain;background-repeat: no-repeat;background-position: center;width: ${FileElement.#defaultSize};height: ${FileElement.#defaultSize};}
             .file.path-segment {flex-flow: row nowrap;justify-content: flex-start;height: ${FileElement.#containerHeight};width: max-content; margin: 0 2px; }
             .file.path-segment .file-icon {width: ${FileElement.#containerHeight};height: ${FileElement.#containerHeight};}
@@ -57,6 +57,7 @@ class FileElement extends HTMLElement
         fileTitle.classList.add('file-name');
         fileTitle.innerText = this.hasAttribute('nick-name') ?
             this.getAttribute('nick-name') : this.getAttribute('name') || '';
+        fileTitle.innerText = this.#formatName(fileTitle.innerText);
 
         this.addEventListener('dragstart', this._dragStart.bind(this));
         this.addEventListener('dragend', this._dragEnd.bind(this));
@@ -91,6 +92,24 @@ class FileElement extends HTMLElement
                 break;
         }
     }
+
+
+    /**
+     * Method for formatting file names.
+     * This is used for when file names are too long to be displayed on the screen.
+     * @param {string} name The name of the file to be formatted.
+     * @param {number} maxLength The maximum length of the file name. Default is 20.
+     */
+    #formatName(name, maxLength= 10) {
+    if (name.length > maxLength) {
+        let extensionIndex = name.indexOf('.');
+        if (extensionIndex < 0) // Directory ?
+            return name.substring(0, maxLength - 3) + '...';
+
+        return name.substring(0, maxLength - 4) + '...' + name.substring(extensionIndex);
+    }
+    return name;
+}
 
     /**
      * Method for updating the thumbnail of the file element.

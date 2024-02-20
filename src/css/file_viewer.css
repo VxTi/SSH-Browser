@@ -57,7 +57,7 @@
     width: 100vw;
     height: var(--file-navigator-height);
     display: grid;
-    grid-template-columns: repeat(2, var(--segment-size)) 7fr calc(3 * var(--segment-size)) repeat(5, var(--segment-size));
+    grid-template-columns: repeat(2, var(--segment-size)) 7fr auto repeat(5, var(--segment-size));
     grid-template-rows: var(--file-navigator-height) 1fr;
     grid-gap: 0;
     align-items: center;

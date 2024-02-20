@@ -95,5 +95,5 @@ contextBridge.exposeInMainWorld('logger', {
 
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
-    get: (file) => ipcRenderer.sendSync('get-config', file),
+    get: (file) => ipcRenderer.invoke('get-config', file),
 })

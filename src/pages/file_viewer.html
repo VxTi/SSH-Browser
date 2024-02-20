@@ -23,25 +23,25 @@
     <div class="content">
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu">
-            <div class="ctx-item" id="ctx-open">Open</div>
-            <div class="ctx-item" id="ctx-execute">Execute</div>
-            <div class="ctx-item" id="ctx-new-dir">New directory</div>
-            <div class="ctx-item" id="ctx-info">Show Info</div>
-            <div class="ctx-item" id="ctx-rename">Rename</div>
-            <div class="ctx-item" id="ctx-delete">Delete</div>
-            <div class="ctx-item" id="ctx-download">Download</div>
-            <div class="ctx-item" id="ctx-cpy-path">Copy path</div>
+            <div class="ctx-item" id="ctx-open"     data-lang="contextmenu.open"></div>
+            <div class="ctx-item" id="ctx-execute"  data-lang="contextmenu.execute"></div>
+            <div class="ctx-item" id="ctx-new-dir"  data-lang="contextmenu.mkdir"></div>
+            <div class="ctx-item" id="ctx-info"     data-lang="contextmenu.info"></div>
+            <div class="ctx-item" id="ctx-rename"   data-lang="contextmenu.rename"></div>
+            <div class="ctx-item" id="ctx-delete"   data-lang="contextmenu.delete"></div>
+            <div class="ctx-item" id="ctx-download" data-lang="contextmenu.download"></div>
+            <div class="ctx-item" id="ctx-cpy-path" data-lang="contextmenu.copy-path"></div>
         </div>
         <!-- File viewer action container -->
         <div class="action-container">
 
-            <div class="action nav-btn btn-back" id="navigate-back" data-lang-title="navigate_back_tooltip"></div>
-            <div class="action nav-btn btn-forward" id="navigate-forward" data-lang-title="navigate_forward_tooltip"></div>
+            <div class="action nav-btn btn-back" id="navigate-back" data-lang-title="page.files.navigate.previous.tooltip"></div>
+            <div class="action nav-btn btn-forward" id="navigate-forward" data-lang-title="page.files.navigate.next.tooltip"></div>
 
-            <input type="text" name="filter" placeholder="Find a file" id="file-filter" title="Enter which file you're looking for.">
+            <input type="text" name="filter" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
 
             <div class="action action-scripts">
-                <span>Scripts</span>
+                <span data-lang="page.files.run-script"></span>
                 <div class="run-script icon"></div>
                 <div class="action-script-container flex f-column">
                     <div class="action-script" id="script-new">New Script</div>
@@ -50,15 +50,15 @@
                 </div>
             </div>
 
-            <div class="action action-home" id="action-home" title="Navigate to home directory"></div>
-            <div class="action action-add-dir" id="action-add-dir" title="Create a new directory"></div>
-            <div class="action action-refresh" id="action-refresh" title="Refresh the content of the current directory"></div>
-            <div class="action action-delete" id="action-delete-file" title="Delete the currently selected file"></div>
-            <div class="action action-add" id="action-add-file" title="Add new file(s)"></div>
+            <div class="action action-home"    id="action-home"        data-lang-title="page.files.navigate.home"></div>
+            <div class="action action-add-dir" id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
+            <div class="action action-refresh" id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
+            <div class="action action-delete"  id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
+            <div class="action action-add"     id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
         </div>
 
         <div class="file-section">
-            <input type="text" id="file-rename" class="file-rename" name="rename-file" placeholder="Rename file">
+            <input type="text" id="file-rename" class="file-rename" name="rename-file">
 
             <!-- Container displaying file contents -->
             <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path"></div>
@@ -70,37 +70,40 @@
                     <div class="file-info-preview"></div>
                     <div class="file-info" id="file-info-title"></div>
                     <div class="f-i-params grid-2-3">
-                        <div class="file-info">Date modified:</div>
+                        <div class="file-info" data-lang="page.files.info.modified"></div>
                         <span class="file-info" id="file-info-modified"></span>
-                        <div class="file-info">Created by</div>
+                        <div class="file-info" data-lang="page.files.info.createdby"></div>
                         <span class="file-info" id="file-info-owner"></span>
-                        <div class="file-info">Size:</div>
+                        <div class="file-info" data-lang="page.files.info.size"></div>
                         <span class="file-info" id="file-info-size"></span>
                     </div>
                     <div class="file-info file-accessibility">
-                        <span class="al-s-c">Accessibility</span>
+                        <span class="al-s-c" data-lang="page.files.info.accessibility"></span>
                         <div class="file-info grid-2-3">
-                            <span class="f-access-title">User</span>
+                            <span class="f-access-title" data-lang="page.files.info.permissions.user"></span>
                             <span id="file-info-perm-user"></span>
-                            <span class="f-access-title">Group</span>
+                            <span class="f-access-title" data-lang="page.files.info.permissions.group"></span>
                             <span id="file-info-perm-group"></span>
-                            <span class="f-access-title">Other</span>
+                            <span class="f-access-title" data-lang="page.files.info.permissions.other"></span>
                             <span id="file-info-perm-other"></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Terminal container -->
+        <!-- Terminal container
+            TODO: Fix this
+        -->
         <div class="terminal container" id="terminal" hidden="hidden">
             <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
             <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
             <div class="terminal-content scrollbar terminal-output"></div>
             <input type="text" name="terminal-input" id="terminal-input" class="terminal-input input-box user-interact" placeholder="Enter command">
         </div>
+
         <!-- Directory path container  -->
         <div class="path-container">
-            <div class="action home-button" id="log-out" title="Log out"></div>
+            <div class="action home-button" id="log-out" data-lang-title="page.files.logout.tooltip"></div>
             <div class="path-section"></div>
             <div class="process-loading"></div>
             <div class="progress-bars"></div>

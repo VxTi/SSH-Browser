@@ -6,11 +6,17 @@ const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
 const { exec} = require('child_process')
 
-const FileNames = { KEYBINDS: 'keybinds.json', SESSIONS: 'sessions.json', LANGUAGES: 'languages.json' }
+const FileNames = { KEYBINDS: 'keybinds.json', SESSIONS: 'sessions.json', LANGUAGES: 'languages.json', FILE_ICONS: 'file_icons.json' }
+
+const StaticFiles = [ 'FILE_ICONS' ]
 
 const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
 
-const filter = new ansiHtml({newline: false, escapeXML: false, stream: false})
+const filter = new ansiHtml({ newline: false, escapeXML: false, stream: false });
+
+// Whether to reload the static content into the appdata directory
+// This is useful for testing and development purposes
+const LOAD_STATIC_CONTENT = true;
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
@@ -79,16 +85,15 @@ app.whenReady().then(() =>
     // Create directory for storing SSH client data
     if (!fs.existsSync(RESOURCES_PATH))
         fs.mkdirSync(RESOURCES_PATH)
-    console.log(RESOURCES_PATH)
 
-    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)))
+    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)) || LOAD_STATIC_CONTENT)
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
         log("Created keybinds file")
     }
 
-    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)))
+    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT)
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
@@ -445,11 +450,19 @@ ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, user
 
 ipcMain.on('log', (_, args) => log(args));
 
-ipcMain.on('get-config', (event, fileName) => {
+ipcMain.handle('get-config', (event, fileName) => {
     if (!FileNames[fileName.toUpperCase()])
+    {
+        log('Config file does not exist.');
         throw new Error('Config file does not exist.');
+    }
 
-    event.returnValue = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[fileName.toUpperCase()])).toString());
+    if (StaticFiles.includes(fileName.toUpperCase()))
+    {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames[fileName.toUpperCase()])).toString());
+    }
+
+    return JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[fileName.toUpperCase()])).toString());
 });
 
 /**

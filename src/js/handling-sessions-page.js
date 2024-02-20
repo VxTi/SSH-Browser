@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
             results.forEach(session => addSession(session));
             let addSessionElement = document.createElement('div');
             addSessionElement.classList.add('session-element', 'add-session', 'user-interact');
-            addSessionElement.onclick = () => window.location.href = '../pages/login_page.html';
-            addSessionElement.title = languages['session.create.tooltip']
+            addSessionElement.onclick = () => window.location.href = './pages/login_page.html';
+            addSessionElement.dataset.langTitle = 'session.create.tooltip'
             document.querySelector('.session-content').appendChild(addSessionElement);
         })
 });
@@ -27,7 +27,7 @@ function addSession(session) {
     let session_element = document.createElement('div');
     session_element.classList.add('session-element', 'user-interact');
     session_container.appendChild(session_element);
-    session_element.title = languages['session.join.tooltip']
+    session_element.dataset.langTitle = 'session.join.tooltip'
 
     let session_host = document.createElement('span');
     session_host.classList.add('session-name');
@@ -43,7 +43,7 @@ function addSession(session) {
         document.querySelector('.session-container').style.visibility = 'hidden';
         document.querySelector('.loading').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)
-            .then(_ => window.location.href = '../pages/file_viewer.html')
+            .then(_ => window.location.href = './pages/file_viewer.html')
             .catch(_ => {
                 document.querySelector('.loading').style.visibility = 'hidden';
                 document.querySelector('.session-container').style.visibility = 'visible'
