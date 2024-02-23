@@ -33,14 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof window.iconMap === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons'))
     {
         window['iconMap'] = await window.config.get('file_icons');
-        window.iconLocation = '../resources/file_icons/'
-        window.getIcon = function(extension) {
-            extension = extension.toLowerCase().replace(/(\s+)/g, '')
-            return window.iconLocation +
-                (window.iconMap.find(icon =>
-                        icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown')
-                )['resource']
-        }
     }
     keybinds = await window.config.get('keybinds')
     languages = await window.config.get('languages');
@@ -51,6 +43,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load languages onto the page
     loadPageLanguages();
 })
+
+/**
+ * Function for getting the icon of a file based on its extension
+ * @param {string} extension The extension of the file
+ * @returns {string} The path to the icon
+ */
+window.getIcon = function(extension) {
+    if (!window.iconMap)
+        return '';
+    extension = extension.toLowerCase().replace(/(\s+)/g, '')
+    return '../resources/file_icons/' +
+        (window.iconMap.find(icon =>
+                icon.id === extension || icon.extensions.includes(extension)) || window.iconMap.find(icon => icon.id === 'unknown')
+        )['resource']
+}
 
 /**
  * Function for loading the languages from the languages.json file

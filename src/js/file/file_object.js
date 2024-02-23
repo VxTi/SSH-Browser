@@ -70,7 +70,7 @@ class File
      * Getter for file type.
      * @returns {string} The file type
      */
-    get fileType()
+    get type()
     {
         return this.#fileType;
     }

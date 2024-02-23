@@ -70,7 +70,8 @@
         "contextmenu.copy-path": "Copy Path",
         "contextmenu.mkdir": "New Directory",
         "contextmenu.info": "Show Information",
-        "contextmenu.delete": "Delete"
+        "contextmenu.delete": "Delete",
+        "contextmenu.open-with": "Open With"
 
     }
 }

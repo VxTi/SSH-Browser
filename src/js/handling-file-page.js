@@ -30,7 +30,8 @@ registerKeybindMappings({
     'file_info': showFileInfo,
     'open_file': addFiles,
     'navigate_home': () => navigateTo(homeDir),
-    'select_all_files': () => $('file-element:not([path-segment])').attr('selected', ''),
+    'select_all_files': () =>
+        getSelectedFiles().forEach(e => e.setAttribute('selected', '')),
     'deselect_all_files': () => $('file-element[selected]').removeAttr('selected'),
     'navigate_back': () => {
         if (navigationHistoryIndex > 0)
@@ -48,9 +49,9 @@ registerKeybindMappings({
         }
     },
     'navigate_directory': () => {
-        let selected = $('file-element[selected]:not(.path-separator)');
+        let selected = getSelectedFiles()
         if (selected.length === 1)
-            navigateTo(selected.attr('path') + '/' + selected.attr('name'))
+            navigateTo(selected[0].getAttribute('path') + '/' + selected[0].getAttribute('name'))
     },
     'select_next_file': () => {
         let selected = $('file-element[selected]:not(.path-separator)');
@@ -86,9 +87,6 @@ $(document).ready(() =>
     addLoadingSpinner($('.process-loading')[0]);
     $('#log-out').on('click', () => window.location.href = '../index.html');
 
-    // Resizing of the file information section
-    $('.file-information-resize').on('dblclick', _ => $('.file-information').addClass('hidden'))
-
     fileContainer = document.querySelector('.file-container');
 
     // Load in the files from the current directory
@@ -119,13 +117,13 @@ $(document).ready(() =>
     setInterval(checkFsDifferences, 3000);
 
     // When the user clicks on the screen outside a file element, hide the context menu.
-    $(document).on('click', _ => $('.context-menu').removeClass('active'));
+    $(document).on('click', _ => $('.context-menu').css('display', 'none'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
     $(document).on('dblclick', () => $('file-element[selected]').each((i, e) =>
     {
         e.removeAttribute('selected')
-        $('.file-information').addClass('hidden')
+        $('.file-information').attr('hidden', '')
     }))
 
     /** - - - - - - - - - - - - - - - **
@@ -158,13 +156,13 @@ $(document).ready(() =>
             fileRenameTarget = getFile(targetElement.getAttribute('path'), targetElement.getAttribute('name'))
             ctxTarget = [...document.querySelectorAll('file-element[selected]')]
             enabled.push(
-                ...['info', 'delete', 'rename', 'download', 'cpy-path']
+                ...['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with']
                     .map(e => document.getElementById('ctx-' + e))
             );
         }
 
         // Disable all context actions first.
-        $('.ctx-item').addClass('disabled');
+        $('.context-menu > .ctx-item').addClass('disabled');
 
         // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
         // First, check whether it has a 'context-menu' dataset property.
@@ -188,6 +186,7 @@ $(document).ready(() =>
             // Moving the context menu to the cursor's position
             menu.style.left = event.clientX + 'px';
             menu.style.top = event.clientY + 'px';
+            menu.style.display = 'block';
 
             // Make sure the context menu fits within screen boundaries.
             let clientRect = menu.getBoundingClientRect();
@@ -196,8 +195,6 @@ $(document).ready(() =>
 
             if (clientRect.bottom > window.innerHeight)
                 menu.style.top = (window.innerHeight - clientRect.height) + 'px';
-
-            menu.classList.add('active');
         }
     });
 
@@ -479,11 +476,10 @@ function createFileElement(file)
     fileElement.addEventListener('dblclick', _ => navigateTo(file));
 
     // When one clicks on a file, we select it.
-    fileElement.addEventListener('click', async (event) =>
+    fileElement.addEventListener('click', (event) =>
     {
         // Deselect all other files
         $('file-element').removeAttr('selected');
-        $('.context-menu').removeClass('active');
         fileElement.setAttribute('selected', '');
 
         // Prevent further propagation of the event.
@@ -521,8 +517,17 @@ async function checkFsDifferences()
         {
             // TODO: Add action menu for when connection fails
             window.location.href = '../index.html'
-
         });
+}
+
+/**
+ * Function for getting all the selected files in the file viewer.
+ * Excludes path separators.
+ * @returns {HTMLElement[]}
+ */
+function getSelectedFiles()
+{
+    return [...document.querySelectorAll('file-element[selected]:not(.path-separator)')]
 }
 
 /**
@@ -583,7 +588,7 @@ function reloadContent()
  */
 function downloadSelected()
 {
-    let selectedFiles = [...document.querySelectorAll('file-element[selected]')];
+    let selectedFiles = getSelectedFiles()
     if (selectedFiles.length === 0)
         return;
 
@@ -603,7 +608,7 @@ function downloadSelected()
 function deleteSelected()
 {
 
-    let selected = [...document.querySelectorAll('file-element[selected]')];
+    let selected = getSelectedFiles();
     if (selected.length === 0)
         return;
 
@@ -655,9 +660,12 @@ function addFiles()
         })
 }
 
+/**
+ * Function for showing the file information of the currently selected file.
+ */
 async function showFileInfo()
 {
-    let selected = document.querySelectorAll('file-element[selected]:not(.path-separator)');
+    let selected = getSelectedFiles()
     if (selected.length === 0)
         return;
 
@@ -671,10 +679,14 @@ async function showFileInfo()
         await file.loadInfo().finally(_ => busy(false))
     }
 
-    $('.file-information').removeClass('hidden');
-    let fileInfoPreview = $('.file-info-preview')
-    fileInfoPreview.css('background-image', `url(${window.getIcon(selected[0].getAttribute('type'))})`);
+    let fileInfo = $('.file-information');
+    let clientRect = selected[0].getBoundingClientRect();
+    fileInfo.removeAttr('hidden');
+    fileInfo.css('left', clientRect.left + clientRect.width / 2);
+    fileInfo.css('top', clientRect.top + clientRect.height + 10);
 
+    // Copy selected element onto file info page
+    $('.file-info-preview').css('background-image', `url(${window.getIcon(selected[0].getAttribute('type'))}`);
     $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
     $('#file-info-perm-group').text(file.permissions.toString('group'));
     $('#file-info-perm-other').text(file.permissions.toString('other'));

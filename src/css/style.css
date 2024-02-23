@@ -235,6 +235,10 @@ body {
     align-items: center;
 }
 
+.f-gap-15 {
+    gap: 15px;
+}
+
 .f-start {
     justify-content: flex-start;
 }

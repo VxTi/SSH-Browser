@@ -23,14 +23,19 @@
     <div class="content">
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu">
-            <div class="ctx-item" id="ctx-open"     data-lang="contextmenu.open"></div>
-            <div class="ctx-item" id="ctx-execute"  data-lang="contextmenu.execute"></div>
-            <div class="ctx-item" id="ctx-new-dir"  data-lang="contextmenu.mkdir"></div>
-            <div class="ctx-item" id="ctx-info"     data-lang="contextmenu.info"></div>
-            <div class="ctx-item" id="ctx-rename"   data-lang="contextmenu.rename"></div>
-            <div class="ctx-item" id="ctx-delete"   data-lang="contextmenu.delete"></div>
-            <div class="ctx-item" id="ctx-download" data-lang="contextmenu.download"></div>
-            <div class="ctx-item" id="ctx-cpy-path" data-lang="contextmenu.copy-path"></div>
+            <div class="ctx-item" id="ctx-open"      data-lang="contextmenu.open"></div>
+            <div class="ctx-item" id="ctx-execute"   data-lang="contextmenu.execute"></div>
+            <div class="ctx-item" id="ctx-new-dir"   data-lang="contextmenu.mkdir"></div>
+            <div class="ctx-item" id="ctx-info"      data-lang="contextmenu.info"></div>
+            <div class="ctx-item" id="ctx-rename"    data-lang="contextmenu.rename"></div>
+            <div class="ctx-item" id="ctx-delete"    data-lang="contextmenu.delete"></div>
+            <div class="ctx-item" id="ctx-download"  data-lang="contextmenu.download"></div>
+            <div class="ctx-item" id="ctx-cpy-path"  data-lang="contextmenu.copy-path"></div>
+            <div class="ctx-item" id="ctx-open-with" data-lang="contextmenu.open-with"></div>
+            <div class="container" id="ctx-open-with-container">
+                <div class="ctx-item" id="ctx-open-with-default">Default</div>
+                <div class="ctx-item" id="ctx-open-with-vscode">VSCode</div>
+            </div>
         </div>
         <!-- File viewer action container -->
         <div class="action-container">
@@ -64,12 +69,11 @@
             <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path"></div>
 
             <!-- File information -->
-            <div class="file-information hidden">
-                <div class="file-information-resize" title="Double-click to hide"></div> <!-- Resize bar -->
-                <div class="flex f-column f-nowrap f-m-center">
-                    <div class="file-info-preview"></div>
+            <div class="file-information container" hidden>
+                <div class="file-info-preview"></div>
+                <div class="flex f-column f-nowrap f-m-center f-d-center f-gap-15">
                     <div class="file-info" id="file-info-title"></div>
-                    <div class="f-i-params grid-2-3">
+                    <div class="grid-2-3">
                         <div class="file-info" data-lang="page.files.info.modified"></div>
                         <span class="file-info" id="file-info-modified"></span>
                         <div class="file-info" data-lang="page.files.info.createdby"></div>
@@ -78,13 +82,13 @@
                         <span class="file-info" id="file-info-size"></span>
                     </div>
                     <div class="file-info file-accessibility">
-                        <span class="al-s-c" data-lang="page.files.info.accessibility"></span>
+                        <span data-lang="page.files.info.accessibility"></span>
                         <div class="file-info grid-2-3">
                             <span class="f-access-title" data-lang="page.files.info.permissions.user"></span>
                             <span id="file-info-perm-user"></span>
                             <span class="f-access-title" data-lang="page.files.info.permissions.group"></span>
                             <span id="file-info-perm-group"></span>
-                            <span class="f-access-title" data-lang="page.files.info.permissions.other"></span>
+                            <span class="f-access-title" data-lang="page.files.info.permissions.others"></span>
                             <span id="file-info-perm-other"></span>
                         </div>
                     </div>
@@ -106,7 +110,9 @@
             <div class="action home-button" id="log-out" data-lang-title="page.files.logout.tooltip"></div>
             <div class="path-section"></div>
             <div class="process-loading"></div>
-            <div class="progress-bars"></div>
+            <div class="progress-bars">
+                <div class="progress-bar" id="pgb-test" style="--progress: 50;"></div>
+            </div>
         </div>
     </div>
 </body>

@@ -44,7 +44,8 @@ class FileElement extends HTMLElement
 
         let mainElement = document.createElement('div');
         mainElement.classList.add('center', 'file');
-        mainElement.draggable = true;
+        mainElement.draggable = !this.hasAttribute('non-draggable') && !this.hasAttribute('path-segment');
+        mainElement.title = this.getAttribute('name');
         if (this.hasAttribute('path-segment'))
             mainElement.classList.add('path-segment')
 
