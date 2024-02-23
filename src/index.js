@@ -511,7 +511,7 @@ async function retrieveSessions()
 
 /**
  * Method for updating the sessions file with a new successful connection.
- * @param {{host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}} session
+ * @param {{host: string, username: string, password: string, port: number, privateKey: string | null, passphrase: string | null}} session
  * The connection object to update the sessions file with.
  */
 function storeSession(session)

@@ -117,7 +117,7 @@ $(document).ready(() =>
     setInterval(checkFsDifferences, 3000);
 
     // When the user clicks on the screen outside a file element, hide the context menu.
-    $(document).on('click', _ => $('.context-menu').css('display', 'none'));
+    $(document).on('click', _ => $('#context-menu').css('display', 'none'));
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
     $(document).on('dblclick', () => $('file-element[selected]').each((i, e) =>
@@ -162,7 +162,7 @@ $(document).ready(() =>
         }
 
         // Disable all context actions first.
-        $('.context-menu > .ctx-item').addClass('disabled');
+        $('#context-menu > .ctx-item').addClass('disabled');
 
         // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
         // First, check whether it has a 'context-menu' dataset property.
@@ -181,7 +181,7 @@ $(document).ready(() =>
         // If there's any enabled items, we show the context menu.
         if (enabled.length > 0)
         {
-            let menu = document.querySelector('.context-menu');
+            let menu = document.querySelector('#context-menu');
 
             // Moving the context menu to the cursor's position
             menu.style.left = event.clientX + 'px';
@@ -301,11 +301,14 @@ $(document).ready(() =>
     })
         .on('drop', (event) =>
     {
-        if (event.dataTransfer.files.length === 0)
-            return;
-
+        event = event.originalEvent;
         event.preventDefault();
         event.stopImmediatePropagation();
+        // Check if there are any files to upload
+        if (!event.dataTransfer?.files || event.dataTransfer.files?.length === 0)
+        {
+            return;
+        }
 
         /** @type {string[]} */
         let pathArr = [];
@@ -611,6 +614,13 @@ function deleteSelected()
     let selected = getSelectedFiles();
     if (selected.length === 0)
         return;
+
+    // Cannot delete home or root directory.
+    if (selected.some(e => e.getAttribute('path') === homeDir || e.getAttribute('path') === '/'))
+        return;
+
+    if (selected[0].getAttribute('path') === currentDir)
+        navigateTo(currentDir.substring(0, currentDir.lastIndexOf('/')))
 
     busy(true);
     Promise.all(selected.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))

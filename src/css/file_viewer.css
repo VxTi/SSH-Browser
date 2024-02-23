@@ -34,8 +34,6 @@
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    border-radius: 5px;
-    border: 1px solid var(--theme-5);
 }
 .path-section::-webkit-scrollbar {
     display: none;
@@ -59,12 +57,37 @@
     width: 100vw;
     height: var(--file-navigator-height);
     display: grid;
-    grid-template-columns: repeat(2, var(--segment-size)) 7fr auto repeat(5, var(--segment-size));
     grid-template-rows: var(--file-navigator-height) 1fr;
+    grid-template-columns: repeat(2, var(--segment-size)) 7fr auto;
     grid-gap: 0;
     align-items: center;
     background-color: var(--theme-1);
     border-bottom: 1px solid var(--theme-5);
+}
+
+.action-toggle-visibility {
+    display: block;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    background-image: url('../resources/three_dots_icon.png');
+    transition: opacity 0.3s ease-in-out;
+}
+
+.action-sub-container {
+    transition: opacity 0.3s ease-in-out;
+}
+
+@media screen and (max-width: 600px) {
+    .action-sub-container {
+        opacity: 0;
+        display: none;
+    }
+    .action-toggle-visibility {
+        opacity: 1;
+        width: var(--file-navigator-height);
+        height: var(--file-navigator-height);
+    }
 }
 
 .file-section {
@@ -131,13 +154,14 @@
     background-repeat: no-repeat;
     display: block;
     user-select: none;
+    border: 1px solid transparent;
 }
 
 .action:hover {
     cursor: pointer;
-    background-color: var(--theme-5);
+    border-color: var(--theme-5);
 }
-.action:active { background-color: var(--theme-3); }
+.action:active { border-color: var(--theme-3); }
 
 .action-delete { background-image: url('../resources/delete_icon.png'); }
 
@@ -327,6 +351,19 @@ file-element[selected] { background-color: var(--theme-5); }
 
 .ctx-item:hover { background-color: var(--theme-5); }
 
+#ctx-open-with::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    background-image: url('../resources/right_arrow.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 1rem;
+    width: 1rem;
+    transform: translateX(100%);
+}
+
 .progress-bars {
     display: flex;
     flex-flow: column nowrap;
@@ -347,16 +384,6 @@ file-element[selected] { background-color: var(--theme-5); }
     background-color: var(--theme-5);
 }
 
-.progress-bar:before {
-    content: "Downloading...";
-    color: var(--text-color-2);
-    display: block;
-    position: absolute;
-    font-family: var(--font);
-    font-size: 0.7rem;
-    transform: translateY(-1rem);
-}
-
 .progress-bar:after {
     content: "";
     display: block;
@@ -366,7 +393,6 @@ file-element[selected] { background-color: var(--theme-5); }
     border-radius: 2px;
     background-color: var(--theme-4);
 }
-
 
 /* Container holding the file elements */
 .file-container {

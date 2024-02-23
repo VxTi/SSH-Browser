@@ -22,7 +22,7 @@
     <div class="navigator"></div>
     <div class="content">
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
-        <div class="context-menu">
+        <div class="context-menu" id="context-menu">
             <div class="ctx-item" id="ctx-open"      data-lang="contextmenu.open"></div>
             <div class="ctx-item" id="ctx-execute"   data-lang="contextmenu.execute"></div>
             <div class="ctx-item" id="ctx-new-dir"   data-lang="contextmenu.mkdir"></div>
@@ -32,9 +32,12 @@
             <div class="ctx-item" id="ctx-download"  data-lang="contextmenu.download"></div>
             <div class="ctx-item" id="ctx-cpy-path"  data-lang="contextmenu.copy-path"></div>
             <div class="ctx-item" id="ctx-open-with" data-lang="contextmenu.open-with"></div>
-            <div class="container" id="ctx-open-with-container">
+            <div class="context-menu" id="ctx-open-with-container">
                 <div class="ctx-item" id="ctx-open-with-default">Default</div>
                 <div class="ctx-item" id="ctx-open-with-vscode">VSCode</div>
+                <div class="ctx-item" id="ctx-open-with-clion">CLion</div>
+                <div class="ctx-item" id="ctx-open-with-webstorm">WebStorm</div>
+                <div class="ctx-item" id="ctx-open-with-sublime">Sublime Text 3</div>
             </div>
         </div>
         <!-- File viewer action container -->
@@ -45,21 +48,24 @@
 
             <input type="text" name="filter" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
 
-            <div class="action action-scripts">
-                <span data-lang="page.files.run-script"></span>
-                <div class="run-script icon"></div>
-                <div class="action-script-container flex f-column">
-                    <div class="action-script" id="script-new">New Script</div>
-                    <div class="action-script" id="script-1">Script 1</div>
-                    <div class="action-script" id="script-2">Script 2</div>
+            <div class="action-sub-container flex f-row f-d-center">
+                <div class="action action-scripts">
+                    <span data-lang="page.files.run-script"></span>
+                    <div class="run-script icon"></div>
+                    <div class="action-script-container flex f-column">
+                        <div class="action-script" id="script-new">New Script</div>
+                        <div class="action-script" id="script-1">Script 1</div>
+                        <div class="action-script" id="script-2">Script 2</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="action action-home"    id="action-home"        data-lang-title="page.files.navigate.home"></div>
-            <div class="action action-add-dir" id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
-            <div class="action action-refresh" id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
-            <div class="action action-delete"  id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
-            <div class="action action-add"     id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
+                <div class="action action-home"    id="action-home"        data-lang-title="page.files.navigate.home"></div>
+                <div class="action action-add-dir" id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
+                <div class="action action-refresh" id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
+                <div class="action action-delete"  id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
+                <div class="action action-add"     id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
+            </div>
+            <div class="action action-toggle-visibility icon"></div>
         </div>
 
         <div class="file-section">
@@ -110,9 +116,7 @@
             <div class="action home-button" id="log-out" data-lang-title="page.files.logout.tooltip"></div>
             <div class="path-section"></div>
             <div class="process-loading"></div>
-            <div class="progress-bars">
-                <div class="progress-bar" id="pgb-test" style="--progress: 50;"></div>
-            </div>
+            <div class="progress-bars"></div>
         </div>
     </div>
 </body>

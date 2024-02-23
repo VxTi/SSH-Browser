@@ -157,19 +157,23 @@ class FileElement extends HTMLElement
         let sourcePath = sourceDragTarget.getAttribute('path') + '/' + sourceDragTarget.getAttribute('name')
         let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name')
 
+        event.dataTransfer.dropEffect = 'none';
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        // If it's a path segment, we have to check paths differently.
+        // Wouldn't wanna drag a file in a directory it's already in...
+        if (this.hasAttribute('path-segment') && sourceDragTarget.getAttribute('path')
+            === this.getAttribute('path') + '/' + this.getAttribute('name'))
+            return;
+
         if (this.hasAttribute('directory') && !this.hasAttribute('dragging')
             && sourcePath !== targetPath && sourceDragTarget instanceof FileElement)
         {
             this.setAttribute('dragover', '')
             event.dataTransfer.dropEffect = 'copy'
         }
-        else
-        {
-            event.dataTransfer.dropEffect = 'none';
-        }
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
     }
 
     /**

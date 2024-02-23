@@ -62,10 +62,10 @@ html, body {
 }
 
 body {
-    border-radius: var(--default-rounding);
+    border-radius: 10px;
     background-color: var(--theme-1);
     outline: 1px solid var(--border-1);
-    border: 1px solid var(--border-2);
+    border: 1px solid var(--theme-5);
 }
 
 .scrollbar {
