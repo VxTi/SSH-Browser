@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain, dialog} = require('electron')
+const {app, BrowserWindow, ipcMain, dialog, Menu} = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
@@ -12,11 +12,11 @@ const StaticFiles = [ 'FILE_ICONS' ]
 
 const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
 
-const filter = new ansiHtml({ newline: false, escapeXML: false, stream: false });
+const filter = new ansiHtml({ newline: true, escapeXML: false, stream: false });
 
 // Whether to reload the static content into the appdata directory
 // This is useful for testing and development purposes
-const LOAD_STATIC_CONTENT = true;
+const LOAD_STATIC_CONTENT = false;
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
@@ -24,13 +24,13 @@ let connections = [];
 let currentConnection = 0;
 
 let mainWindow = null;
+let /* TEMPORARY */ terminalWindow = null;
 
-let _clog = console.log;
-console.log = (...args) => _clog(`${new Date().toLocaleDateString('en-UK')} |`, ...args);
-
-function log(...args) {
+function LOG(message, ...args) {
     let timeStamp = new Date();
-    console.log(timeStamp.toLocaleDateString('en-UK') + " " + timeStamp.toLocaleTimeString('en-UK'),...args);
+    console.log(
+        timeStamp.toLocaleDateString('en-UK') + ' ' +
+        timeStamp.toLocaleTimeString('en-UK') + ' | ' + message, ...args);
 }
 
 const OS = {
@@ -43,8 +43,9 @@ const OS = {
  * Method for creating a window.
  * @returns {Electron.CrossProcessExports.BrowserWindow} The created window.
  */
-function createWindow()
+function createWindow(pagePath = null, createArgs = {})
 {
+    pagePath ||= path.join(__dirname, 'index.html');
     let window = new BrowserWindow({
         width: 900,
         height: 700,
@@ -57,14 +58,15 @@ function createWindow()
             nodeIntegration: true,
             contextIsolation: true,
             preload: path.join(__dirname, "preload.js")
-        }
+        },
+        ...createArgs
     });
 
     // Show the window buttons on macOS
-    if (OS.isMac) window.setWindowButtonVisibility(true);
+    if (OS.isMac)
+        window.setWindowButtonVisibility(true);
 
-    window.loadFile(path.join(__dirname, 'index.html'))
-        .catch((err) => console.error(err));
+    window.loadFile(pagePath).catch(console.error);
     return window;
 }
 
@@ -76,6 +78,7 @@ app.whenReady().then(() =>
 {
     mainWindow = createWindow()
     mainWindow.setMinimumSize(600, 500);
+
     app.on('activate', _ =>
     {
         if (BrowserWindow.getAllWindows().length === 0)
@@ -90,31 +93,99 @@ app.whenReady().then(() =>
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
-        log("Created keybinds file")
+        LOG("Created keybinds file")
     }
 
     if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT)
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
-        log("Created languages file")
+        LOG("Created languages file")
     }
 
     if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)))
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
+
+    /*let keybindsData = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)).toString());
+    let languagesData = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)).toString())['english'];
+    let menu = Menu.buildFromTemplate([
+        ...(OS.isMac
+            ? [{
+                label: app.name,
+                submenu: [
+                    { role: 'about' },
+                    { type: 'separator' },
+                    { role: 'services' },
+                    { type: 'separator' },
+                    { role: 'hide' },
+                    { role: 'hideOthers' },
+                    { role: 'unhide' },
+                    { type: 'separator' },
+                    { role: 'quit' }
+                ]
+            }]
+            : []),
+            ...Object.keys(keybindsData).map(keybind =>
+        {
+            return {
+                label: keybindsData[keybind]['title'],
+                submenu: Object.keys(keybindsData[keybind]['content']).map(key =>
+                    {
+                        return {
+                            label: languagesData[keybindsData[keybind]['content'][key]['title']],
+                            accelerator: languagesData[keybindsData[keybind]['content'][key]['combination']],
+                            click: () => {
+                                mainWindow.webContents.send('context-menu-interact', key)
+                            }
+                        }
+                    })
+
+            }
+        }),
+    ]);
+    Menu.setApplicationMenu(menu);*/
 })
 
-app.on('window-all-closed', () =>
-{
-    if (!OS.isMac)
-        app.quit()
+app.on('window-all-closed', () => OS.isMac || app.quit())
+
+ipcMain.on('open-terminal', async (_, directory) => {
+    if (terminalWindow)
+    {
+        terminalWindow.focus();
+        return;
+    }
+    terminalWindow = createWindow(path.join(__dirname, 'pages/terminal_page.html'), {width: 600, height: 480});
+
+    ssh()
+        .requestShell({term: process.env.TERM || 'xterm-256color'})
+        .then((stream) =>
+        {
+            stream.write('cd ' + directory + '\n');
+            stream.setWindow(80, 24, 480, 600);
+
+            [stream.stderr, stream.stdout].forEach(stream =>
+                stream.on('data', data =>
+                    terminalWindow.webContents.send('message-received', filter.toHtml(data.toString()))))
+
+            if (ipcMain.eventNames().includes('cmd'))
+                ipcMain.removeHandler('cmd');
+            ipcMain.handle('cmd', async (_, command) =>
+            {
+                stream
+                    .pause()
+                    .write(command + '\n', 'utf-8', _ => stream.resume());
+            })
+
+            terminalWindow.on('close', _ => stream.end());
+        })
+        .catch(e => LOG("An error occurred whilst requesting shell", e));
 })
 
 /** Event handler for the 'select files' dialog menu **/
 ipcMain.handle('open-files', async () => {
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             dialog.showOpenDialog({properties: ['openFile', 'multiSelections']})
                 .then(result => resolve(result.filePaths))
@@ -127,7 +198,7 @@ ipcMain.handle('open-files', async () => {
 ipcMain.handle('download-file', async (_, remotePath, fileName) => {
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             let localAbsolutePath = path.join(app.getPath('downloads'), fileName);
             let remoteAbsolutePath = path.join(remotePath, fileName);
@@ -157,7 +228,7 @@ ipcMain.handle('list-files', async (_, path) => {
 
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
-        if (sshConnected())
+        if (isSSHConnected())
         {
             return ssh().execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
@@ -175,7 +246,7 @@ ipcMain.handle('delete-file', async (_, directory, fileName) => {
         [directory] = fmtPaths(directory);
         return new Promise((resolve, reject) =>
         {
-            if (sshConnected())
+            if (isSSHConnected())
             {
                 console.error("Attempting to remove file: " + fileName + " from directory: " + directory);
 
@@ -195,13 +266,13 @@ ipcMain.handle('delete-file', async (_, directory, fileName) => {
 ipcMain.handle('retrieve-sessions', retrieveSessions);
 
 /** Event handler for retrieving the status of the current SSH connection **/
-ipcMain.handle('connection-status', sshConnected)
+ipcMain.handle('connection-status', isSSHConnected)
 
 /** Event handler for attempting to connect to a remote server **/
 ipcMain.handle('connect', async (_, host, username, password, port = 22, privateKey = null, passphrase = null) => {
     return new Promise((resolve, reject) =>
     {
-        let cur = sshCurrent();
+        let cur = getCurrentSession();
 
         port = port || 22;
 
@@ -210,11 +281,11 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
         if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port)
         {
             currentConnection = connections.indexOf(cur);
-            log('Connection already active');
+            LOG('Connection already active');
             return resolve();
         }
 
-        log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+        LOG('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
 
         let connection = {
             ssh: new NodeSSH(),
@@ -242,31 +313,10 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
             {
                 storeSession(connection); // store the session in sessions.json
 
-                log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+                LOG('Connected to ' + host + ' with username ' + username + ' on port ' + port);
 
                 connections.push(connection);
                 currentConnection = connections.length - 1;
-
-                ssh.requestShell({term: process.env.TERM || 'xterm-256color'})
-                    .then((stream) =>
-                    {
-                        stream.setWindow(80, 24, 480, 600);
-                        stream.on('data', data =>
-                        {
-                            mainWindow.webContents.send('message-received', filter.toHtml(data.toString()));
-                        }).stderr.on('data', data =>
-                        {
-                            mainWindow.webContents.send('message-received', filter.toHtml(data.toString()));
-                        });
-                        ipcMain.removeHandler('cmd');
-                        ipcMain.handle('cmd', async (_, command) =>
-                        {
-                            stream.pause();
-                            stream.write(command + '\n');
-                            stream.resume();
-                        })
-                    })
-                    .catch(e => log("An error occurred whilst requesting shell", e))
                 resolve();
 
             })
@@ -274,9 +324,9 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
     })
 })
 
-ipcMain.on('get-languages', (event) => event.returnValue = languages);
+ipcMain.on('get-languages', (event) => event.returnValue = __languages);
 
-ipcMain.on('get-keybinds', (event) => event.returnValue = keybinds);
+ipcMain.on('get-keybinds', (event) => event.returnValue = __keybinds);
 
 /**
  *  Event handler for uploading multiple files
@@ -294,7 +344,7 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
         if (files.length === 0)
             return resolve();
 
-        if (sshConnected())
+        if (isSSHConnected())
         {
             let opt = {
                 step: (transfer_count, chunk, total) =>
@@ -356,7 +406,7 @@ ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) => {
     [fileName, srcPath, dstPath] = fmtPaths(fileName, srcPath, dstPath);
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             ssh().execCommand(`mv ${path.join(srcPath, fileName)} ${path.join(dstPath, fileName)}`)
                 .then(_ => resolve())
@@ -369,7 +419,7 @@ ipcMain.handle('rename-file', async (_, directory, fileName, newName) => {
     [directory, fileName, newName] = fmtPaths(directory, fileName, newName);
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             ssh().execCommand(`cd ${directory} && mv ${fileName} ${newName}`)
                 .then(_ => resolve())
@@ -382,7 +432,7 @@ ipcMain.handle('rename-file', async (_, directory, fileName, newName) => {
 ipcMain.handle('starting-directory', async _ => {
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             ssh().execCommand('pwd && ls')
                 .then(result => resolve({
@@ -397,15 +447,15 @@ ipcMain.handle('starting-directory', async _ => {
 /** Event handler for creating a directory on the remote server **/
 ipcMain.handle('create-directory', async (_, directory, dirName) => {
     [directory] = fmtPaths(directory);
-    log(`Attempting to create dir at [${directory}] with name [${dirName}]`)
+    LOG(`Attempting to create dir at [${directory}] with name [${dirName}]`)
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             ssh().execCommand(`cd ${directory} && mkdir '${dirName}'`)
                 .then(_ =>
                 {
-                    log("Directory successfully created");
+                    LOG("Directory successfully created");
                     resolve()
                 })
                 .catch(err =>
@@ -422,7 +472,7 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) => {
 
     return new Promise((resolve, reject) =>
     {
-        if (sshConnected())
+        if (isSSHConnected())
         {
             ssh().execCommand(`cd ${directory} && ls -l -d ${fileName}`)
                 .then(result =>
@@ -442,46 +492,50 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) => {
 
 ipcMain.on('current-session', (event) =>
 {
-    if (!sshConnected()) return event.returnValue = null;
-    event.returnValue = {username: sshCurrent().username, host: sshCurrent().host, port: sshCurrent().port};
+    if (!isSSHConnected()) return event.returnValue = null;
+    event.returnValue = {username: getCurrentSession().username, host: getCurrentSession().host, port: getCurrentSession().port};
 })
 
 ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
-ipcMain.on('log', (_, args) => log(args));
+ipcMain.on('log', (_, message, ...args) => LOG(args, ...args));
 
 ipcMain.handle('get-config', (event, fileName) => {
-    if (!FileNames[fileName.toUpperCase()])
-    {
-        log('Config file does not exist.');
+    let query = fileName.toUpperCase();
+    if (!FileNames[query])
         throw new Error('Config file does not exist.');
-    }
 
-    if (StaticFiles.includes(fileName.toUpperCase()))
-    {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames[fileName.toUpperCase()])).toString());
-    }
+    if (StaticFiles.includes(query))
+        return JSON.parse(fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames[query])).toString());
 
-    return JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[fileName.toUpperCase()])).toString());
+    return JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[query])).toString());
 });
 
 /**
  * Method for checking the status of the current SSH connection.
  * @returns {boolean} Whether or not the connection is active.
  */
-function sshConnected()
+function isSSHConnected()
 {
     return ssh()?.isConnected() || false;
 }
 
-function sshCurrent()
+/**
+ * Function for retrieving the current session.
+ * @returns {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}}
+ */
+function getCurrentSession()
 {
     return connections[currentConnection];
 }
 
+/**
+ * Function for retrieving the current SSH connection.
+ * @returns {NodeSSH}
+ */
 function ssh()
 {
-    return sshCurrent()?.ssh;
+    return getCurrentSession()?.ssh;
 }
 
 /**
@@ -492,7 +546,7 @@ async function retrieveSessions()
 {
     return new Promise((resolve, reject) =>
     {
-        fs.readFile(path.join(__dirname, 'sessions.json'), (err, data) =>
+        fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (err, data) =>
         {
             if (err) return reject(err);
 
@@ -541,8 +595,6 @@ function storeSession(session)
                 passphrase: session.passphrase
             });
 
-            // 192.168.238.76 
-            //  blackbananaman
             // TODO: Encrypt the data before writing it to the file.
 
             // Write back to file

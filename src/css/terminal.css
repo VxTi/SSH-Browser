@@ -1,50 +1,11 @@
-.terminal {
-    --terminal-input-height: 12px;
-    --width: 50vw;
-    --height: 200px;
-    display: flex;
-    position: absolute;
-    flex-flow: column nowrap;
-    left: 0;
-    top: calc(100vh - var(--height) - var(--file-navigator-height));
-    height: var(--height);
-    width: var(--width);
-    border-radius: 5px;
-    background-color: var(--theme-1);
-    z-index: 100;
-    -webkit-user-drag: none;
-    visibility: hidden;
+:root {
+    --terminal-input-height: 1.5rem;
 }
 
-.terminal-resize-vertical {
-    position: absolute;
-    width: 100%;
-    height: 5px;
-    border-top: 1px solid transparent;
+.terminal-page {
+
 }
 
-.terminal-resize-horizontal {
-    position: absolute;
-    width: 5px;
-    height: 100%;
-    border-left: 1px solid transparent;
-    right: 0;
-}
-
-.terminal-resize-horizontal:hover { border-left-color: var(--container-resize-color); }
-.terminal-resize-vertical:hover { border-top-color: var(--container-resize-color); }
-
-.terminal-resize-vertical { cursor: ns-resize; }
-.terminal-resize-horizontal { cursor: ew-resize; }
-
-.terminal-resize-horizontal:hover + .terminal-resize-vertical { cursor: nwse-resize; }
-
-.terminal.hidden {
-    display: block;
-    --width: 20px;
-    --height: 20px;
-    background-color: white;
-}
 
 /* Styling for a line of text in the terminal */
 .terminal-output {
@@ -58,25 +19,28 @@
 
 /* The container for output */
 .terminal-content {
-    grid-area: a;
-    height: calc(var(--height) - var(--terminal-input-height));
+    height: calc(100vh - var(--terminal-input-height));
     margin: 10px;
     display: flex;
     flex-flow: column nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: var(--theme-5) var(--theme-1);
+    color: var(--text-color);
+    font-family: Inconsolata, monospace;
     overflow-y: scroll;
 }
 
 .terminal-input {
-    grid-area: b;
     margin: 0;
     font-size: var(--terminal-input-height);
+    width: 100%;
     border-color: transparent;
     background-color: var(--theme-1);
-    padding: 0 0 0 15px;
-    width: auto;
-    font-family: "Andale Mono", monospace;
+    padding: 10px;
+    font-family: Inconsolata, monospace;
+    color: var(--text-color);
+}
+
+.terminal-input:focus {
+    outline: none;
 }
 
 .terminal-input:focus {

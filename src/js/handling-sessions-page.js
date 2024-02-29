@@ -7,11 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.ssh.sessions.get()
         .then(results => {
             results.forEach(session => addSession(session));
-            let addSessionElement = document.createElement('div');
-            addSessionElement.classList.add('session-element', 'add-session', 'user-interact');
-            addSessionElement.onclick = () => window.location.href = './pages/login_page.html';
-            addSessionElement.dataset.langTitle = 'session.create.tooltip'
-            document.querySelector('.session-content').appendChild(addSessionElement);
+            document.getElementById('add-sessions')
+                .addEventListener('click', () => window.location.href = './pages/login_page.html');
         })
 });
 
@@ -50,8 +47,7 @@ function addSession(session) {
             });
     })
 
-    session_element.addEventListener('mousedown', (event) => {
-        if (event.button !== 2) return;
+    session_element.addEventListener('contextmenu', (event) => {
         delete_button.style.setProperty('--delete-pos-x', `${session_element.offsetLeft}px`);
         delete_button.style.setProperty('--delete-pos-y', `${session_element.offsetTop + session_element.offsetHeight + 4}px`);
         delete_button.style.visibility = 'visible';

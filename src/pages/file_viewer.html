@@ -11,7 +11,7 @@
     <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/general-functionality.js"></script>
     <script src="../js/custom_elements/file_element.js"></script>
-    <script src="../js/terminal.js"></script>
+    <script src="../js/handling-external-terminal.js"></script>
     <script src="../js/file/file_permissions_object.js"></script>
     <script src="../js/file/file_object.js"></script>
     <script src="../js/file/file_caching.js"></script>
@@ -49,21 +49,12 @@
             <input type="text" name="filter" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
 
             <div class="action-sub-container flex f-row f-d-center">
-                <div class="action action-scripts">
-                    <span data-lang="page.files.run-script"></span>
-                    <div class="run-script icon"></div>
-                    <div class="action-script-container flex f-column">
-                        <div class="action-script" id="script-new">New Script</div>
-                        <div class="action-script" id="script-1">Script 1</div>
-                        <div class="action-script" id="script-2">Script 2</div>
-                    </div>
-                </div>
-
-                <div class="action action-home"    id="action-home"        data-lang-title="page.files.navigate.home"></div>
-                <div class="action action-add-dir" id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
-                <div class="action action-refresh" id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
-                <div class="action action-delete"  id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
-                <div class="action action-add"     id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
+                <div class="action action-terminal" id="action-terminal"    data-lang-title="page.files.terminal.tooltip"></div>
+                <div class="action action-home"     id="action-home"        data-lang-title="page.files.navigate.home"></div>
+                <div class="action action-add-dir"  id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
+                <div class="action action-refresh"  id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
+                <div class="action action-delete"   id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
+                <div class="action action-add"      id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
             </div>
             <div class="action action-toggle-visibility icon"></div>
         </div>
@@ -104,7 +95,7 @@
         <!-- Terminal container
             TODO: Fix this
         -->
-        <div class="terminal container" id="terminal" hidden="hidden">
+        <div class="terminal container" id="terminal">
             <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
             <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
             <div class="terminal-content scrollbar terminal-output"></div>

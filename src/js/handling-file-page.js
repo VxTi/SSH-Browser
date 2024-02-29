@@ -1,3 +1,4 @@
+"use strict";
 let busy = (state) =>
 {
     $('.process-loading').css('visibility', state ? 'visible' : 'hidden')
@@ -6,6 +7,7 @@ let busy = (state) =>
 /** @type {string | undefined} */
 let currentUser = undefined
 
+/** @type JQuery<HTMLElement> */
 let fileContainer = null
 
 /** @type {File | null} */
@@ -19,10 +21,10 @@ let navigationHistory = [];
 let navigationHistoryIndex = 0;
 
 // Which element the context menu is targeting
-let ctxTarget = [];
+let contextMenuTarget = null;
 
 // Register all keybind mappings for the file viewer
-registerKeybindMappings({
+registerKeybindMapping({
     'create_directory': createDirectory,
     'download_file': downloadSelected,
     'delete_file': deleteSelected,
@@ -30,9 +32,8 @@ registerKeybindMappings({
     'file_info': showFileInfo,
     'open_file': addFiles,
     'navigate_home': () => navigateTo(homeDir),
-    'select_all_files': () =>
-        getSelectedFiles().forEach(e => e.setAttribute('selected', '')),
-    'deselect_all_files': () => $('file-element[selected]').removeAttr('selected'),
+    'select_all_files': () => getFileElements().forEach(e => e.setAttribute('selected', '')),
+    'deselect_all_files': () => getFileElements().forEach(e => e.removeAttribute('selected')),
     'navigate_back': () => {
         if (navigationHistoryIndex > 0)
         {
@@ -71,13 +72,8 @@ registerKeybindMappings({
         next.attr('selected', '');
     },
     'invert_selection': () => {
-        $('file-element').each((i, e) =>
-        {
-            if (e.hasAttribute('selected'))
-                e.removeAttribute('selected')
-            else
-                e.setAttribute('selected', '')
-        })
+        getFileElements().forEach(e => e.hasAttribute('selected') ?
+            e.removeAttribute('selected') : e.setAttribute('selected', ''))
     }
 })
 
@@ -87,7 +83,7 @@ $(document).ready(() =>
     addLoadingSpinner($('.process-loading')[0]);
     $('#log-out').on('click', () => window.location.href = '../index.html');
 
-    fileContainer = document.querySelector('.file-container');
+    fileContainer = $('.file-container');
 
     // Load in the files from the current directory
     // If this fails, we redirect the user to the main menu.
@@ -135,30 +131,31 @@ $(document).ready(() =>
         // Errors will be thrown otherwise.
         if (!document.hasFocus())
             return;
+
         event.preventDefault();
         event.stopImmediatePropagation();
-
-        // Select potential file
-        let targetElement = event.target
 
         // Which items are enabled in the context menu
         /** @type {HTMLElement[]} */
         let enabled = []
 
-        ctxTarget = [targetElement];
+        contextMenuTarget = event.target;
 
         // Check if the clicked-on element is a file
-        if (targetElement instanceof FileElement)
+        if (contextMenuTarget instanceof FileElement)
         {
             document.querySelectorAll('file-element')
                 .forEach(e => e.removeAttribute('selected'))
-            targetElement.setAttribute('selected', '')
-            fileRenameTarget = getFile(targetElement.getAttribute('path'), targetElement.getAttribute('name'))
-            ctxTarget = [...document.querySelectorAll('file-element[selected]')]
+
+            contextMenuTarget.setAttribute('selected', '')
+
+            fileRenameTarget = getFile(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name'))
             enabled.push(
-                ...['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with']
-                    .map(e => document.getElementById('ctx-' + e))
+                ...(['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with']
+                    .map(e => document.getElementById(`ctx-${e}`)))
             );
+            if (contextMenuTarget.hasAttribute('executable'))
+                enabled.push(document.getElementById('ctx-execute'));
         }
 
         // Disable all context actions first.
@@ -166,9 +163,9 @@ $(document).ready(() =>
 
         // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
         // First, check whether it has a 'context-menu' dataset property.
-        if (targetElement.dataset.hasOwnProperty('contextMenu'))
+        if (contextMenuTarget.dataset['contextMenu'])
         {
-            let items = targetElement.dataset.contextMenu.split(' ');
+            let items = contextMenuTarget.dataset.contextMenu.split(' ');
             items.forEach(ctxMenuItem =>
             {
                 let element = document.getElementById('ctx-' + ctxMenuItem.trim());
@@ -181,20 +178,9 @@ $(document).ready(() =>
         // If there's any enabled items, we show the context menu.
         if (enabled.length > 0)
         {
-            let menu = document.querySelector('#context-menu');
-
-            // Moving the context menu to the cursor's position
-            menu.style.left = event.clientX + 'px';
-            menu.style.top = event.clientY + 'px';
-            menu.style.display = 'block';
-
-            // Make sure the context menu fits within screen boundaries.
-            let clientRect = menu.getBoundingClientRect();
-            if (clientRect.right > window.innerWidth)
-                menu.style.left = (window.innerWidth - clientRect.width) + 'px';
-
-            if (clientRect.bottom > window.innerHeight)
-                menu.style.top = (window.innerHeight - clientRect.height) + 'px';
+            const menu = $('#context-menu');
+            menu.css('display', 'block');
+            ensureFrameWithinWindow(menu, event.clientX, event.clientY, {left: 5, top: 5, right: 5, bottom: 5})
         }
     });
 
@@ -211,15 +197,13 @@ $(document).ready(() =>
     // Copy file path
     $('#ctx-cpy-path').on('click', () =>
     {
-        // Filter out all elements that don't have a path (non-files / directories)
-        ctxTarget = ctxTarget.filter(e => e.dataset.path);
-        if (ctxTarget.length > 0)
+        if (contextMenuTarget instanceof FileElement)
         {
-            navigator.clipboard.writeText(ctxTarget[0].dataset.path)
+            navigator.clipboard.writeText(contextMenuTarget.getAttribute('path') + '/' + contextMenuTarget.getAttribute('name'))
                 .catch(_ => window.logger.log('Error occurred whilst attempting to copy path', _));
         }
     })
-    // FIXME: Not working correctly (Broken after redoing file-element)
+    // FIXME: Not working correctly (Broken after making file-element)
     $('#ctx-rename').on('click', () =>
     {
         if (fileRenameTarget !== null)
@@ -235,7 +219,7 @@ $(document).ready(() =>
             renameFileInput.focus();
         }
     })
-
+    $('#action-terminal').on('click', () => window.terminal.open(currentDir))
     $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
     $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
 
@@ -293,8 +277,7 @@ $(document).ready(() =>
     $('#action-home').on('click', () => navigateTo(homeDir))
 
     // Add drag and drop functionality
-    $('.file-container')
-        .on('dragover', (e) =>
+    fileContainer.on('dragover', (e) =>
     {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -372,21 +355,17 @@ function loadFileViewer()
 
     let pathContainer = document.querySelector('.path-section');
 
-    let pathSegments = currentDir.split('/') || [''];
-    if (pathSegments[pathSegments.length - 1] === '')
-        pathSegments.pop();
+    let pathSegments = currentDir.match(/\/?([^\/]+)/g) || ['/']
 
     // Add all the path segments to the path container
     // These are just directories
     for (let i = 0; i < pathSegments.length; i++)
     {
-        let seg = pathSegments[i];
-
         let pathElement = document.createElement('file-element');
-        pathElement.setAttribute('name', seg)
+        pathElement.setAttribute('name', pathSegments[i].replace('/', ''));
         if (i === 0)
             pathElement.setAttribute('nick-name', 'root')
-        pathElement.setAttribute('path', pathSegments.slice(0, i).join('/').trim() || '/')
+        pathElement.setAttribute('path', pathSegments.slice(0, i).join(''))
         pathElement.setAttribute('directory', '')
         pathElement.setAttribute('type', 'dir')
         pathElement.setAttribute('path-segment', '')
@@ -418,7 +397,7 @@ function loadFileElements(path = currentDir, clearOld = true)
     if (clearOld) $('file-element:not(.path-separator)').remove();
 
     // Add all files to the file container
-    getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
+    getFiles(path).forEach(file => fileContainer.get(0).appendChild(createFileElement(file)));
 }
 
 /**
@@ -432,7 +411,11 @@ function navigateTo(target)
     // If we're already on there, don't proceed.
     if (target === currentDir)
         return;
-    document.querySelector('.file-section').dataset.path = target;
+
+    $('.file-section').attr('data-path', target);
+    $('#context-menu').css('display', 'none');
+    $('.file-information').attr('hidden', '');
+    console.log("Attempting to navigate to ", target);
 
     busy(true);
     window.ssh
@@ -450,7 +433,7 @@ function navigateTo(target)
         .catch(_ =>
         {   // If an error occurs whilst
             window.logger.log('Error occurred whilst attempting to navigate', _)
-            window.location.href = '../index.html';
+            //window.location.href = '../index.html';
         })
         .finally(_ =>
         {
@@ -533,6 +516,11 @@ function getSelectedFiles()
     return [...document.querySelectorAll('file-element[selected]:not(.path-separator)')]
 }
 
+function getFileElements()
+{
+    return [...document.querySelectorAll('file-element:not(.path-separator)')];
+}
+
 /**
  * Event handler for the process status event.
  * This can be uploading, downloading, or something else.
@@ -610,8 +598,9 @@ function downloadSelected()
  */
 function deleteSelected()
 {
-
     let selected = getSelectedFiles();
+
+    // If there aren't any files selected, stop.
     if (selected.length === 0)
         return;
 
@@ -619,16 +608,11 @@ function deleteSelected()
     if (selected.some(e => e.getAttribute('path') === homeDir || e.getAttribute('path') === '/'))
         return;
 
-    if (selected[0].getAttribute('path') === currentDir)
-        navigateTo(currentDir.substring(0, currentDir.lastIndexOf('/')))
-
     busy(true);
     Promise.all(selected.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
         .then(_ =>
         {
-            // Remove them from the DOM
-            // Automatic file system reloading will take care
-            // of file cache updates.
+            fileCache.set(currentDir, getFiles(currentDir).filter(f => !selected.some(e => e.getAttribute('name') === f.name)));
             selected.forEach(e => e.remove());
         })
         .catch(e => window.logger.error('Error occurred whilst attempting to delete file', e))
@@ -689,14 +673,16 @@ async function showFileInfo()
         await file.loadInfo().finally(_ => busy(false))
     }
 
-    let fileInfo = $('.file-information');
-    let clientRect = selected[0].getBoundingClientRect();
+    const fileInfo = $('.file-information');
+    const clientRect = selected[0].getBoundingClientRect();
     fileInfo.removeAttr('hidden');
-    fileInfo.css('left', clientRect.left + clientRect.width / 2);
-    fileInfo.css('top', clientRect.top + clientRect.height + 10);
+
+    ensureFrameWithinWindow(fileInfo,
+        clientRect.left + clientRect.width / 2 - fileInfo.width() / 2,
+        clientRect.top + clientRect.height + 10);
 
     // Copy selected element onto file info page
-    $('.file-info-preview').css('background-image', `url(${window.getIcon(selected[0].getAttribute('type'))}`);
+    $('.file-info-preview').css('background-image', `url(${window.resourceFromFileExtension(selected[0].getAttribute('type'))}`);
     $('#file-info-perm-user').text(file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : ''));
     $('#file-info-perm-group').text(file.permissions.toString('group'));
     $('#file-info-perm-other').text(file.permissions.toString('other'));
@@ -705,4 +691,19 @@ async function showFileInfo()
     $('#file-info-size').text(file.fileSizeString);
     $('#file-info-owner').text(file?.owner || 'Unknown');
     $('#file-info-modified').text(file.lastModified || 'Unknown');
+}
+
+/**
+ * Function for ensuring the provided window stays within boundaries of the window.
+ * @param {JQuery<HTMLElement> | string} frame The frame to ensure within the window. Can be a selector or a jQuery object.
+ * @param {number} nextLeft The next left position of the frame
+ * @param {number} nextTop The next top position of the frame
+ * @param {{left: number, top: number, right: number, bottom: number}} [margins = {left: 0, top: 0, right: 0, bottom: 0}] The margins to keep from the window edges
+ */
+function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = {left: 0, top: 0, right: 0, bottom: 0})
+{
+    if (typeof frame === 'string')
+        frame = $(frame);
+    frame.css('left', Math.max(margins.left, Math.min(window.innerWidth - frame.width() - margins.right, nextLeft)))
+    frame.css('top', Math.max(margins.bottom, Math.min(window.innerHeight - frame.height() - margins.top, nextTop)))
 }

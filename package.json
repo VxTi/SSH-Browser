@@ -4,16 +4,17 @@
   "description": "A Simple SSH File Browser",
   "main": "src/index.js",
   "scripts": {
-    "build_linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=resources/app_icon.png --prune=true --out=release-builds",
-    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=resources/app_icon.icns --prune=true --out=release-builds",
-    "build_win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=resources/app_icon.ico --prune=true --out=release-builds",
-    "build_all": "electron-packager . --overwrite --platform=all --arch=all --icon=resources/app_icon.ico --prune=true --out=release-builds",
+    "build_linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",
+    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds",
+    "build_win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
+    "build_all": "electron-packager . --overwrite --platform=all --arch=all --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
     "test": "echo \\\"Error: no test specified\\\" && exit 1",
     "start": "electron . --unhandled-rejections=strict"
   },
   "author": "Luca Warmenhoven",
   "private": true,
   "dependencies": {
+    "@types/jquery": "^3.5.29",
     "ansi-to-html": "^0.7.2",
     "electron-wix-msi": "^5.0.0",
     "menu": "^0.2.5",

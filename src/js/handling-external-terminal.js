@@ -99,10 +99,7 @@ $(document).ready(() => {
 function println(message) {
 
     // Clear screen ANSI code.
-    if (/(\x1b\[H\x1b\[2J\x1b\[3J)+/g.test(message)) {
-        terminalContent.innerHTML = '';
-    } else terminalContent.innerHTML += message;
-
+    terminalContent.innerHTML += message;
     terminalContent.scrollTop = terminalContent.scrollHeight;
 }
 window.events.on('message-received', message => println(message))

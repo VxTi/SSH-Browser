@@ -1,74 +1,80 @@
 {
     "file_explorer": {
-        "open_file": {
-            "title": "file.open",
-            "combination": "Control+O|Meta+O"
-        },
-        "delete_file": {
-            "title": "file.delete",
-            "combination": "Control+Delete|Meta+Delete"
-        },
-        "navigate_directory": {
-            "title": "page.navigate.file",
-            "combination": "Enter"
-        },
-        "navigate_home": {
-            "title": "page.navigate.home",
-            "combination": "Control+H|Meta+H"
-        },
-        "navigate_back": {
-            "title": "page.navigate.back",
-            "combination": "Control+ArrowLeft|Meta+ArrowLeft"
-        },
-        "navigate_forward": {
-            "title": "page.navigate.forward",
-            "combination": "Control+ArrowRight|Meta+ArrowRight"
-        },
-        "file_info": {
-            "title": "file.info",
-            "combination": "Control+I|Meta+I"
-        },
-        "select_next_file": {
-            "title": "file.select.next",
-            "combination": "ArrowRight"
-        },
-        "select_previous_file": {
-            "title": "file.select.previous",
-            "combination": "ArrowLeft"
-        },
-        "select_all_files": {
-            "title": "file.select.all",
-            "combination": "Control+A|Meta+A"
-        },
-        "invert_selection": {
-            "title": "Invert Selection",
-            "combination": "Control+Shift+I|Meta+Shift+I"
-        },
-        "download_file": {
-            "title": "Download File",
-            "combination": "Control+D|Meta+D"
-        },
-        "reload_page": {
-            "title": "page.refresh",
-            "combination": "Control+R|Meta+R"
-        },
-        "deselect_all_files": {
-            "title": "file.select.none",
-            "combination": "Control+Shift+A|Meta+Shift+A|Escape"
-        },
-        "create_directory": {
-            "title": "file.mkdir",
-            "combination": "Control+Shift+N|Meta+Shift+N"
+        "title": "File",
+        "content": {
+            "open_file": {
+                "title": "page.files.upload",
+                "combination": "Control+O|Meta+O"
+            },
+            "delete_file": {
+                "title": "page.files.delete",
+                "combination": "Control+Backspace|Meta+Backspace"
+            },
+            "navigate_directory": {
+                "title": "page.files.navigate.file",
+                "combination": "Enter"
+            },
+            "navigate_home": {
+                "title": "page.files.navigate.home",
+                "combination": "Control+H|Meta+H"
+            },
+            "navigate_back": {
+                "title": "page.files.navigate.previous",
+                "combination": "Control+ArrowLeft|Meta+ArrowLeft"
+            },
+            "navigate_forward": {
+                "title": "page.files.navigate.next",
+                "combination": "Control+ArrowRight|Meta+ArrowRight"
+            },
+            "file_info": {
+                "title": "page.files.info",
+                "combination": "Control+I|Meta+I"
+            },
+            "select_next_file": {
+                "title": "page.files.select.next",
+                "combination": "ArrowRight"
+            },
+            "select_previous_file": {
+                "title": "page.files.select.previous",
+                "combination": "ArrowLeft"
+            },
+            "select_all_files": {
+                "title": "page.files.select.all",
+                "combination": "Control+A|Meta+A"
+            },
+            "invert_selection": {
+                "title": "page.files.select.invert",
+                "combination": "Control+Shift+I|Meta+Shift+I"
+            },
+            "download_file": {
+                "title": "page.files.download",
+                "combination": "Control+D|Meta+D"
+            },
+            "reload_page": {
+                "title": "page.files.refresh",
+                "combination": "Control+R|Meta+R"
+            },
+            "deselect_all_files": {
+                "title": "page.files.select.none",
+                "combination": "Control+Shift+A|Meta+Shift+A|Escape"
+            },
+            "create_directory": {
+                "title": "page.files.mkdir",
+                "combination": "Control+Shift+N|Meta+Shift+N"
+            }
         }
     },
-    "global": {
-        "new_session": {
-            "title": "session.create",
-            "combination": "Control+N|Meta+N"
-        },
-        "close_session": {
-            "title": "session.logout",
-            "combination": "Control+W|Meta+W"
+    "session": {
+        "title": "Sessions",
+        "content": {
+            "new_session": {
+                "title": "session.create",
+                "combination": "Control+N|Meta+N"
+            },
+            "close_session": {
+                "title": "session.logout",
+                "combination": "Control+W|Meta+W"
+            }
         }
     }
 }

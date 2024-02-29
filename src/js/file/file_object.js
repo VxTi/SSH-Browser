@@ -34,7 +34,7 @@ class File
         this.name = fileName;
         this.path = path;
         this.#permissions = new FilePermissions(this);
-        this.#fileType = fileName.split('.').pop();
+        this.#fileType = this.directory ? 'dir' : fileName.split('.').pop();
         if (loadOnCreate)
             this.loadInfo();
     }

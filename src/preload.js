@@ -79,14 +79,15 @@ contextBridge.exposeInMainWorld('events', {
 });
 
 contextBridge.exposeInMainWorld('terminal', {
-    execute: async (command) => ipcRenderer.invoke('cmd', command)
+    execute: async (command) => ipcRenderer.invoke('cmd', command),
+    open: (directory) => ipcRenderer.send('open-terminal', directory)
 });
 
 contextBridge.exposeInMainWorld('logger', {
     /** @param {string} message
      *  @param {...any} args */
     log: (message, ...args) => {
-        ipcRenderer.send('log', message, args);
+        ipcRenderer.send('log', message, ...args);
     },
     error: (message, ...args) => {
         ipcRenderer.send('log', `\x1b[38;2;200;0;0m${message}\x1b[0m`, args);

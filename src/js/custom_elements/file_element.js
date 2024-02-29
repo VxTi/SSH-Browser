@@ -49,9 +49,12 @@ class FileElement extends HTMLElement
         if (this.hasAttribute('path-segment'))
             mainElement.classList.add('path-segment')
 
+        if ((window.findIconMapEntry(this.getAttribute('type')) || {})['id'] === 'executable')
+            this.setAttribute('executable', '')
+
         let fileIcon = document.createElement('div');
         fileIcon.classList.add('center', 'file-icon');
-        fileIcon.style.backgroundImage = `url(${window.getIcon(this.getAttribute('type'))})`
+        fileIcon.style.backgroundImage = `url(${window.resourceFromFileExtension(this.getAttribute('type'))})`
 
         // Add the file name to the file element
         let fileTitle = document.createElement('span');
@@ -121,7 +124,8 @@ class FileElement extends HTMLElement
     #setThumbnail(extension)
     {
         this.shadowRoot.querySelector('.file-icon')
-            .style.backgroundImage = `url(${window.getIcon(extension)})`;
+            .style.backgroundImage = `url(${window.resourceFromFileExtension(extension)})`;
+        console.log("Setting thumbnail for", extension, "to", window.resourceFromFileExtension(extension));
     }
 
     /**
