@@ -34,14 +34,16 @@ registerKeybindMapping({
     'navigate_home': () => navigateTo(homeDir),
     'select_all_files': () => getFileElements().forEach(e => e.setAttribute('selected', '')),
     'deselect_all_files': () => getFileElements().forEach(e => e.removeAttribute('selected')),
-    'navigate_back': () => {
+    'navigate_back': () =>
+    {
         if (navigationHistoryIndex > 0)
         {
             navigationHistoryIndex--;
             navigateTo(navigationHistory[navigationHistoryIndex].from);
         }
     },
-    'navigate_forward': () => {
+    'navigate_forward': () =>
+    {
         if (navigationHistoryIndex < navigationHistory.length - 1)
         {
             console.log('Navigate forward with keybinds')
@@ -49,12 +51,14 @@ registerKeybindMapping({
             navigateTo(navigationHistory[navigationHistoryIndex].to);
         }
     },
-    'navigate_directory': () => {
+    'navigate_directory': () =>
+    {
         let selected = getSelectedFiles()
         if (selected.length === 1)
             navigateTo(selected[0].getAttribute('path') + '/' + selected[0].getAttribute('name'))
     },
-    'select_next_file': () => {
+    'select_next_file': () =>
+    {
         let selected = $('file-element[selected]:not(.path-separator)');
         let next = selected.next()
         if (selected.length === 0 || next.length === 0)
@@ -71,7 +75,8 @@ registerKeybindMapping({
         selected.removeAttr('selected');
         next.attr('selected', '');
     },
-    'invert_selection': () => {
+    'invert_selection': () =>
+    {
         getFileElements().forEach(e => e.hasAttribute('selected') ?
             e.removeAttribute('selected') : e.setAttribute('selected', ''))
     }
@@ -190,15 +195,15 @@ $(document).ready(() =>
     /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
 
     // Downloading a selected file
-    $('#ctx-download').on('click', () => downloadSelected())
-
+    $('#ctx-download').on('click', _ => downloadSelected())
+    $('#ctx-delete').on('click', _ => deleteSelected());
     let renameFileInput = $('#file-rename');
 
     // Viewing the information of a selected file
-    $('#ctx-info').on('click', () => showFileInfo());
+    $('#ctx-info').on('click', _ => showFileInfo());
 
     // Copy file path
-    $('#ctx-cpy-path').on('click', () =>
+    $('#ctx-cpy-path').on('click', _ =>
     {
         if (contextMenuTarget instanceof FileElement)
         {
@@ -226,7 +231,7 @@ $(document).ready(() =>
     $('#action-terminal').on('click', () => window.extWindows.openTerminal(currentDir));
     $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
     $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
-    $('#ctx-open').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path') + '/' + contextMenuTarget.getAttribute('name')))
+    $('#ctx-open').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name')))
 
     renameFileInput.on('keypress', (e) =>
     {
@@ -288,35 +293,35 @@ $(document).ready(() =>
         e.stopImmediatePropagation();
     })
         .on('drop', (event) =>
-    {
-        event = event.originalEvent;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        // Check if there are any files to upload
-        if (!event.dataTransfer?.files || event.dataTransfer.files?.length === 0)
         {
-            return;
-        }
-
-        /** @type {string[]} */
-        let pathArr = [];
-        for (const f of event.dataTransfer.files)
-            pathArr.push(f.path);
-
-        busy(true);
-        window.ssh.uploadFiles(currentDir, pathArr)
-            .then(_ =>
+            event = event.originalEvent;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            // Check if there are any files to upload
+            if (!event.dataTransfer?.files || event.dataTransfer.files?.length === 0)
             {
-                // Update the file cache with the new files
-                getFiles(currentDir).push(...pathArr.map(p =>
-                    new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
-                loadFileElements();
-            })
-            .finally(_ =>
-            {
-                busy(false)
-            });
-    });
+                return;
+            }
+
+            /** @type {string[]} */
+            let pathArr = [];
+            for (const f of event.dataTransfer.files)
+                pathArr.push(f.path);
+
+            busy(true);
+            window.ssh.uploadFiles(currentDir, pathArr)
+                .then(_ =>
+                {
+                    // Update the file cache with the new files
+                    getFiles(currentDir).push(...pathArr.map(p =>
+                        new File(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
+                    loadFileElements();
+                })
+                .finally(_ =>
+                {
+                    busy(false)
+                });
+        });
 
     $('#navigate-back').on('click', () =>
     {
@@ -609,7 +614,11 @@ function deleteSelected()
         return;
 
     // Cannot delete home or root directory.
-    if (selected.some(e => e.getAttribute('path') === homeDir || e.getAttribute('path') === '/'))
+    if (selected.some(e =>
+    {
+        return e.getAttribute('path') + '/' + e.getAttribute('name') === homeDir
+            || e.getAttribute('path') + '/' + e.getAttribute('name') === '/'
+    }))
         return;
 
     busy(true);

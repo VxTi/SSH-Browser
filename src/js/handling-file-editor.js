@@ -1,23 +1,28 @@
-
 let contentLines = [""];
 let contentCursorHorizontal = 0;
 let lineNumber = 0;
 let __indentation = 4;
-let __fileType = "javascript";
+let __fileType = null;
 let __remotePath = null;
 let __localPath = null;
+let __fileName = null;
 
-window.events.on('file-editor-language-configuration', lang => __fileType = lang);
-window.events.on('file-editor-space-count-configuration', count => __indentation = count);
+window.events.on('file-editor-set-indentation', count => __indentation = count);
 window.events.on('file-editor-remote-path', path => __remotePath = path);
 window.events.on('file-editor-local-path', path => __localPath = path);
+window.events.on('file-editor-file-name', name =>
+{
+    __fileName = name;
+    __fileType = name.split('.').pop();
+});
 window.events.on('file-editor-content', content =>
 {
     contentLines = content.split("\n");
     parseContent();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () =>
+{
     // Save the elements to the window object for later use.
     window.lineNumbers = document.getElementById('line-numbers');
     window.fileEditorContent = document.getElementById('file-editor-content');
@@ -25,40 +30,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add functionality for action buttons
     document.getElementById('save-upload')
-        .addEventListener('click', async _ => {
+        .addEventListener('click', async _ =>
+        {
             // Save the file locally (to the cache)
-            if ( !(await __saveFileLocally()) )
+            if (!(await __saveFileLocally()))
                 return window.emitError('Failed to save file locally');
 
-            if ( !(await __uploadFile()) )
+            if (!(await __uploadFile()))
                 return window.emitError('Failed to upload file to the server');
-
-
-    })
+            // TODO: Add success message (?)
+        })
 
     document.getElementById('action-reload')
-        .addEventListener('click', _ => {
-            console.log(__localPath, __remotePath)
-        })
+        .addEventListener('click', async _ => await __reloadFile())
 
 });
 
-document.addEventListener('keypress', (event) => {
+document.addEventListener('keypress', (event) =>
+{
     insert(event.key, lineNumber, contentCursorHorizontal);
     contentCursorHorizontal++;
     moveCursor(lineNumber, contentCursorHorizontal);
 })
-
-document.addEventListener('wheel', event => {
-    codeContent.scrollTop += event.deltaY;
-    codeContent.scrollLeft += event.deltaX;
-    lineNumbers.scrollTop += event.deltaY;
-    //lineNumbers.scrollTop = codeContent.scrollTop;
-})
-
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', (e) =>
+{
     e.preventDefault();
-    switch (e.key) {
+    switch (e.key)
+    {
         case "ArrowRight": // TODO: Add overflow functionality
             contentCursorHorizontal++;
             break;
@@ -76,8 +74,16 @@ document.addEventListener('keydown', (e) => {
             contentCursorHorizontal += 4;
             break;
         case "Backspace":
-            deleteCharacter(lineNumber, contentCursorHorizontal);
-            contentCursorHorizontal--;
+            if ((e.ctrlKey || e.metaKey) && lineNumber > 0)
+            {
+                deleteLine(lineNumber);
+                lineNumber--;
+            }
+            else if (contentCursorHorizontal > 0)
+            {
+                deleteCharacter(lineNumber, contentCursorHorizontal);
+                contentCursorHorizontal--;
+            }
             break;
         case "Enter":
             insert("\n", lineNumber, contentCursorHorizontal);
@@ -88,27 +94,33 @@ document.addEventListener('keydown', (e) => {
     moveCursor(lineNumber, contentCursorHorizontal);
 })
 
-function insert(content, lineNumber, horizontalPosition) {
+function insert(content, lineNumber, horizontalPosition)
+{
     contentLines[lineNumber] = contentLines[lineNumber].slice(0, horizontalPosition) + content + contentLines[lineNumber].slice(horizontalPosition);
     parseContent();
 }
 
-function deleteCharacter(lineNumber, horizontalPosition) {
+function deleteCharacter(lineNumber, horizontalPosition)
+{
     contentLines[lineNumber] = contentLines[lineNumber].slice(0, horizontalPosition) + contentLines[lineNumber].slice(horizontalPosition + 1);
     parseContent();
 }
 
-function deleteLine(lineNumber) {
+function deleteLine(lineNumber)
+{
     contentLines.splice(lineNumber, 1);
     parseContent();
 }
 
-function parseContent() {
+function parseContent()
+{
     let lines = window.codeHighlighting.highlight(contentLines.join("\n"), __fileType).split("\n");
 
     let targetElement = document.getElementById("file-editor-content");
     let lineNumbers = document.getElementById('line-numbers');
-    for (let i = 0; i < lines.length; i++) {
+    lineNumbers.innerHTML = "";
+    for (let i = 0; i < lines.length; i++)
+    {
         lines[i] = `<div class="line-content content-text" data-line-number="${i + 1}">${lines[i] || ' '}</div></div>`;
 
         let lineNumber = document.createElement('div');
@@ -120,38 +132,11 @@ function parseContent() {
     targetElement.innerHTML = lines.join("");
 
 }
-function moveCursor(line, horizontal) {
+
+function moveCursor(line, horizontal)
+{
     // TODO: Add implementation
 }
-
-window.events.on('process-status', (status) =>
-{
-
-    // Check whether the provided argument has all the necessary properties.
-    if (status.hasOwnProperty('type') && typeof status.type === 'string' &&
-        status.hasOwnProperty('progress') && typeof status.progress === 'number' &&
-        status.hasOwnProperty('finished') && typeof status.finished === 'boolean')
-    {
-        // Get the target element
-        let target = document.getElementById(`pgb-${status.type}`);
-
-        // If the process has finished, we remove the element (if it still exists?)
-        if (status.finished)
-            target?.remove();
-        else
-        {
-            if (target == null)
-            {
-                target = document.createElement('div');
-                target.classList.add('progress-bar');
-                target.id = `pgb-${status.type}`;
-                document.querySelector('.progress-bars').appendChild(target);
-            }
-            target.style.setProperty('--progress', status.progress);
-        }
-    }
-});
-
 
 /**
  * Save the file locally (to the cache)
@@ -160,7 +145,10 @@ window.events.on('process-status', (status) =>
  */
 async function __saveFileLocally()
 {
-    return await window.file.saveFile(__localPath, contentLines.join("\n"))
+    return await window.localFs.saveFile(
+        __localPath + '/' + __fileName,
+        contentLines.join("\n")
+    )
         .then(_ => true)
         .catch(_ => false);
 }
@@ -174,7 +162,21 @@ async function __saveFileLocally()
  */
 async function __uploadFile()
 {
-    return await window.ssh.uploadFiles(__remotePath, [__localPath])
+    return await window.ssh.uploadFiles(__remotePath, [__localPath + '/' + __fileName])
         .then(_ => true)
         .catch(_ => false);
+}
+
+async function __reloadFile()
+{
+    // TODO: Fix implementation
+    /*console.log("Reloading file")
+    return await window.ssh.downloadFile(__remotePath, __localPath)
+        .then(content =>
+        {
+            contentLines = content.split("\n");
+            parseContent();
+            return true;
+        })
+        .catch(_ => false);*/
 }

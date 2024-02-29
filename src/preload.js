@@ -35,10 +35,10 @@ contextBridge.exposeInMainWorld('ssh',  {
     connect: async (host, username, password, port = 22, privateKey = null, passphrase = null) => {
         return ipcRenderer.invoke('connect', host, username, password, port, privateKey, passphrase)
     },
-    /** @param {string} directory
-     *  @param {string[]} files */
-    uploadFiles: async (directory, files) => {
-        return ipcRenderer.invoke('upload-files', directory, files)
+    /** @param {string} remoteDirectory
+     *  @param {string[]} localFilePaths */
+    uploadFiles: async (remoteDirectory, localFilePaths) => {
+        return ipcRenderer.invoke('upload-files', remoteDirectory, localFilePaths)
     },
     /** @param {string} directory
      *  @param {string} file */
@@ -105,11 +105,14 @@ contextBridge.exposeInMainWorld('terminal', {
 
 contextBridge.exposeInMainWorld('extWindows', {
     openTerminal: (directory) => ipcRenderer.send('open-terminal', directory),
-    openFileEditor: (file) => ipcRenderer.send('open-file-editor', file),
+    openFileEditor: (remoteDirectory, fileName) => ipcRenderer.send('open-file-editor', remoteDirectory, fileName),
 });
 
-contextBridge.exposeInMainWorld('file', {
-    saveFile: async (path, content) => ipcRenderer.invoke('save-file', path, content),
+contextBridge.exposeInMainWorld('localFs', {
+    /** @param {string} localAbsolutePath
+     * @param {string} content*/
+    saveFile: async (localAbsolutePath, content) => ipcRenderer.invoke('save-local-file', localAbsolutePath, content),
+    renameFile: async (localDirectory, oldFileName, newFileName) => ipcRenderer.invoke('rename-local-file', localDirectory, oldFileName, newFileName),
 })
 
 
