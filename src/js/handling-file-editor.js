@@ -50,6 +50,7 @@ document.addEventListener('keypress', (event) =>
 {
     insert(event.key, lineNumber, contentCursorHorizontal);
     contentCursorHorizontal++;
+    console.log("Key pressed:", event.key, "Line:", lineNumber, "Horizontal:", contentCursorHorizontal);
     moveCursor(lineNumber, contentCursorHorizontal);
 })
 document.addEventListener('keydown', (e) =>

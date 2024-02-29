@@ -236,12 +236,12 @@ $(document).ready(() =>
     renameFileInput.on('keypress', (e) =>
     {
         // If there isn't any file targetted for renaming, we hide the input and return.
-        e.stopImmediatePropagation()
         if (fileRenameTarget == null)
         {
             renameFileInput.removeClass('active')
             return;
         }
+        e.stopImmediatePropagation()
 
         switch (e.key)
         {

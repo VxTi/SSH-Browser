@@ -49,16 +49,23 @@ An example of how the pages look like can be found below.
 
 ## Example of the Sessions page
 
-<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_sessions.png" width="500"/>
+<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/main-page.png" width="500"/>
 
 ## Example of the login page
 
-<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_login.png" width="500"/>
+<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/login-page.png" width="500"/>
 
 ## Example of the file viewing page
 
-<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/ssh_ftp_view_files.png" width="500"/>
+<img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/file-explorer.png" width="500"/>
 
+## Example of the file editing window
+
+<img alt="File editing" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/file-editor.png" width="500"/>
+
+## Example of the SSH Terminal window
+
+<img alt="SSH Terminal" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/terminal.png" width="500"/>
 ---
 
 Future functions will be:
