@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
+const hljs = require('highlight.js'); // Highlight.js
 
 /**
  * Methods for interacting with the SSH connection.
@@ -83,6 +84,12 @@ contextBridge.exposeInMainWorld('terminal', {
     open: (directory) => ipcRenderer.send('open-terminal', directory)
 });
 
+contextBridge.exposeInMainWorld('extWindows', {
+    openTerminal: (directory) => ipcRenderer.send('open-terminal', directory),
+    openFileEditor: (file) => ipcRenderer.send('open-file-editor', file),
+});
+
+
 contextBridge.exposeInMainWorld('logger', {
     /** @param {string} message
      *  @param {...any} args */
@@ -97,4 +104,11 @@ contextBridge.exposeInMainWorld('logger', {
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
     get: (file) => ipcRenderer.invoke('get-config', file),
+})
+
+/**
+ * Expose the code highlighting function(s) to the rendering process with ID 1024 (0x400)
+ */
+contextBridge.exposeInMainWorld('codeHighlighting', {
+    highlight: (code, lang) => hljs.highlight(code, { language: lang }).value
 })

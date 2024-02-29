@@ -38,7 +38,7 @@ $(document).ready(() => {
 
         // Send a request to log in with the retrieved input.
         window.ssh.connect(host.value, username.value, password.value, parseInt(port.value), privateKey.value, passphrase.value)
-            .then(_ => window.location.href = './file_viewer.html')     // Redirect to the file viewer page.
+            .then(_ => window.location.href = './page-file-explorer.html')     // Redirect to the file viewer page.
             .catch(err => {
                 $('.login-container').css('visibility', 'visible');
                 $('.loading').css('visibility', 'hidden');

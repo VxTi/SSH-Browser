@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(results => {
             results.forEach(session => addSession(session));
             document.getElementById('add-sessions')
-                .addEventListener('click', () => window.location.href = './pages/login_page.html');
+                .addEventListener('click', () => window.location.href = './pages/page-login-ssh.html');
         })
 });
 
@@ -40,7 +40,7 @@ function addSession(session) {
         document.querySelector('.session-container').style.visibility = 'hidden';
         document.querySelector('.loading').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)
-            .then(_ => window.location.href = './pages/file_viewer.html')
+            .then(_ => window.location.href = './pages/page-file-explorer.html')
             .catch(_ => {
                 document.querySelector('.loading').style.visibility = 'hidden';
                 document.querySelector('.session-container').style.visibility = 'visible'

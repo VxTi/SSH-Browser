@@ -5,18 +5,16 @@
     <title>SSH Browser</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/terminal.css">
-    <link rel="stylesheet" href="../css/file_viewer.css">
+    <link rel="stylesheet" href="../css/styling-file-explorer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/general-functionality.js"></script>
-    <script src="../js/custom_elements/file_element.js"></script>
-    <script src="../js/handling-external-terminal.js"></script>
+    <script src="../js/custom_elements/file-element.js"></script>
     <script src="../js/file/file_permissions_object.js"></script>
     <script src="../js/file/file_object.js"></script>
-    <script src="../js/file/file_caching.js"></script>
+    <script src="../js/file/file-caching.js"></script>
     <script src="../js/handling-file-page.js"></script>
-    <script src="../js/loading_spinner.js"></script>
+    <script src="../js/loading-spinner.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -91,15 +89,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Terminal container
-            TODO: Fix this
-        -->
-        <div class="terminal container" id="terminal">
-            <div class="terminal-resize-vertical" title="Drag to resize vertically"></div>
-            <div class="terminal-resize-horizontal" title="Drag to resize horizontally"></div>
-            <div class="terminal-content scrollbar terminal-output"></div>
-            <input type="text" name="terminal-input" id="terminal-input" class="terminal-input input-box user-interact" placeholder="Enter command">
         </div>
 
         <!-- Directory path container  -->

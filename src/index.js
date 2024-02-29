@@ -23,16 +23,18 @@ const LOAD_STATIC_CONTENT = false;
 let connections = [];
 let currentConnection = 0;
 
+// Window variables
 let mainWindow = null;
 let /* TEMPORARY */ terminalWindow = null;
+let fileEditorWindows = [];
 
-function LOG(message, ...args) {
+function log(message, ...args) {
     let timeStamp = new Date();
     console.log(
         timeStamp.toLocaleDateString('en-UK') + ' ' +
         timeStamp.toLocaleTimeString('en-UK') + ' | ' + message, ...args);
 }
-
+// Which operating system is the app running on.
 const OS = {
     isWindows: os.platform() === 'win32',
     isMac: os.platform() === 'darwin',
@@ -41,6 +43,8 @@ const OS = {
 
 /**
  * Method for creating a window.
+ * @param {string | null} pagePath The path to the page to load in the window.
+ * @param {Electron.BrowserWindowConstructorOptions} createArgs The arguments to create the window with.
  * @returns {Electron.CrossProcessExports.BrowserWindow} The created window.
  */
 function createWindow(pagePath = null, createArgs = {})
@@ -54,6 +58,7 @@ function createWindow(pagePath = null, createArgs = {})
         titleBarOverlay: false,
         icon: './resources/app_icon.png',
         titleBarStyle: 'hiddenInset',
+        vibrancy: 'under-window',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
@@ -67,6 +72,7 @@ function createWindow(pagePath = null, createArgs = {})
         window.setWindowButtonVisibility(true);
 
     window.loadFile(pagePath).catch(console.error);
+
     return window;
 }
 
@@ -76,7 +82,7 @@ function createWindow(pagePath = null, createArgs = {})
  */
 app.whenReady().then(() =>
 {
-    mainWindow = createWindow()
+    mainWindow = createWindow();
     mainWindow.setMinimumSize(600, 500);
 
     app.on('activate', _ =>
@@ -93,14 +99,14 @@ app.whenReady().then(() =>
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
-        LOG("Created keybinds file")
+        log("Created keybinds file")
     }
 
     if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT)
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
-        LOG("Created languages file")
+        log("Created languages file")
     }
 
     if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)))
@@ -146,16 +152,20 @@ app.whenReady().then(() =>
     Menu.setApplicationMenu(menu);*/
 })
 
+// Quits the application if all windows are closed (windows & linux)
 app.on('window-all-closed', () => OS.isMac || app.quit())
 
+/**
+ * Handler for opening an external terminal window, with a provided directory.
+ * This handler then connects a shell to that window every time the window is opened.
+ */
 ipcMain.on('open-terminal', async (_, directory) => {
-    if (terminalWindow)
+    if (terminalWindow && !terminalWindow.isDestroyed())
     {
         terminalWindow.focus();
         return;
     }
-    terminalWindow = createWindow(path.join(__dirname, 'pages/terminal_page.html'), {width: 600, height: 480});
-
+    terminalWindow = createWindow(path.join(__dirname, 'pages/page-external-terminal.html'), {width: 600, height: 480});
     ssh()
         .requestShell({term: process.env.TERM || 'xterm-256color'})
         .then((stream) =>
@@ -167,8 +177,7 @@ ipcMain.on('open-terminal', async (_, directory) => {
                 stream.on('data', data =>
                     terminalWindow.webContents.send('message-received', filter.toHtml(data.toString()))))
 
-            if (ipcMain.eventNames().includes('cmd'))
-                ipcMain.removeHandler('cmd');
+            ipcMain.removeHandler('cmd');
             ipcMain.handle('cmd', async (_, command) =>
             {
                 stream
@@ -178,10 +187,43 @@ ipcMain.on('open-terminal', async (_, directory) => {
 
             terminalWindow.on('close', _ => stream.end());
         })
-        .catch(e => LOG("An error occurred whilst requesting shell", e));
+        .catch(e => log("An error occurred whilst requesting shell", e));
+});
+
+ipcMain.on('open-file-editor', (_, remoteAbsolutePath) => {
+    let fileEditor = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {width: 800, height: 600});
+    fileEditorWindows.push(fileEditor);
+
+    let localFilePath = path.join(app.getPath('temp'), 'file-editor-' + Math.random().toString(36).substring(7));
+    let fileType = remoteAbsolutePath.split('.').pop();
+
+    // Once the window has successfully opened, we download the file into the
+    // temp folder and load its contents onto the file editor.
+    fileEditor.webContents.on('did-finish-load', async _ => {
+        let success = await ssh().getFile(localFilePath, remoteAbsolutePath, null, {
+            step: (transfer_count, chunk, total) =>
+            {
+                mainWindow.webContents.send('process-status',
+                    {type: 'download', progress: 100 * transfer_count / total, finished: transfer_count === total});
+            }
+        })
+            .then(_ => true)
+            .catch(e =>
+        {
+            log('An error occurred whilst attempting to download file:', e)
+            return false;
+        });
+        if (success)
+        {
+            fileEditor.webContents.send('file-editor-language-configuration', fileType);
+            fileEditor.webContents.send('file-editor-content', fs.readFileSync(localFilePath).toString());
+        }
+    });
 })
 
-/** Event handler for the 'select files' dialog menu **/
+/**
+ * Event handler for the 'select files' dialog menu
+ **/
 ipcMain.handle('open-files', async () => {
     return new Promise((resolve, reject) =>
     {
@@ -194,7 +236,11 @@ ipcMain.handle('open-files', async () => {
     })
 });
 
-/** Event handler for downloading a file from the remote server **/
+/**
+ * Event handler for downloading a file from the remote server
+ * This handler attempts to retrieve a file from the absolute remote path and save
+ * it to the local downloads' directory.
+ **/
 ipcMain.handle('download-file', async (_, remotePath, fileName) => {
     return new Promise((resolve, reject) =>
     {
@@ -215,7 +261,12 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) => {
     })
 });
 
-/** Event handler for listing files on the remote server **/
+/**
+ * Event handler for listing files on the remote server.
+ * This handler attempts to list the available files on the remote server
+ * in the provided directory.
+ * The promise is then resolved with the list of files, separated by '\n'.
+ **/
 ipcMain.handle('list-files', async (_, path) => {
     [path] = fmtPaths(path);
     return new Promise((resolve, reject) =>
@@ -268,24 +319,29 @@ ipcMain.handle('retrieve-sessions', retrieveSessions);
 /** Event handler for retrieving the status of the current SSH connection **/
 ipcMain.handle('connection-status', isSSHConnected)
 
-/** Event handler for attempting to connect to a remote server **/
+/**
+ * Event handler for attempting to connect to a remote server.
+ * The provided arguments can vary, depending on the requirements of the server.
+ * When the connection is successful, the promise is resolved and the connection credentials
+ * are saved locally in the sessions.json file.
+ **/
 ipcMain.handle('connect', async (_, host, username, password, port = 22, privateKey = null, passphrase = null) => {
     return new Promise((resolve, reject) =>
     {
         let cur = getCurrentSession();
 
-        port = port || 22;
+        port ||= 22;
 
         // If the connection is already active and one is
         // trying to connect with the same credentials, resolve the promise.
         if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port)
         {
             currentConnection = connections.indexOf(cur);
-            LOG('Connection already active');
+            log('Connection already active');
             return resolve();
         }
 
-        LOG('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+        log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
 
         let connection = {
             ssh: new NodeSSH(),
@@ -313,7 +369,7 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
             {
                 storeSession(connection); // store the session in sessions.json
 
-                LOG('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+                log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
 
                 connections.push(connection);
                 currentConnection = connections.length - 1;
@@ -323,10 +379,6 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
             .catch(err => reject(err));
     })
 })
-
-ipcMain.on('get-languages', (event) => event.returnValue = __languages);
-
-ipcMain.on('get-keybinds', (event) => event.returnValue = __keybinds);
 
 /**
  *  Event handler for uploading multiple files
@@ -402,6 +454,10 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
     })
 })
 
+/**
+ * Event handler for moving files on the remote server.
+ * If the file exists, it'll move it from the source directory to the target directory.
+ */
 ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) => {
     [fileName, srcPath, dstPath] = fmtPaths(fileName, srcPath, dstPath);
     return new Promise((resolve, reject) =>
@@ -415,6 +471,11 @@ ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) => {
     })
 })
 
+/**
+ * Event handler for renaming files on the remote server.
+ * This handler attempts to rename a file on the remote server
+ * in the provided path with the new name.
+ */
 ipcMain.handle('rename-file', async (_, directory, fileName, newName) => {
     [directory, fileName, newName] = fmtPaths(directory, fileName, newName);
     return new Promise((resolve, reject) =>
@@ -428,7 +489,16 @@ ipcMain.handle('rename-file', async (_, directory, fileName, newName) => {
     })
 })
 
-/** Event handler for navigating to the home directory **/
+/**
+ * Event handler for navigating to the home directory.
+ * When successful, it resolves the promise with an object containing
+ * both the path and files in the home directory.
+ * The following data will be returned:
+ * {
+ *     path: string,
+ *     files: string[]
+ * }
+ **/
 ipcMain.handle('starting-directory', async _ => {
     return new Promise((resolve, reject) =>
     {
@@ -444,10 +514,14 @@ ipcMain.handle('starting-directory', async _ => {
     })
 });
 
-/** Event handler for creating a directory on the remote server **/
+/**
+ * Event handler for creating a directory on the remote server.
+ * This handler attempts to create a directory on the remote server
+ * in the provided  directory with the provided name.
+ **/
 ipcMain.handle('create-directory', async (_, directory, dirName) => {
     [directory] = fmtPaths(directory);
-    LOG(`Attempting to create dir at [${directory}] with name [${dirName}]`)
+    log(`Attempting to create dir at [${directory}] with name [${dirName}]`)
     return new Promise((resolve, reject) =>
     {
         if (isSSHConnected())
@@ -455,7 +529,7 @@ ipcMain.handle('create-directory', async (_, directory, dirName) => {
             ssh().execCommand(`cd ${directory} && mkdir '${dirName}'`)
                 .then(_ =>
                 {
-                    LOG("Directory successfully created");
+                    log("Directory successfully created");
                     resolve()
                 })
                 .catch(err =>
@@ -498,7 +572,7 @@ ipcMain.on('current-session', (event) =>
 
 ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
-ipcMain.on('log', (_, message, ...args) => LOG(args, ...args));
+ipcMain.on('log', (_, message, ...args) => log(args, ...args));
 
 ipcMain.handle('get-config', (event, fileName) => {
     let query = fileName.toUpperCase();
@@ -635,6 +709,13 @@ function deleteSession(host, username)
     })
 }
 
+/**
+ * Method for formatting paths for the remote server.
+ * Files containing spaces in the names are not handled properly when
+ * handled in a terminal, therefore we'll have to format them to be compatible.
+ * @param {string} paths The paths to format.
+ * @returns {string[]} The formatted paths.
+ */
 function fmtPaths(...paths)
 {
     return paths.map(p => p.replaceAll(' ', '\\ '));

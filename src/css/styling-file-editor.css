@@ -1,0 +1,37 @@
+:root {
+    --editor-font: monospace;
+    --editor-font-size: 1rem;
+}
+
+.line {
+    font-family: var(--editor-font);
+    font-size: var(--editor-font-size);
+    display: grid;
+    grid-template-columns: 50px auto;
+    overflow: hidden;
+    color: white;
+}
+
+.line:hover + .line-number {
+    color: var(--text-color);
+}
+
+.line-number {
+    content: attr(data-line);
+    display: block;
+    counter-increment: line;
+    color: var(--text-color-2);
+    padding-right: 10px;
+    text-align: center;
+    user-select: none;
+}
+
+.line-content {
+    padding-left: 10px;
+    white-space: pre;
+    overflow-x: hidden;
+}
+
+.file-content {
+    overflow: scroll;
+}

@@ -91,7 +91,7 @@ $(document).ready(() =>
     window.ssh.startingDir()
         .then(res =>
         {
-            /** Current dir is defined in file_caching.js **/
+            /** Current dir is defined in file-caching.js **/
             currentDir = res.path;
             homeDir = res.path;
             document.querySelector('.file-section').dataset.path = res.path;
@@ -154,6 +154,9 @@ $(document).ready(() =>
                 ...(['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with']
                     .map(e => document.getElementById(`ctx-${e}`)))
             );
+
+            if (!contextMenuTarget.hasAttribute('directory'))
+                enabled.push(document.getElementById('ctx-open'));
             if (contextMenuTarget.hasAttribute('executable'))
                 enabled.push(document.getElementById('ctx-execute'));
         }
@@ -219,9 +222,11 @@ $(document).ready(() =>
             renameFileInput.focus();
         }
     })
-    $('#action-terminal').on('click', () => window.terminal.open(currentDir))
+
+    $('#action-terminal').on('click', () => window.extWindows.openTerminal(currentDir))
     $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
     $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
+    $('#ctx-open').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path') + '/' + contextMenuTarget.getAttribute('name')))
 
     renameFileInput.on('keypress', (e) =>
     {
@@ -428,7 +433,6 @@ function navigateTo(target)
             currentDir = target;
             loadFileViewer(); // reload the file viewer
             $('.path-section').animate({scrollLeft: $('.path-section').width()}, 300)
-            window.terminal.execute(`cd '${target}'`) // Change directory in the terminal
         })
         .catch(_ =>
         {   // If an error occurs whilst
