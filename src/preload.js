@@ -1,6 +1,26 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 const hljs = require('highlight.js'); // Highlight.js
 
+hljs.addPlugin({
+    "after:highlight": (params) => {
+        const openTags = [];
+
+        params.value = params.value.replace(/(<span [^>]+>)|(<\/span>)|(\n)/g, match => {
+            if (match === "\n") {
+                return "</span>".repeat(openTags.length) + "\n" + openTags.join("");
+            }
+
+            if (match === "</span>") {
+                openTags.pop();
+            } else {
+                openTags.push(match);
+            }
+
+            return match;
+        });
+    },
+});
+
 /**
  * Methods for interacting with the SSH connection.
  */
@@ -81,13 +101,16 @@ contextBridge.exposeInMainWorld('events', {
 
 contextBridge.exposeInMainWorld('terminal', {
     execute: async (command) => ipcRenderer.invoke('cmd', command),
-    open: (directory) => ipcRenderer.send('open-terminal', directory)
 });
 
 contextBridge.exposeInMainWorld('extWindows', {
     openTerminal: (directory) => ipcRenderer.send('open-terminal', directory),
     openFileEditor: (file) => ipcRenderer.send('open-file-editor', file),
 });
+
+contextBridge.exposeInMainWorld('file', {
+    saveFile: async (path, content) => ipcRenderer.invoke('save-file', path, content),
+})
 
 
 contextBridge.exposeInMainWorld('logger', {

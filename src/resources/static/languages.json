@@ -66,6 +66,9 @@
         "page.login.passphrase.tooltip": "The passphrase for the private key (optional)",
         "page.login.connect": "Connect",
 
+        "page.file-editor.upload": "Save & Upload",
+        "page.file-editor.reload.tooltip": "Reload the file content from the server",
+
         "contextmenu.open": "Open",
         "contextmenu.download": "Download",
         "contextmenu.rename": "Rename",

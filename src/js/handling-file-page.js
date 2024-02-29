@@ -223,7 +223,7 @@ $(document).ready(() =>
         }
     })
 
-    $('#action-terminal').on('click', () => window.extWindows.openTerminal(currentDir))
+    $('#action-terminal').on('click', () => window.extWindows.openTerminal(currentDir));
     $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
     $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
     $('#ctx-open').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path') + '/' + contextMenuTarget.getAttribute('name')))

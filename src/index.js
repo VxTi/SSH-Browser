@@ -16,7 +16,7 @@ const filter = new ansiHtml({ newline: true, escapeXML: false, stream: false });
 
 // Whether to reload the static content into the appdata directory
 // This is useful for testing and development purposes
-const LOAD_STATIC_CONTENT = false;
+const LOAD_STATIC_CONTENT = true;
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
@@ -111,45 +111,6 @@ app.whenReady().then(() =>
 
     if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)))
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
-
-    /*let keybindsData = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)).toString());
-    let languagesData = JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)).toString())['english'];
-    let menu = Menu.buildFromTemplate([
-        ...(OS.isMac
-            ? [{
-                label: app.name,
-                submenu: [
-                    { role: 'about' },
-                    { type: 'separator' },
-                    { role: 'services' },
-                    { type: 'separator' },
-                    { role: 'hide' },
-                    { role: 'hideOthers' },
-                    { role: 'unhide' },
-                    { type: 'separator' },
-                    { role: 'quit' }
-                ]
-            }]
-            : []),
-            ...Object.keys(keybindsData).map(keybind =>
-        {
-            return {
-                label: keybindsData[keybind]['title'],
-                submenu: Object.keys(keybindsData[keybind]['content']).map(key =>
-                    {
-                        return {
-                            label: languagesData[keybindsData[keybind]['content'][key]['title']],
-                            accelerator: languagesData[keybindsData[keybind]['content'][key]['combination']],
-                            click: () => {
-                                mainWindow.webContents.send('context-menu-interact', key)
-                            }
-                        }
-                    })
-
-            }
-        }),
-    ]);
-    Menu.setApplicationMenu(menu);*/
 })
 
 // Quits the application if all windows are closed (windows & linux)
@@ -190,12 +151,17 @@ ipcMain.on('open-terminal', async (_, directory) => {
         .catch(e => log("An error occurred whilst requesting shell", e));
 });
 
+/**
+ * Event handler for opening a new file editor window.
+ * After the window has been initialized, it will attempt to download the file
+ * and send its content to the file window.
+ */
 ipcMain.on('open-file-editor', (_, remoteAbsolutePath) => {
-    let fileEditor = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {width: 800, height: 600});
+    let fileEditor = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {width: 1000, height: 700});
     fileEditorWindows.push(fileEditor);
 
-    let localFilePath = path.join(app.getPath('temp'), 'file-editor-' + Math.random().toString(36).substring(7));
     let fileType = remoteAbsolutePath.split('.').pop();
+    let localFilePath = path.join(app.getPath('temp'), `ssh-file-${Math.random().toString(16).substring(7)}.${fileType}`);
 
     // Once the window has successfully opened, we download the file into the
     // temp folder and load its contents onto the file editor.
@@ -203,7 +169,7 @@ ipcMain.on('open-file-editor', (_, remoteAbsolutePath) => {
         let success = await ssh().getFile(localFilePath, remoteAbsolutePath, null, {
             step: (transfer_count, chunk, total) =>
             {
-                mainWindow.webContents.send('process-status',
+                fileEditor.webContents.send('process-status',
                     {type: 'download', progress: 100 * transfer_count / total, finished: transfer_count === total});
             }
         })
@@ -215,9 +181,25 @@ ipcMain.on('open-file-editor', (_, remoteAbsolutePath) => {
         });
         if (success)
         {
+            fileEditor.webContents.send('file-editor-local-path', localFilePath);
+            fileEditor.webContents.send('file-editor-remote-path', remoteAbsolutePath.split('/').slice(0, -1).join('/') + '/');
             fileEditor.webContents.send('file-editor-language-configuration', fileType);
             fileEditor.webContents.send('file-editor-content', fs.readFileSync(localFilePath).toString());
         }
+    });
+})
+
+ipcMain.handle('save-file', async (_, path, content) => {
+    return new Promise((resolve, reject) =>
+    {
+        fs.writeFile(path, content, err =>
+        {
+            if (err)
+            {
+                log('An error occurred whilst attempting to save file:', err);
+                reject(err);
+            } else resolve();
+        })
     });
 })
 
@@ -382,18 +364,18 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
 
 /**
  *  Event handler for uploading multiple files
- *  @param {string} directory The directory to upload the files to.
+ *  @param {string} remoteDirectoryPath The directory to upload the files to.
  *  @param {string[]} files The files to upload.
  **/
-ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files) =>
+ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[]}*/ localAbsoluteFilePaths) =>
 {
     // Format the path so that it's compatible with the remote server
-    [directory] = fmtPaths(directory);
+    [remoteDirectoryPath] = fmtPaths(remoteDirectoryPath);
 
     return new Promise((resolve, reject) =>
     {
         // If there are no files to upload, resolve the promise with a message
-        if (files.length === 0)
+        if (localAbsoluteFilePaths.length === 0)
             return resolve();
 
         if (isSSHConnected())
@@ -408,16 +390,16 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
 
             // Go through all provided file arguments and check whether they are directories.
             // If this is the case, remove them from the list and call 'putDirectory' instead.
-            for (let i = 0; i < files.length; i++)
+            for (let i = 0; i < localAbsoluteFilePaths.length; i++)
             {
                 /** @type string */
-                let filePath = files[i];
+                let filePath = localAbsoluteFilePaths[i];
 
                 // Check if the file exists. If not, remove it from the transfer list
                 // and continue.
                 if (!fs.existsSync(filePath))
                 {
-                    files.splice(i--, 1)
+                    localAbsoluteFilePaths.splice(i--, 1)
                     continue
                 }
 
@@ -425,8 +407,8 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
                 if (fs.lstatSync(filePath).isDirectory())
                 {
                     // Remove file from argument and call 'putDirectory' instead
-                    files.splice(i, 1);
-                    ssh().putDirectory(filePath, path.join(directory, filePath.split('/').pop()), {
+                    localAbsoluteFilePaths.splice(i, 1);
+                    ssh().putDirectory(filePath, path.join(remoteDirectoryPath, filePath.split('/').pop()), {
                         recursive: true,
                         concurrency: 10,
                         transferOptions: opt
@@ -437,13 +419,14 @@ ipcMain.handle('upload-files', async (_, directory, /** @type {string[]}*/ files
             }
 
             // If there are no files to upload, resolve the promise.
-            if (files.length === 0)
+            if (localAbsoluteFilePaths.length === 0)
                 return resolve()
 
+            log("Attempting to upload files to " + remoteDirectoryPath + ":", localAbsoluteFilePaths)
             // If there are still files to upload, call 'putFiles' to upload them.
-            ssh().putFiles(files.map(_path =>
+            ssh().putFiles(localAbsoluteFilePaths.map(localPath =>
             {
-                return {local: _path, remote: path.join(directory, _path.split('/').pop())}
+                return {local: localPath, remote: path.join(remoteDirectoryPath, localPath.split('/').pop())}
             }), {
                 concurrency: 10,
                 transferOptions: opt

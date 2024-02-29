@@ -6,12 +6,26 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/styling-file-editor.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="../css/styling-code-highlighting.css">
     <script src="../js/general-functionality.js"></script>
     <script src="../js/handling-file-editor.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
-    <div class="content file-content" id="file-editor-content"></div>
+    <div class="cursor"></div>
+    <div class="action-container border-bottom-2">
+        <div class="action action-upload" id="save-upload" data-lang="page.file-editor.upload"></div>
+        <div class="action action-refresh" id="action-reload" data-lang-tooltip="page.file-editor.reload.tooltip"></div>
+    </div>
+    <div class="content file-content-wrapper">
+        <div class="file-content">
+            <div class="line-numbers" id="line-numbers"></div>
+            <div class="separator-line"></div>
+            <div class="code-content" id="file-editor-content"></div>
+        </div>
+    </div>
+    <div class="action-container border-top-2">
+        <div class="progress-bars"></div>
+    </div>
 </body>
 </html>

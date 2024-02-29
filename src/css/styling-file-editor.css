@@ -1,37 +1,105 @@
 :root {
     --editor-font: monospace;
-    --editor-font-size: 1rem;
+    --editor-font-size: 0.9rem;
+    --action-bar-height: 40px;
+    --editor-line-height: 1.5;
 }
 
-.line {
+.content-text {
     font-family: var(--editor-font);
     font-size: var(--editor-font-size);
-    display: grid;
-    grid-template-columns: 50px auto;
-    overflow: hidden;
-    color: white;
-}
-
-.line:hover + .line-number {
     color: var(--text-color);
+    line-height: var(--editor-line-height);
+    overflow: hidden;
 }
 
 .line-number {
-    content: attr(data-line);
     display: block;
-    counter-increment: line;
-    color: var(--text-color-2);
-    padding-right: 10px;
+    color: var(--text-color-3);
     text-align: center;
     user-select: none;
 }
 
+/* Inner content of a line*/
 .line-content {
     padding-left: 10px;
     white-space: pre;
-    overflow-x: hidden;
+    display: block;
 }
 
-.file-content {
-    overflow: scroll;
+.file-content-wrapper {
+    height: calc(100vh - var(--action-bar-height) - 2 * var(--navigator-height));
+    width: auto;
+    overflow-y: scroll;
 }
+.file-content {
+    height: max-content;
+    width: max-content;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    overflow-x: scroll;
+}
+
+.cursor {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: var(--editor-font-size);
+    background-color: var(--text-color);
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    49% { opacity: 1;}
+    50% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.line-numbers {
+    padding: 0 10px;
+    min-width: 30px;
+    height: max-content;
+    display: block;
+    overflow: hidden;
+}
+
+.separator-line {
+    min-width: 1px;
+    min-height: max-content;
+    margin: 0 10px;
+    background-color: var(--text-color-3);
+    display: block;
+}
+
+.code-content {
+    display: block;
+    width: max-content;
+    height: max-content;
+}
+
+.action-container {
+    display: flex;
+    width: 100vw;
+    flex-flow: row-reverse nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    height: var(--action-bar-height);
+    background-color: var(--theme-1);
+}
+
+.action-upload {
+    border: 1px solid var(--theme-4);
+    border-radius: 5px;
+    padding: 4px 10px;
+    margin: 0 10px;
+    width: max-content;
+    color: var(--text-color);
+    font-size: 1.0rem;
+    font-family: var(--font);
+    cursor: pointer;
+    vertical-align: center;
+}
+
+.action-upload:hover { background-color: var(--theme-4); }

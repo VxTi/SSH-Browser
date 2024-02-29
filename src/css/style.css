@@ -38,6 +38,8 @@
     --back-button-size: 30px;
     --back-button-padding: 3px;
     --back-button-margin: 5px;
+    --action-element-margins: 8px;
+    --action-element-size: calc(var(--navigator-height) - var(--action-element-margins) * 2);
 }
 
 html[data-theme="light"] {
@@ -334,3 +336,49 @@ body {
     background-position: center;
     background-repeat: no-repeat;
 }
+
+.border-left-1 { border-left: 1px solid var(--border-1); }
+.border-right-1 { border-right: 1px solid var(--border-1); }
+.border-top-1 { border-top: 1px solid var(--border-1); }
+.border-bottom-1 { border-bottom: 1px solid var(--border-1); }
+.border-1 { border: 1px solid var(--border-1); }
+
+.border-left-2 { border-left: 1px solid var(--border-2); }
+.border-right-2 { border-right: 1px solid var(--border-2); }
+.border-top-2 { border-top: 1px solid var(--border-2); }
+.border-bottom-2 { border-bottom: 1px solid var(--border-2); }
+.border-2 { border: 1px solid var(--border-2); }
+
+
+/** Generic action class **/
+.action {
+    margin: calc(0.5 * var(--action-element-margins));
+    padding: calc(0.5 * var(--action-element-margins));
+    width: var(--action-element-size);
+    height: var(--action-element-size);
+    border-radius: var(--action-element-margins);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: block;
+    user-select: none;
+    border: 1px solid transparent;
+}
+
+.action:hover {
+    cursor: pointer;
+    border-color: var(--theme-5);
+}
+.action:active { border-color: var(--theme-3); }
+
+.action-delete { background-image: url('../resources/delete_icon.png'); }
+
+.action-add { background-image: url('../resources/add_icon.png'); }
+
+.action-refresh { background-image: url('../resources/reload_icon.png'); }
+
+.action-add-dir { background-image: url('../resources/add_dir_icon.png'); }
+
+.action-home { background-image: url('../resources/home_icon.png'); }
+
+.action-terminal { background-image: url('../resources/terminal_icon.png'); }
