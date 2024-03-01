@@ -22,7 +22,8 @@
 
 /* Inner content of a line*/
 .line-content {
-    padding-left: 10px;
+    padding-left: 3px;
+    padding-right: 15px;
     white-space: pre;
     display: block;
 }
@@ -31,6 +32,9 @@
     height: calc(100vh - var(--action-bar-height) - 2 * var(--navigator-height));
     width: auto;
     overflow-y: scroll;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
 }
 .file-content {
     height: max-content;
@@ -43,10 +47,14 @@
 
 .cursor {
     position: absolute;
+    color: transparent;
     display: block;
-    width: 1px;
     height: var(--editor-font-size);
-    background-color: var(--text-color);
+    font-family: var(--editor-font);
+    font-size: var(--editor-font-size);
+    line-height: var(--editor-line-height);
+    border-right: 2px solid var(--theme-4);
+    transform: translateX(3px);
     animation: blink 1s infinite;
 }
 
@@ -58,25 +66,19 @@
 }
 
 .line-numbers {
-    padding: 0 10px;
+    padding: 0 15px 0 10px;
     min-width: 30px;
     height: max-content;
     display: block;
     overflow: hidden;
-}
-
-.separator-line {
-    min-width: 1px;
-    min-height: max-content;
-    margin: 0 10px;
-    background-color: var(--text-color-3);
-    display: block;
+    border-right: 1px solid var(--text-color-3);
 }
 
 .code-content {
     display: block;
     width: max-content;
     height: max-content;
+    letter-spacing: 0;
 }
 
 .action-container {
@@ -89,17 +91,13 @@
     background-color: var(--theme-1);
 }
 
-.action-upload {
-    border: 1px solid var(--theme-4);
-    border-radius: 5px;
-    padding: 4px 10px;
-    margin: 0 10px;
-    width: max-content;
-    color: var(--text-color);
-    font-size: 1.0rem;
-    font-family: var(--font);
-    cursor: pointer;
-    vertical-align: center;
+.action-sub {
+
 }
 
-.action-upload:hover { background-color: var(--theme-4); }
+.action-upload {
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 0 10px;
+    width: max-content;
+}

@@ -1,10 +1,10 @@
-const {app, BrowserWindow, ipcMain, dialog, Menu} = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
-const {NodeSSH} = require('node-ssh')
+const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
-const {exec} = require('child_process')
+const { exec } = require('child_process')
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -13,11 +13,11 @@ const FileNames = {
     FILE_ICONS: 'file_icons.json'
 }
 
-const StaticFiles = ['FILE_ICONS']
+const StaticFiles = [ 'FILE_ICONS' ]
 
 const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
 
-const filter = new ansiHtml({newline: true, escapeXML: false, stream: false});
+const filter = new ansiHtml({ newline: true, escapeXML: false, stream: false });
 
 // Whether to reload the static content into the appdata directory
 // This is useful for testing and development purposes
@@ -75,7 +75,7 @@ function createWindow(pagePath = null, createArgs = {})
     });
 
     // Show the window buttons on macOS
-    if (OS.isMac)
+    if ( OS.isMac )
         window.setWindowButtonVisibility(true);
 
     window.loadFile(pagePath).catch(console.error);
@@ -94,29 +94,29 @@ app.whenReady().then(() =>
 
     app.on('activate', _ =>
     {
-        if (BrowserWindow.getAllWindows().length === 0)
+        if ( BrowserWindow.getAllWindows().length === 0 )
             createWindow()
     })
 
     // Create directory for storing SSH client data
-    if (!fs.existsSync(RESOURCES_PATH))
+    if ( !fs.existsSync(RESOURCES_PATH) )
         fs.mkdirSync(RESOURCES_PATH)
 
-    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)) || LOAD_STATIC_CONTENT)
+    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)) || LOAD_STATIC_CONTENT )
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
         log("Created keybinds file")
     }
 
-    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT)
+    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT )
     {
         let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
         log("Created languages file")
     }
 
-    if (!fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)))
+    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
 })
 
@@ -129,20 +129,23 @@ app.on('window-all-closed', () => OS.isMac || app.quit())
  */
 ipcMain.on('open-terminal', async (_, directory) =>
 {
-    if (terminalWindow && !terminalWindow.isDestroyed())
+    if ( terminalWindow && !terminalWindow.isDestroyed() )
     {
         terminalWindow.focus();
         return;
     }
-    terminalWindow = createWindow(path.join(__dirname, 'pages/page-external-terminal.html'), {width: 600, height: 480});
+    terminalWindow = createWindow(path.join(__dirname, 'pages/page-external-terminal.html'), {
+        width: 600,
+        height: 480
+    });
     ssh()
-        .requestShell({term: process.env.TERM || 'xterm-256color'})
+        .requestShell({ term: process.env.TERM || 'xterm-256color' })
         .then((stream) =>
         {
             stream.write('cd ' + directory + '\n');
             stream.setWindow(80, 24, 480, 600);
 
-            [stream.stderr, stream.stdout].forEach(stream =>
+            [ stream.stderr, stream.stdout ].forEach(stream =>
                 stream.on('data', data =>
                     terminalWindow.webContents.send('message-received', filter.toHtml(data.toString()))))
 
@@ -172,7 +175,6 @@ ipcMain.on('open-file-editor', (_, remotePath, fileName) =>
     });
     fileEditorWindows.push(fileEditor);
 
-    let fileType = fileName.split('.').pop();
     let localDirectory = app.getPath('temp');
     let localAbsoluteFilePath = path.join(localDirectory, fileName);
 
@@ -181,11 +183,13 @@ ipcMain.on('open-file-editor', (_, remotePath, fileName) =>
     fileEditor.webContents.on('did-finish-load', async _ =>
     {
         await ssh().getFile(localAbsoluteFilePath, remotePath + '/' + fileName)
-            .then(_ => {
-                fileEditor.webContents.send('file-editor-local-path', localDirectory);
-                fileEditor.webContents.send('file-editor-file-name', fileName);
-                fileEditor.webContents.send('file-editor-remote-path', remotePath);
-                fileEditor.webContents.send('file-editor-content', fs.readFileSync(localAbsoluteFilePath).toString());
+            .then(_ =>
+            {
+                fileEditor.webContents.send('file-editor-set-origin-path', localDirectory);
+                fileEditor.webContents.send('file-editor-set-target-path', remotePath);
+                fileEditor.webContents.send('file-editor-set-file-name', fileName);
+                fileEditor.webContents.send('file-editor-set-origin', 'remote');
+                fileEditor.webContents.send('file-editor-set-content', fs.readFileSync(localAbsoluteFilePath).toString());
             })
             .catch(e =>
             {
@@ -201,7 +205,7 @@ ipcMain.on('open-file-editor', (_, remotePath, fileName) =>
         // Delete cache files
         fs.unlink(localAbsoluteFilePath, err =>
         {
-            if (err) log('An error occurred whilst attempting to delete file:', err);
+            if ( err ) log('An error occurred whilst attempting to delete file:', err);
         });
     });
 })
@@ -212,7 +216,7 @@ ipcMain.handle('save-local-file', async (_, path, content) =>
     {
         fs.writeFile(path, content, err =>
         {
-            if (err)
+            if ( err )
             {
                 log('An error occurred whilst attempting to save file:', err);
                 reject(err);
@@ -227,7 +231,7 @@ ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileNam
     {
         fs.rename(path.join(localPath, oldFileName), path.join(localPath, newFileName), err =>
         {
-            if (err)
+            if ( err )
             {
                 log('An error occurred whilst attempting to rename file:', err);
                 reject(err);
@@ -243,9 +247,9 @@ ipcMain.handle('open-files', async () =>
 {
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
-            dialog.showOpenDialog({properties: ['openFile', 'multiSelections']})
+            dialog.showOpenDialog({ properties: [ 'openFile', 'multiSelections' ] })
                 .then(result => resolve(result.filePaths))
                 .catch(err => reject(err));
         } else reject('Not connected');
@@ -261,7 +265,7 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) =>
 {
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             let localAbsolutePath = path.join(app.getPath('downloads'), fileName);
             let remoteAbsolutePath = path.join(remotePath, fileName);
@@ -269,7 +273,11 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) =>
                 step: (transfer_count, chunk, total) =>
                 {
                     mainWindow.webContents.send('process-status',
-                        {type: 'download', progress: 100 * transfer_count / total, finished: transfer_count === total});
+                        {
+                            type: 'download',
+                            progress: 100 * transfer_count / total,
+                            finished: transfer_count === total
+                        });
                 }
             })
                 .then(_ => resolve())
@@ -286,18 +294,18 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) =>
  **/
 ipcMain.handle('list-files', async (_, path) =>
 {
-    [path] = fmtPaths(path);
+    [ path ] = fmtPaths(path);
     return new Promise((resolve, reject) =>
     {
 
         // Check whether the provided argument is a string or not.
         // If this is not the case, do not proceed.
-        if (!(typeof path === 'string' || path instanceof String))
+        if ( !(typeof path === 'string' || path instanceof String) )
             return reject('Argument \'directory\' is not a string');
 
         // Check whether there's an active connection.
         // If this is the case, we move to the provided directory and list its files
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             return ssh().execCommand(`cd ${path} && ls`)
                 .then(result => resolve(result.stdout))
@@ -313,10 +321,10 @@ ipcMain.handle('list-files', async (_, path) =>
 ipcMain.handle('delete-file', async (_, directory, fileName) =>
 {
     {
-        [directory] = fmtPaths(directory);
+        [ directory ] = fmtPaths(directory);
         return new Promise((resolve, reject) =>
         {
-            if (isSSHConnected())
+            if ( isSSHConnected() )
             {
                 console.error("Attempting to remove file: " + fileName + " from directory: " + directory);
 
@@ -354,7 +362,7 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
 
         // If the connection is already active and one is
         // trying to connect with the same credentials, resolve the promise.
-        if ((cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port)
+        if ( (cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port )
         {
             currentConnection = connections.indexOf(cur);
             log('Connection already active');
@@ -383,7 +391,7 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
             tryKeyboard: true,
 
             onKeyboardInteractive: (name, instructions, instructionsLang, prompts, finish) =>
-                finish([connection.password])
+                finish([ connection.password ])
         })
             .then(ssh =>
             {
@@ -408,41 +416,41 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
 ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[]}*/ localAbsoluteFilePaths) =>
 {
     // Format the path so that it's compatible with the remote server
-    [remoteDirectoryPath] = fmtPaths(remoteDirectoryPath);
+    [ remoteDirectoryPath ] = fmtPaths(remoteDirectoryPath);
 
     return new Promise((resolve, reject) =>
     {
         // If there are no files to upload, resolve the promise with a message
-        if (localAbsoluteFilePaths.length === 0)
+        if ( localAbsoluteFilePaths.length === 0 )
             return resolve();
 
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             let opt = {
                 step: (transfer_count, chunk, total) =>
                 {
                     mainWindow.webContents.send('process-status',
-                        {type: 'upload', progress: 100 * transfer_count / total, finished: transfer_count === total});
+                        { type: 'upload', progress: 100 * transfer_count / total, finished: transfer_count === total });
                 }
             }
 
             // Go through all provided file arguments and check whether they are directories.
             // If this is the case, remove them from the list and call 'putDirectory' instead.
-            for (let i = 0; i < localAbsoluteFilePaths.length; i++)
+            for ( let i = 0; i < localAbsoluteFilePaths.length; i++ )
             {
                 /** @type string */
                 let filePath = localAbsoluteFilePaths[i];
 
                 // Check if the file exists. If not, remove it from the transfer list
                 // and continue.
-                if (!fs.existsSync(filePath))
+                if ( !fs.existsSync(filePath) )
                 {
                     localAbsoluteFilePaths.splice(i--, 1)
                     continue
                 }
 
                 // Check whether provided file is a directory
-                if (fs.lstatSync(filePath).isDirectory())
+                if ( fs.lstatSync(filePath).isDirectory() )
                 {
                     // Remove file from argument and call 'putDirectory' instead
                     localAbsoluteFilePaths.splice(i, 1);
@@ -457,14 +465,14 @@ ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[
             }
 
             // If there are no files to upload, resolve the promise.
-            if (localAbsoluteFilePaths.length === 0)
+            if ( localAbsoluteFilePaths.length === 0 )
                 return resolve()
 
             log("Attempting to upload files to " + remoteDirectoryPath + ":", localAbsoluteFilePaths)
             // If there are still files to upload, call 'putFiles' to upload them.
             ssh().putFiles(localAbsoluteFilePaths.map(localPath =>
             {
-                return {local: localPath, remote: path.join(remoteDirectoryPath, localPath.split('/').pop())}
+                return { local: localPath, remote: path.join(remoteDirectoryPath, localPath.split('/').pop()) }
             }), {
                 concurrency: 10,
                 transferOptions: opt
@@ -481,10 +489,10 @@ ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[
  */
 ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) =>
 {
-    [fileName, srcPath, dstPath] = fmtPaths(fileName, srcPath, dstPath);
+    [ fileName, srcPath, dstPath ] = fmtPaths(fileName, srcPath, dstPath);
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             ssh().execCommand(`mv ${path.join(srcPath, fileName)} ${path.join(dstPath, fileName)}`)
                 .then(_ => resolve())
@@ -500,10 +508,10 @@ ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) =>
  */
 ipcMain.handle('rename-file', async (_, directory, fileName, newName) =>
 {
-    [directory, fileName, newName] = fmtPaths(directory, fileName, newName);
+    [ directory, fileName, newName ] = fmtPaths(directory, fileName, newName);
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             ssh().execCommand(`cd ${directory} && mv ${fileName} ${newName}`)
                 .then(_ => resolve())
@@ -526,7 +534,7 @@ ipcMain.handle('starting-directory', async _ =>
 {
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             ssh().execCommand('pwd && ls')
                 .then(result => resolve({
@@ -545,11 +553,11 @@ ipcMain.handle('starting-directory', async _ =>
  **/
 ipcMain.handle('create-directory', async (_, directory, dirName) =>
 {
-    [directory] = fmtPaths(directory);
+    [ directory ] = fmtPaths(directory);
     log(`Attempting to create dir at [${directory}] with name [${dirName}]`)
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             ssh().execCommand(`cd ${directory} && mkdir '${dirName}'`)
                 .then(_ =>
@@ -568,11 +576,11 @@ ipcMain.handle('create-directory', async (_, directory, dirName) =>
 
 ipcMain.handle('get-file-info', async (_, directory, fileName) =>
 {
-    [directory, fileName] = fmtPaths(directory, fileName)
+    [ directory, fileName ] = fmtPaths(directory, fileName)
 
     return new Promise((resolve, reject) =>
     {
-        if (isSSHConnected())
+        if ( isSSHConnected() )
         {
             ssh().execCommand(`cd ${directory} && ls -l -d ${fileName}`)
                 .then(result =>
@@ -592,7 +600,7 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) =>
 
 ipcMain.on('current-session', (event) =>
 {
-    if (!isSSHConnected()) return event.returnValue = null;
+    if ( !isSSHConnected() ) return event.returnValue = null;
     event.returnValue = {
         username: getCurrentSession().username,
         host: getCurrentSession().host,
@@ -607,10 +615,10 @@ ipcMain.on('log', (_, message, ...args) => log(args, ...args));
 ipcMain.handle('get-config', (event, fileName) =>
 {
     let query = fileName.toUpperCase();
-    if (!FileNames[query])
+    if ( !FileNames[query] )
         throw new Error('Config file does not exist.');
 
-    if (StaticFiles.includes(query))
+    if ( StaticFiles.includes(query) )
         return JSON.parse(fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames[query])).toString());
 
     return JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[query])).toString());
@@ -653,7 +661,7 @@ async function retrieveSessions()
     {
         fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (err, data) =>
         {
-            if (err) return reject(err);
+            if ( err ) return reject(err);
 
             let content = {};
             try
@@ -679,7 +687,7 @@ function storeSession(session)
     // Get previous data
     fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
     {
-        if (error)
+        if ( error )
         {
             console.error(error);
             throw error;
@@ -688,7 +696,7 @@ function storeSession(session)
         let sessions = JSON.parse(data.toString());
 
         // Check if the connection is already in the sessions file, if not, add it.
-        if (!sessions.some(ses => ses.host === session.host && ses.username === session.username && ses.port === session.port))
+        if ( !sessions.some(ses => ses.host === session.host && ses.username === session.username && ses.port === session.port) )
         {
             // Add new data
             sessions.push({
@@ -705,7 +713,7 @@ function storeSession(session)
             // Write back to file
             fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
             {
-                if (err)
+                if ( err )
                 {
                     console.error("An error occurred whilst attempting to write file:", err);
                     throw err;
@@ -724,17 +732,17 @@ function deleteSession(host, username)
 {
     fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
     {
-        if (error)
+        if ( error )
             throw error;
 
         let sessions = JSON.parse(data.toString());
         let index = sessions.findIndex(session => session.host === host && session.username === username);
-        if (index !== -1)
+        if ( index !== -1 )
         {
             sessions.splice(index, 1);
             fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
             {
-                if (err) throw err;
+                if ( err ) throw err;
             })
         }
     })

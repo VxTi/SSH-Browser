@@ -12,15 +12,14 @@
 </head>
 <body>
     <div class="navigator"></div>
-    <div class="cursor"></div>
     <div class="action-container border-bottom-2">
-        <div class="action action-upload" id="save-upload" data-lang="page.file-editor.upload"></div>
+        <div class="action action-special action-upload" id="save-file" data-lang="page.file-editor.upload"></div>
         <div class="action action-refresh" id="action-reload" data-lang-tooltip="page.file-editor.reload.tooltip"></div>
     </div>
     <div class="content file-content-wrapper">
+        <div class="line-numbers" id="line-numbers"></div>
         <div class="file-content">
-            <div class="line-numbers" id="line-numbers"></div>
-            <div class="separator-line"></div>
+            <div class="cursor" id="cursor"></div>
             <div class="code-content" id="file-editor-content"></div>
         </div>
     </div>

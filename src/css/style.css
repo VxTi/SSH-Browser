@@ -11,6 +11,7 @@
     --theme-4: #2358C9;
     --theme-5: #4D5052;
     --theme-6: #1E1F22;
+    --theme-7: #A00505;
 
     --border-1: #000;
     --border-2: #343840;
@@ -356,11 +357,14 @@ body {
     padding: calc(0.5 * var(--action-element-margins));
     width: var(--action-element-size);
     height: var(--action-element-size);
-    border-radius: var(--action-element-margins);
+    border-radius: 5px;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     display: block;
+    font-family: var(--font);
+    font-size: 0.9rem;
+    color: var(--text-color);
     user-select: none;
     border: 1px solid transparent;
 }
@@ -370,6 +374,12 @@ body {
     border-color: var(--theme-5);
 }
 .action:active { border-color: var(--theme-3); }
+
+.action-special { border: 1px solid var(--theme-4); }
+.action-special:hover { background-color: var(--theme-4); }
+
+.action-special-negative { border: 1px solid var(--theme-7); }
+.action-special-negative:hover { background-color: var(--theme-7); }
 
 .action-delete { background-image: url('../resources/delete_icon.png'); }
 
