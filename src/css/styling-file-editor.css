@@ -2,6 +2,7 @@
     --editor-font: monospace;
     --editor-font-size: 0.9rem;
     --action-bar-height: 40px;
+    --editor-bottom-padding: 20px;
     --editor-line-height: 1.5;
 }
 
@@ -28,8 +29,9 @@
     display: block;
 }
 
-.file-content-wrapper {
+.inner-content-wrapper {
     height: calc(100vh - var(--action-bar-height) - 2 * var(--navigator-height));
+    padding-bottom: var(--editor-bottom-padding);
     width: auto;
     overflow-y: scroll;
     display: flex;

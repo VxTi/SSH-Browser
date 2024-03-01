@@ -81,72 +81,61 @@ document.addEventListener('keydown', (e) =>
     const doSpecial = (e.ctrlKey || e.metaKey);
     switch ( e.key )
     {
-        case "ArrowRight": // TODO: Add overflow functionality
-            if ( cursor.x + 1 >= pageContent[cursor.y].length )
-            {
-                // We check if there's a line to move up to
-                if ( cursor.y + 1 < pageContent.length )
-                {
-                    // then move it up and change the x position to the line end
-                    cursor.y++;
-                    cursor.x = 0;
-                }
-            } else
-                cursor.x++;
+        case "ArrowLeft":
+            __translateCursor(doSpecial ? -cursor.x : -1, 0);
+            break;
+        case "ArrowRight":
+            __translateCursor(doSpecial ? pageContent[cursor.y].length - 1 - cursor.x : 1, 0);
             break;
         case "ArrowUp":
-
-            cursor.y = Math.max(0, cursor.y - 1);
-
+            __translateCursor(0, -1);
             break;
         case "ArrowDown":
-
-            cursor.y = Math.min(pageContent.length - 1, cursor.y + 1);
-
-            break;
-        case "ArrowLeft":
-
-            //  If the cursor underflows, we'll move it up to the previous line
-            if ( cursor.x - 1 < 0 )
-            {
-                // We check if there's a line to move up to
-                if ( cursor.y > 0 )
-                {
-                    // then move it up and change the x position to the line end
-                    cursor.y--;
-                    cursor.x = pageContent[cursor.y].length;
-                }
-            } else
-                cursor.x--;
-
+            __translateCursor(0, 1);
             break;
         case "Tab":
-
-            let indent = cursor.x % __indentation || __indentation;
-            __insertChars((" ").repeat(indent));
-            cursor.x += indent;
-
+            __insertChars((" ").repeat(cursor.x % __indentation || __indentation));
             break;
         case "Backspace":
-
             __deleteChars(doSpecial ? 0 : 1);
-
             break;
         case "Enter":
-
             __insertChars('\n');
-
             break;
         default:
-
             if ( e.key.length === 1 )
-            {
                 __insertChars(e.key);
-            }
-
             break;
     }
 })
+
+function __translateCursor(dx, dy)
+{
+    // If the cursor is underflowing on the line, we try to move it a line up.
+    if ( cursor.x + dx < 0 )
+    {
+        // Check if there's lines available above
+        if ( cursor.y > 0 )
+        {
+            cursor.y--;
+            cursor.x = pageContent[cursor.y].length;
+        }
+    } // If it's overflowing on the line, we try to move it a line down.
+    else if ( cursor.x + dx > pageContent[cursor.y].length )
+    {
+        // Check if there's lines available underneath
+        if ( cursor.y + 1 < pageContent.length )
+        {
+            cursor.y++;
+            cursor.x = 0;
+        }
+    } else // Translate the cursor normally (x)
+    {
+        cursor.x += dx;
+    }
+    cursor.y = Math.max(0, Math.min(pageContent.length - 1, cursor.y + dy));
+    __updateCursorScreenPos();
+}
 
 /**
  * Function for inserting characters into the page content.
@@ -160,12 +149,10 @@ function __insertChars(content)
     if ( newLines > 1 )
     {
         // TODO: Fix this
-        pageContent.splice(cursor.y, 0, newLines);
         cursor.x = 0;
-        cursor.y = newLines[newLines.length - 1].length;
     } else
     {
-        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x) + content + pageContent[cursor.x].slice(cursor.x);
+        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x) + content + pageContent[cursor.y].slice(cursor.x);
         cursor.x += content.length;
     }
     __updatePageContent(newLines.length > 1 ? -1 : cursor.y);
@@ -198,7 +185,7 @@ function __deleteChars(deleteCount = 1)
         }
     } else
     {
-        pageContent[cursor.x] = pageContent.slice(0, cursor.x - deleteCount) + pageContent.slice(cursor.x);
+        pageContent[cursor.y] = pageContent.slice(0, cursor.x - deleteCount) + pageContent[cursor.y].slice(cursor.x);
         cursor.x -= deleteCount;
     }
     __updatePageContent(cursor.y);
@@ -226,7 +213,7 @@ function __updatePageContent(lineIndex = -1)
     } else
     {
         // Update the entire page
-        document.querySelector('.line-numbers').innerHTML =
+        eEditorContentContainer.innerHTML =
             window["codeHighlighting"]
                 .highlight(pageContent.join('\n'), __fileExtension)
                 .split('\n')
@@ -244,9 +231,8 @@ function __updateCursorScreenPos()
 {
     const lineElement = document.querySelector(`.line-content[data-line-number="${cursor.y + 1}"]`);
     const clientPosition = lineElement.getBoundingClientRect();
-    eCursor.innerText = lineElement.innerText.slice(0, cursor.x);
-    eCursor.style.left = `${clientPosition.left}px`;
-    eCursor.style.top = `${clientPosition.top}px`;
+    eCursor.innerText = lineElement.innerText.slice(0, cursor.x).replaceAll(' ', '\u00A0');
+    eCursor.transform = `translateX(${clientPosition.left}px) translateY(${clientPosition.top}px)`;
 }
 
 /**
@@ -255,7 +241,7 @@ function __updateCursorScreenPos()
  */
 function __updateLineNumbers()
 {
-    let lineNumberElements = document.querySelectorAll('.line-number');
+    let lineNumberElements = eLineNumbersContainer.querySelectorAll('.line-number');
 
     // If there's less line numbers elements than needed,
     // we'll generate them.
@@ -274,11 +260,12 @@ function __updateLineNumbers()
             lineNumberElements[lineNumberElements.length - 1].remove();
     }
     // Update the content of the elements with the correct line numbers.
-    lineNumberElements.forEach((element, i) =>
-    {
-        element.innerText = `${i + 1}`;
-        element.dataset.lineNumber = `${i + 1}`;
-    });
+    document.querySelectorAll('.line-number')
+        .forEach((element, i) =>
+        {
+            element.innerText = `${i + 1}`;
+            element.dataset.lineNumber = `${i + 1}`;
+        });
 
     // Updates the line numbers of the text content.
     document.querySelectorAll('.line-content')
