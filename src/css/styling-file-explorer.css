@@ -83,8 +83,6 @@
     }
     .action-toggle-visibility {
         opacity: 1;
-        width: var(--file-navigator-height);
-        height: var(--file-navigator-height);
     }
 }
 

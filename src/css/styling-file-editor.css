@@ -1,5 +1,5 @@
 :root {
-    --editor-font: monospace;
+    --editor-font: var(--font-mono);
     --editor-font-size: 0.9rem;
     --action-bar-height: 40px;
     --editor-bottom-padding: 20px;
@@ -14,11 +14,26 @@
     overflow: hidden;
 }
 
-.line-number {
+.line-numbers-container {
+    padding: 0 15px 0 10px;
+    min-width: fit-content;
+    height: max-content;
+    display: block;
+    overflow: hidden;
+    border-right: 1px solid var(--text-color-3);
+    counter-reset: line-num;
+}
+
+.line-number-element {
     display: block;
     color: var(--text-color-3);
     text-align: center;
     user-select: none;
+}
+.line-number-element::after {
+    counter-increment: line-num;
+    content: " " counter(line-num);
+    display: block;
 }
 
 /* Inner content of a line*/
@@ -31,7 +46,6 @@
 
 .inner-content-wrapper {
     height: calc(100vh - var(--action-bar-height) - 2 * var(--navigator-height));
-    padding-bottom: var(--editor-bottom-padding);
     width: auto;
     overflow-y: scroll;
     display: flex;
@@ -44,11 +58,12 @@
     display: flex;
     flex-flow: row nowrap;
     justify-content: flex-start;
+    padding-bottom: var(--editor-bottom-padding);
     overflow-x: scroll;
 }
 
 .cursor {
-    position: absolute;
+    position: fixed;
     color: transparent;
     display: block;
     height: var(--editor-font-size);
@@ -65,15 +80,6 @@
     49% { opacity: 1;}
     50% { opacity: 0; }
     100% { opacity: 0; }
-}
-
-.line-numbers {
-    padding: 0 15px 0 10px;
-    min-width: 30px;
-    height: max-content;
-    display: block;
-    overflow: hidden;
-    border-right: 1px solid var(--text-color-3);
 }
 
 .code-content {
@@ -93,13 +99,28 @@
     background-color: var(--theme-1);
 }
 
-.action-sub {
-
+.open-file-container {
+    width: 100%;
+    flex-grow: 1;
+    overflow-x: scroll;
+    overflow-y: hidden;
 }
+
+.open-file {
+    min-width: max-content;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 0;
+    background-color: var(--theme-2);
+}
+
+.open-file:hover { background-color: var(--theme-2); }
+.open-file[selected] { background-color: var(--theme-5); }
+.open-file[selected]:hover { border-color: var(--theme-5); }
 
 .action-upload {
     padding-left: 10px;
     padding-right: 10px;
     margin: 0 10px;
-    width: max-content;
+    min-width: max-content;
 }

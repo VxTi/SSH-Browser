@@ -104,8 +104,10 @@ contextBridge.exposeInMainWorld('terminal', {
 });
 
 contextBridge.exposeInMainWorld('extWindows', {
-    openTerminal: (directory) => ipcRenderer.send('open-terminal', directory),
-    openFileEditor: (remoteDirectory, fileName) => ipcRenderer.send('open-file-editor', remoteDirectory, fileName),
+    openTerminal: (directory) =>
+        ipcRenderer.send('open-terminal', directory),
+    openFileEditor: (remoteDirectory, fileName) =>
+        ipcRenderer.send('open-file-editor-remote', remoteDirectory, fileName),
 });
 
 contextBridge.exposeInMainWorld('localFs', {

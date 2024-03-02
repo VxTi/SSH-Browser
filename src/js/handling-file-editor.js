@@ -30,33 +30,58 @@ let
 /** @type {'text' | 'image' | 'audio' | 'video'} */
 let __displayType = 'text';
 
+/** @type {{context: {origin: 'local' | 'remote', originPath: string, targetPath: string, fileName: string, content: string}}}**/
+let fileContexts = {};
+
+const ActionHistory = { undo: [], redo: [] };
+const maxHistoryLength = 100;
+
 /**
  * Registration of event handlers for when the file editor opens.
  */
-window.events.on('file-editor-set-indentation', (indentation) => __indentation = indentation);
-window.events.on('file-editor-set-origin', (origin) => __fileOrigin = origin);
-window.events.on('file-editor-set-origin-path', (path) => __originPath = path);
-window.events.on('file-editor-set-target-path', (path) => __targetPath = path);
-window.events.on('file-editor-set-file-name', (type) =>
-{
-    __fileName = type;
-    __fileExtension = type.split('.').pop();
-    __displayType = __getDisplayType(type);
-});
-window.events.on('file-editor-set-content', (content) =>
-{
-    pageContent = content.split('\n');
-    cursor.x = cursor.y = 0;
-    console.log("Received file content");
-    __updatePageContent(-1);
+window.events.on('file-editor-acquire-context', (context) => {
+    const contextId = Math.random().toString(16).substring(9);
+    fileContexts[contextId] = context;
+
+    // Add file to the file list
+    let fileElement = document.createElement('div');
+    fileElement.classList.add('action', 'open-file', 'content-text');
+    fileElement.innerText = __fileName;
+    fileElement.setAttribute('context-id', contextId);
+    fileElement.title = (__targetPath + '/' + __fileName).replace(/\/\//g, '/');
+    document.getElementById('open-file-container').appendChild(fileElement);
+
+    __switchContext(contextId);
+
 })
+window.events.on('file-editor-set-indentation', (indentation) => __indentation = indentation);
+
+function __switchContext(contextId)
+{
+    let context = fileContexts[contextId];
+    __fileOrigin    = context.origin;
+    __originPath    = context.originPath;
+    __targetPath    = context.targetPath;
+    __fileName      = context.fileName;
+    __fileExtension = context.fileName.split('.').pop();
+    __displayType   = __getDisplayType(__fileExtension);
+    pageContent     = context.content.split('\n');
+    document
+        .querySelectorAll('.open-file')
+        .forEach(element => element.removeAttribute('selected'));
+    document
+        .querySelector(`open-file[context-id="${contextId}"]`)
+        ?.setAttribute('selected', '');
+    __updatePageContent(-1);
+}
 
 document.addEventListener('DOMContentLoaded', () =>
 {
     // Save the elements to the window object for later use.
     window.eEditorContentContainer = document.getElementById('file-editor-content');
-    window.eLineNumbersContainer = document.getElementById('line-numbers');
+    window.eLineNumbersContainer = document.getElementById('line-numbers-container');
     window.eCursor = document.getElementById('cursor');
+    window.eCursorPosition = document.getElementById('cursor-position');
 
     // Add functionality for action buttons
     document
@@ -64,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () =>
         .addEventListener('click', async _ =>
         {
             await __saveFile(
-                origin => window.logger.error('Failed to save file to ' + origin),
-                origin => window.logger.log('File saved on ' + origin)
+                origin => console.error('Failed to save file to ' + origin),
+                origin => console.log('File saved on ' + origin)
             );
         })
 
@@ -73,6 +98,23 @@ document.addEventListener('DOMContentLoaded', () =>
         .getElementById('action-reload')
         .addEventListener('click', async _ => await __reloadFile())
 
+    document
+        .querySelectorAll('.open-file')
+        .forEach(element =>
+            element.addEventListener('click', _ => __switchContext(element.getAttribute('context-id'))))
+
+});
+
+document.addEventListener('click', (e) =>
+{
+    if ( e.target.classList.contains('line-content') )
+    {
+        cursor.y = parseInt(e.target.dataset.lineNumber) - 1;
+        cursor.x = e.target.innerText.length;
+        __updateCursorScreenPos();
+        console.log("Clicked on line number");
+    }
+    console.log("Test", e)
 });
 
 document.addEventListener('keydown', (e) =>
@@ -182,13 +224,15 @@ function __deleteChars(deleteCount = 1)
             cursor.x = pageContent[cursor.y - 1].length;
             pageContent[cursor.y - 1] += pageContent[cursor.y];
             pageContent.splice(cursor.y, 1);
+            cursor.y--;
         }
     } else
     {
-        pageContent[cursor.y] = pageContent.slice(0, cursor.x - deleteCount) + pageContent[cursor.y].slice(cursor.x);
+        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x - deleteCount - 1) + pageContent[cursor.y].slice(cursor.x);
         cursor.x -= deleteCount;
     }
     __updatePageContent(cursor.y);
+    __updatePageContent(cursor.y + 1);
     __updateCursorScreenPos();
 }
 
@@ -233,6 +277,7 @@ function __updateCursorScreenPos()
     const clientPosition = lineElement.getBoundingClientRect();
     eCursor.innerText = lineElement.innerText.slice(0, cursor.x).replaceAll(' ', '\u00A0');
     eCursor.transform = `translateX(${clientPosition.left}px) translateY(${clientPosition.top}px)`;
+    eCursorPosition.innerText = `Ln ${cursor.y + 1}, Col ${cursor.x + 1}`;
 }
 
 /**
@@ -241,7 +286,7 @@ function __updateCursorScreenPos()
  */
 function __updateLineNumbers()
 {
-    let lineNumberElements = eLineNumbersContainer.querySelectorAll('.line-number');
+    let lineNumberElements = eLineNumbersContainer.querySelectorAll('.line-number-element');
 
     // If there's less line numbers elements than needed,
     // we'll generate them.
@@ -250,7 +295,7 @@ function __updateLineNumbers()
         for ( let i = 0; i < pageContent.length - lineNumberElements.length; i++ )
         {
             let lineNumber = document.createElement('div');
-            lineNumber.classList.add('line-number', 'content-text');
+            lineNumber.classList.add('line-number-element', 'content-text');
             eLineNumbersContainer.appendChild(lineNumber);
         }
     } // If there's too many, we'll have to remove some.
@@ -259,13 +304,6 @@ function __updateLineNumbers()
         for ( let i = 0; i < lineNumberElements.length - pageContent.length; i++ )
             lineNumberElements[lineNumberElements.length - 1].remove();
     }
-    // Update the content of the elements with the correct line numbers.
-    document.querySelectorAll('.line-number')
-        .forEach((element, i) =>
-        {
-            element.innerText = `${i + 1}`;
-            element.dataset.lineNumber = `${i + 1}`;
-        });
 
     // Updates the line numbers of the text content.
     document.querySelectorAll('.line-content')
@@ -302,7 +340,8 @@ async function __saveFile(errorCallback = null, successCallback = null)
         await window.ssh.uploadFiles(__originPath, [ __targetPath + '/' + __fileName ])
             .then(_ => successCallback && successCallback('remote'))
             .catch(_ => errorCallback && errorCallback('remote'));
-    } else // File is stored locally
+    }
+    else // File is stored locally
     {
         // Save the file locally to the target path (can be the same as the origin path)
         await window.localFs.saveFile(

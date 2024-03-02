@@ -1,3 +1,10 @@
+/**
+ * @file The main file for the SSH client.
+ *
+ * @Author Luca Warmenhoven
+ * @Date
+ */
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const fs = require('fs')
 const os = require('os')
@@ -118,6 +125,19 @@ app.whenReady().then(() =>
 
     if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
+
+    let win = __openFileEditor({
+        originPath: '/Users/lucawarm/Desktop/',
+        fileName: 'fft_sketch.ino',
+    });
+
+    setTimeout(() => win.webContents.send('file-editor-acquire-context', {
+        originPath: '/Users/lucawarm/Desktop/',
+        fileName: 'BleGamepad.cpp',
+        origin: 'local',
+        content: fs.readFileSync('/Users/lucawarm/Desktop/BleGamepad.cpp').toString(),
+        targetPath: '/Users/lucawarm/Desktop/'
+    }), 1000);
 })
 
 // Quits the application if all windows are closed (windows & linux)
@@ -162,53 +182,92 @@ ipcMain.on('open-terminal', async (_, directory) =>
         .catch(e => log("An error occurred whilst requesting shell", e));
 });
 
-/**
- * Event handler for opening a new file editor window.
- * After the window has been initialized, it will attempt to download the file
- * and send its content to the file window.
- */
-ipcMain.on('open-file-editor', (_, remotePath, fileName) =>
+ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 {
-    let fileEditor = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
-        width: 1000,
-        height: 700
-    });
-    fileEditorWindows.push(fileEditor);
-
+    // Temp folder to store the file in
     let localDirectory = app.getPath('temp');
     let localAbsoluteFilePath = path.join(localDirectory, fileName);
 
-    // Once the window has successfully opened, we download the file into the
-    // temp folder and load its contents onto the file editor.
-    fileEditor.webContents.on('did-finish-load', async _ =>
+    let onWindowClose = _ =>
     {
-        await ssh().getFile(localAbsoluteFilePath, remotePath + '/' + fileName)
-            .then(_ =>
-            {
-                fileEditor.webContents.send('file-editor-set-origin-path', localDirectory);
-                fileEditor.webContents.send('file-editor-set-target-path', remotePath);
-                fileEditor.webContents.send('file-editor-set-file-name', fileName);
-                fileEditor.webContents.send('file-editor-set-origin', 'remote');
-                fileEditor.webContents.send('file-editor-set-content', fs.readFileSync(localAbsoluteFilePath).toString());
-            })
-            .catch(e =>
-            {
-                log('An error occurred whilst attempting to download file:', e)
-            });
-    });
-
-    fileEditor.on('close', _ =>
-    {
-        // Remove from the list of file editor windows
-        fileEditorWindows.splice(fileEditorWindows.indexOf(fileEditor), 1);
-
         // Delete cache files
         fs.unlink(localAbsoluteFilePath, err =>
         {
-            if ( err ) log('An error occurred whilst attempting to delete file:', err);
+            if ( err )
+                log('An error occurred whilst attempting to delete file:', err);
+            else log("Deleted window from cache");
         });
-    });
+    }
+
+    // Download file from remote server
+    await ssh().getFile(localAbsoluteFilePath, remoteDirectory + '/' + fileName)
+        .then(_ =>
+        {
+            // Read file content from local file system
+            let content = fs.readFileSync(localAbsoluteFilePath).toString();
+            let context = {
+                originPath: localDirectory,
+                targetPath: remoteDirectory,
+                fileName: fileName,
+                origin: 'remote',
+                content: content
+            };
+
+            __openFileEditor(context, onWindowClose);
+
+        })
+        .catch(e =>
+        {
+            log('An error occurred whilst attempting to download file:', e)
+        });
 })
+
+/**
+ * Event handler for opening a new file editor window.
+ */
+ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context));
+
+/**
+ *
+ * @param {{originPath: string, targetPath: string | null, fileName: string, origin: 'local' | 'remote', content: string | null}} context
+ * @param {function} [windowCloseCallback = null] Callback for when the window closes
+ * @param {function} [webPageLoadCallback = null] Callback for when the webpage has loaded
+ * @returns {Electron.CrossProcessExports.BrowserWindow}
+ * @private
+ */
+function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadCallback = undefined)
+{
+    // Create a new window
+    let fileEditorWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
+        width: 1000,
+        height: 700
+    });
+    fileEditorWindows.push(fileEditorWindow);
+
+    if ( context && (context.origin === 'local' || !context.origin) )
+    {
+        context.origin = 'local';
+        context.targetPath ||= context.originPath;
+        context.content ||= fs.readFileSync(path.join(context.originPath, context.fileName)).toString();
+    }
+
+    // Once the window has successfully opened
+    // temp folder and load its contents onto the file editor.
+    fileEditorWindow.webContents.on('did-finish-load', async _ =>
+    {
+        if ( context )
+            fileEditorWindow.webContents.send('file-editor-acquire-context', context);
+        webPageLoadCallback && webPageLoadCallback();
+    });
+
+    fileEditorWindow.on('close', _ =>
+    {
+        // Remove from the list of file editor windows
+        fileEditorWindows.splice(fileEditorWindows.indexOf(fileEditorWindow), 1);
+        windowCloseCallback && windowCloseCallback();
+    });
+    return fileEditorWindow;
+}
 
 ipcMain.handle('save-local-file', async (_, path, content) =>
 {

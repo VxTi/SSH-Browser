@@ -66,7 +66,9 @@
         "page.login.passphrase.tooltip": "The passphrase for the private key (optional)",
         "page.login.connect": "Connect",
 
-        "page.file-editor.upload": "Save & Upload",
+        "page.file-editor.upload": "Save File",
+        "page.file-editor.redo.tooltip": "Redo last undone changes",
+        "page.file-editor.undo.tooltip": "Undo last changes",
         "page.file-editor.reload.tooltip": "Reload the file content from the server",
 
         "contextmenu.open": "Open",

@@ -4,6 +4,12 @@
     src: url('../resources/fonts/sf-pro.otf') format('opentype');
 }
 
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-weight: normal;
+    src: url('../resources/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+
 :root {
     --theme-1:#22252A;
     --theme-2: #282C33;
@@ -35,6 +41,7 @@
     --input-box-height: 30px;
     --navigator-padding: 10px;
     --font: 'San Francisco', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 
     --back-button-size: 30px;
     --back-button-padding: 3px;
@@ -76,19 +83,17 @@ body {
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-background);
 }
 
-.scrollbar::-webkit-scrollbar-track {
-    background-color: var(--scrollbar-background);
-}
-
-.scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
-
+.scrollbar::-webkit-scrollbar-track { background-color: var(--scrollbar-background); }
+.scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .scrollbar::-webkit-scrollbar-thumb {
     background-color: var(--scrollbar-thumb);
     border-radius: 5px;
 }
+
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar::-webkit-scrollbar-thumb { display: none; }
+.hide-scrollbar::-webkit-scrollbar-track { display: none; }
 
 .no-drag {
     -webkit-user-drag: none;
@@ -218,25 +223,12 @@ body {
     display: flex;
 }
 
-.f-row {
-    flex-flow: row;
-}
-
-.f-column {
-    flex-flow: column;
-}
-
-.f-nowrap {
-    flex-wrap: nowrap;
-}
-
-.f-m-center {
-    justify-content: center;
-}
-
-.f-d-center {
-    align-items: center;
-}
+.f-row { flex-flow: row; }
+.f-row-rev { flex-flow: row-reverse; }
+.f-column { flex-flow: column; }
+.f-nowrap { flex-wrap: nowrap; }
+.f-m-center { justify-content: center; }
+.f-d-center { align-items: center; }
 
 .f-gap-15 {
     gap: 15px;
@@ -277,10 +269,6 @@ body {
 }
 
 .nav-btn {
-    width: var(--back-button-size);
-    height: var(--back-button-size);
-    margin: var(--back-button-margin);
-    padding: var(--back-button-padding);
     position: relative;
     cursor: pointer;
     background-size: contain;
@@ -355,8 +343,8 @@ body {
 .action {
     margin: calc(0.5 * var(--action-element-margins));
     padding: calc(0.5 * var(--action-element-margins));
-    width: var(--action-element-size);
-    height: var(--action-element-size);
+    min-width: var(--action-element-size);
+    min-height: var(--action-element-size);
     border-radius: 5px;
     background-size: contain;
     background-position: center;
@@ -392,3 +380,7 @@ body {
 .action-home { background-image: url('../resources/home_icon.png'); }
 
 .action-terminal { background-image: url('../resources/terminal_icon.png'); }
+
+.action-undo { background-image: url('../resources/undo_icon.png'); }
+
+.action-redo { background-image: url('../resources/redo_icon.png'); }
