@@ -18,6 +18,7 @@ function storeFiles(files, path, forceLoad = false, loadFileInfo = false) {
 
     // Convert 'files' parameter to an array if it isn't one already.
     files = Array.isArray(files) ? files : files.split('\n');
+    files = files.sort((a, b) => a.localeCompare(b));
 
     // If the path is already loaded in the file map, we'll check whether we have to add new files or not.
     if (fileCache.has(path) && !forceLoad) {

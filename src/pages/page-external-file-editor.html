@@ -14,9 +14,9 @@
     <div class="navigator"></div>
     <div class="action-container border-bottom-2">
         <div class="action action-special action-upload" id="save-file" data-lang="page.file-editor.upload"></div>
-        <div class="action action-refresh" id="action-reload" data-lang-tooltip="page.file-editor.reload.tooltip"></div>
-        <div class="action action-redo" id="action-redo" data-lang-tooltip="page.file-editor.redo.tooltip"></div>
-        <div class="action action-undo" id="action-undo" data-lang-tooltip="page.file-editor.undo.tooltip"></div>
+        <div class="action action-refresh" id="action-reload" data-lang-title="page.file-editor.reload.tooltip"></div>
+        <div class="action action-redo" id="action-redo" data-lang-title="page.file-editor.redo.tooltip"></div>
+        <div class="action action-undo" id="action-undo" data-lang-title="page.file-editor.undo.tooltip"></div>
         <div class="open-file-container flex f-row f-start f-nowrap hide-scrollbar" id="open-file-container"></div>
     </div>
     <div class="content inner-content-wrapper">
@@ -27,7 +27,7 @@
         </div>
     </div>
     <div class="action-container border-top-2 flex f-row-rev f-d-center">
-        <div class="progress-bars"></div>
+        <div class="progress-bar" id="progress-bar" style="display: none;"></div>
         <div class="content-text" id="cursor-position"></div>
     </div>
 </body>

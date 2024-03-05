@@ -85,7 +85,15 @@ registerKeybindMapping({
 $(document).ready(() =>
 {
     // Add loading animation (bottom right)
-    addLoadingSpinner($('.process-loading')[0]);
+    const bladeCount = 8;
+    let spinner = document.createElement('div');
+    for (let i = 0; i < bladeCount; i++) {
+        let loadingSpinner = document.createElement('div');
+        loadingSpinner.classList.add('blade');
+        spinner.appendChild(loadingSpinner);
+    }
+    spinner.classList.add('spinner');
+    $('.process-loading')[0].appendChild(spinner);
     $('#log-out').on('click', () => window.location.href = '../index.html');
 
     fileContainer = $('.file-container');
@@ -161,7 +169,7 @@ $(document).ready(() =>
             );
 
             if (!contextMenuTarget.hasAttribute('directory'))
-                enabled.push(document.getElementById('ctx-open'));
+                enabled.push(document.getElementById('ctx-edit'));
             if (contextMenuTarget.hasAttribute('executable'))
                 enabled.push(document.getElementById('ctx-execute'));
         }
@@ -196,7 +204,6 @@ $(document).ready(() =>
 
     // Downloading a selected file
     $('#ctx-download').on('click', _ => downloadSelected())
-    $('#ctx-delete').on('click', _ => deleteSelected());
     let renameFileInput = $('#file-rename');
 
     // Viewing the information of a selected file
@@ -229,9 +236,8 @@ $(document).ready(() =>
     })
 
     $('#action-terminal').on('click', () => window.extWindows.openTerminal(currentDir));
-    $('#ctx-new-dir').on('click', createDirectory);    // Create new directory (Context menu)
-    $('#action-add-dir').on('click', createDirectory); // Create new directory (Action bar)
-    $('#ctx-open').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name')))
+    $('#ctx-new-dir, #action-add-dir').on('click', createDirectory);    // Create new directory (Context menu)
+    $('#ctx-edit, #ctx-open-with-builtin').on('click', () => window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name')))
 
     renameFileInput.on('keypress', (e) =>
     {
@@ -281,7 +287,7 @@ $(document).ready(() =>
     $('#action-add-file').on('click', addFiles);
 
     /** Functionality for the 'delete file' button in the action bar */
-    $('#action-delete-file').on('click', deleteSelected);
+    $('#action-delete-file, #ctx-delete').on('click', deleteSelected);
 
     /** Functionality for the 'home' button */
     $('#action-home').on('click', () => navigateTo(homeDir))
@@ -502,8 +508,9 @@ async function checkFsDifferences()
         {
             serverFiles = serverFiles.filter(f => f.length > 0);
             // Compare files, if there's any difference, update the file viewer
-            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => file.name !== serverFiles[i]))
+            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => !serverFiles.includes(file.name)))
             {
+                window.logger.log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
                 storeFiles(serverFiles, currentDir, true);
                 loadFileViewer();
             }
@@ -608,6 +615,8 @@ function downloadSelected()
 function deleteSelected()
 {
     let selected = getSelectedFiles();
+
+    console.log("Deleting files: ", selected);
 
     // If there aren't any files selected, stop.
     if (selected.length === 0)

@@ -14,14 +14,13 @@
     <script src="../js/file/file_object.js"></script>
     <script src="../js/file/file-caching.js"></script>
     <script src="../js/handling-file-page.js"></script>
-    <script src="../js/loading-spinner.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
     <div class="content">
         <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
         <div class="context-menu" id="context-menu">
-            <div class="ctx-item" id="ctx-open"      data-lang="contextmenu.open"></div>
+            <div class="ctx-item" id="ctx-edit"      data-lang="contextmenu.edit"></div>
             <div class="ctx-item" id="ctx-execute"   data-lang="contextmenu.execute"></div>
             <div class="ctx-item" id="ctx-new-dir"   data-lang="contextmenu.mkdir"></div>
             <div class="ctx-item" id="ctx-info"      data-lang="contextmenu.info"></div>
@@ -31,7 +30,7 @@
             <div class="ctx-item" id="ctx-cpy-path"  data-lang="contextmenu.copy-path"></div>
             <div class="ctx-item" id="ctx-open-with" data-lang="contextmenu.open-with"></div>
             <div class="context-menu" id="ctx-open-with-container">
-                <div class="ctx-item" id="ctx-open-with-default">Default</div>
+                <div class="ctx-item" id="ctx-open-with-builtin" data-lang="contextmenu.open-with.builtin"></div>
                 <div class="ctx-item" id="ctx-open-with-vscode">VSCode</div>
                 <div class="ctx-item" id="ctx-open-with-clion">CLion</div>
                 <div class="ctx-item" id="ctx-open-with-webstorm">WebStorm</div>

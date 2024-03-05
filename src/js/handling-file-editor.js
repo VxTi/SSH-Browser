@@ -25,7 +25,8 @@ let
     __originPath,
     __targetPath,
     __fileName,
-    __fileExtension;
+    __fileExtension,
+    __currentContextId;
 
 /** @type {'text' | 'image' | 'audio' | 'video'} */
 let __displayType = 'text';
@@ -35,6 +36,9 @@ let fileContexts = {};
 
 const ActionHistory = { undo: [], redo: [] };
 const maxHistoryLength = 100;
+
+localStorage['font-size'] = localStorage['font-size'] || 16;
+let fontSize = parseInt(localStorage['font-size']);
 
 /**
  * Registration of event handlers for when the file editor opens.
@@ -46,34 +50,20 @@ window.events.on('file-editor-acquire-context', (context) => {
     // Add file to the file list
     let fileElement = document.createElement('div');
     fileElement.classList.add('action', 'open-file', 'content-text');
-    fileElement.innerText = __fileName;
+    fileElement.innerText = context.fileName;
     fileElement.setAttribute('context-id', contextId);
-    fileElement.title = (__targetPath + '/' + __fileName).replace(/\/\//g, '/');
-    document.getElementById('open-file-container').appendChild(fileElement);
+    fileElement.setAttribute('selected', '');
+    fileElement.title = (context.targetPath + '/' + context.fileName).replace(/\/\//g, '/');
+    fileElement.addEventListener('click', _ => contextId === __currentContextId || __switchContext(contextId));
+    document
+        .getElementById('open-file-container')
+        .appendChild(fileElement);
+    __currentContextId = contextId;
 
     __switchContext(contextId);
 
 })
 window.events.on('file-editor-set-indentation', (indentation) => __indentation = indentation);
-
-function __switchContext(contextId)
-{
-    let context = fileContexts[contextId];
-    __fileOrigin    = context.origin;
-    __originPath    = context.originPath;
-    __targetPath    = context.targetPath;
-    __fileName      = context.fileName;
-    __fileExtension = context.fileName.split('.').pop();
-    __displayType   = __getDisplayType(__fileExtension);
-    pageContent     = context.content.split('\n');
-    document
-        .querySelectorAll('.open-file')
-        .forEach(element => element.removeAttribute('selected'));
-    document
-        .querySelector(`open-file[context-id="${contextId}"]`)
-        ?.setAttribute('selected', '');
-    __updatePageContent(-1);
-}
 
 document.addEventListener('DOMContentLoaded', () =>
 {
@@ -97,24 +87,27 @@ document.addEventListener('DOMContentLoaded', () =>
     document
         .getElementById('action-reload')
         .addEventListener('click', async _ => await __reloadFile())
+});
 
-    document
-        .querySelectorAll('.open-file')
-        .forEach(element =>
-            element.addEventListener('click', _ => __switchContext(element.getAttribute('context-id'))))
-
+document.addEventListener('selectionchange', _ => {
+    // Update cursor position
+    const selection = document.getSelection();
+    _.preventDefault();
+    _.stopPropagation();
+    cursor.x = selection.focusOffset;
+    __updateCursorScreenPos();
+    console.log(selection, selection.toString())
 });
 
 document.addEventListener('click', (e) =>
 {
     if ( e.target.classList.contains('line-content') )
     {
-        cursor.y = parseInt(e.target.dataset.lineNumber) - 1;
-        cursor.x = e.target.innerText.length;
-        __updateCursorScreenPos();
+        //cursor.y = parseInt(e.target.dataset.lineNumber) - 1;
+        //cursor.x = e.target.innerText.length;
+        //__updateCursorScreenPos();
         console.log("Clicked on line number");
     }
-    console.log("Test", e)
 });
 
 document.addEventListener('keydown', (e) =>
@@ -149,7 +142,38 @@ document.addEventListener('keydown', (e) =>
                 __insertChars(e.key);
             break;
     }
-})
+});
+
+/**
+ * Function for switching the context of the file editor (file).
+ * @param {string} contextId The context ID of the file to switch to.
+ * This ID must be contained within the <code>fileContexts</code> object.
+ * @private
+ */
+function __switchContext(contextId)
+{
+    if ( !fileContexts[contextId] )
+        throw new Error(`Cannot switch to context with ID ${contextId}, it does not exist.`);
+
+    console.log("Switching context to", contextId, fileContexts[contextId]);
+
+    let context = fileContexts[contextId];
+    __fileOrigin        = context.origin;
+    __originPath        = context.originPath;
+    __targetPath        = context.targetPath;
+    __fileName          = context.fileName;
+    __fileExtension     = context.fileName.split('.').pop();
+    __displayType       = __getDisplayType(__fileExtension);
+    __currentContextId  = contextId;
+    pageContent         = context.content.split('\n');
+    document
+        .querySelectorAll('.open-file')
+        .forEach(element => element.removeAttribute('selected'));
+    document
+        .querySelector(`open-file[context-id="${contextId}"]`)
+        ?.setAttribute('selected', '');
+    __updatePageContent(-1);
+}
 
 function __translateCursor(dx, dy)
 {
@@ -188,9 +212,12 @@ function __translateCursor(dx, dy)
 function __insertChars(content)
 {
     let newLines = content.split('\n');
-    if ( newLines > 1 )
+    if ( newLines.length > 1 )
     {
         // TODO: Fix this
+        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x) + newLines[0];
+        pageContent.splice(cursor.y + 1, 0, ...newLines.slice(1));
+        cursor.y += newLines.length - 1;
         cursor.x = 0;
     } else
     {
@@ -215,7 +242,7 @@ function __deleteChars(deleteCount = 1)
     deleteCount = deleteCount <= 0 ? pageContent[cursor.y].length : deleteCount || 1;
 
     // Check if we're trying to delete a whole line
-    if ( cursor.x - deleteCount <= 0 )
+    if ( cursor.x - deleteCount < 0 )
     {
         // Check if we have more lines available
         if ( cursor.y > 0 && pageContent.length > 1 )
@@ -223,16 +250,16 @@ function __deleteChars(deleteCount = 1)
             // Delete the lines
             cursor.x = pageContent[cursor.y - 1].length;
             pageContent[cursor.y - 1] += pageContent[cursor.y];
+            ActionHistory.undo.push(pageContent[cursor.y]); // Add to undo history
             pageContent.splice(cursor.y, 1);
             cursor.y--;
         }
     } else
     {
-        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x - deleteCount - 1) + pageContent[cursor.y].slice(cursor.x);
+        pageContent[cursor.y] = pageContent[cursor.y].slice(0, cursor.x - deleteCount) + pageContent[cursor.y].slice(cursor.x);
         cursor.x -= deleteCount;
     }
-    __updatePageContent(cursor.y);
-    __updatePageContent(cursor.y + 1);
+    __updatePageContent(-1);
     __updateCursorScreenPos();
 }
 
@@ -243,7 +270,6 @@ function __deleteChars(deleteCount = 1)
  */
 function __updatePageContent(lineIndex = -1)
 {
-    console.log("Updating page content");
     // If the index is out of range, don't do anything.
     if ( lineIndex + 1 > pageContent.length )
         return;
@@ -253,7 +279,7 @@ function __updatePageContent(lineIndex = -1)
     {
         document.querySelector('.line-content[data-line-number="' + (lineIndex + 1) + '"]').innerHTML =
             window["codeHighlighting"]
-                .highlight(pageContent[lineIndex], __fileExtension);
+                .highlight(pageContent[lineIndex], __fileExtension)
     } else
     {
         // Update the entire page
@@ -276,8 +302,10 @@ function __updateCursorScreenPos()
     const lineElement = document.querySelector(`.line-content[data-line-number="${cursor.y + 1}"]`);
     const clientPosition = lineElement.getBoundingClientRect();
     eCursor.innerText = lineElement.innerText.slice(0, cursor.x).replaceAll(' ', '\u00A0');
-    eCursor.transform = `translateX(${clientPosition.left}px) translateY(${clientPosition.top}px)`;
+    eCursor.style.left = `${clientPosition.left}px`;
+    eCursor.style.top = `${clientPosition.top}px`;
     eCursorPosition.innerText = `Ln ${cursor.y + 1}, Col ${cursor.x + 1}`;
+    eCursor.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 /**
@@ -302,7 +330,7 @@ function __updateLineNumbers()
     else if ( lineNumberElements.length > pageContent.length )
     {
         for ( let i = 0; i < lineNumberElements.length - pageContent.length; i++ )
-            lineNumberElements[lineNumberElements.length - 1].remove();
+            lineNumberElements[i].remove();
     }
 
     // Updates the line numbers of the text content.
@@ -337,7 +365,7 @@ async function __saveFile(errorCallback = null, successCallback = null)
             .then(_ => successCallback && successCallback('local'))
             .catch(_ => errorCallback && errorCallback('local'));
 
-        await window.ssh.uploadFiles(__originPath, [ __targetPath + '/' + __fileName ])
+        await window.ssh.uploadFiles(__targetPath, [ __originPath + '/' + __fileName ])
             .then(_ => successCallback && successCallback('remote'))
             .catch(_ => errorCallback && errorCallback('remote'));
     }

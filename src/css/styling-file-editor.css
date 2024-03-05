@@ -26,6 +26,8 @@
 
 .line-number-element {
     display: block;
+    min-width: 1px;
+    min-height: var(--editor-font-size);
     color: var(--text-color-3);
     text-align: center;
     user-select: none;

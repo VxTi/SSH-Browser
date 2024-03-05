@@ -44,8 +44,8 @@ function log(message, ...args)
 {
     let timeStamp = new Date();
     console.log(
-        timeStamp.toLocaleDateString('en-UK') + ' ' +
-        timeStamp.toLocaleTimeString('en-UK') + ' | ' + message, ...args);
+        `${timeStamp.toLocaleDateString('en-UK')} ${timeStamp.toLocaleTimeString('en-UK')} | ${message}`,
+        ...args);
 }
 
 // Which operating system is the app running on.
@@ -126,18 +126,6 @@ app.whenReady().then(() =>
     if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
 
-    let win = __openFileEditor({
-        originPath: '/Users/lucawarm/Desktop/',
-        fileName: 'fft_sketch.ino',
-    });
-
-    setTimeout(() => win.webContents.send('file-editor-acquire-context', {
-        originPath: '/Users/lucawarm/Desktop/',
-        fileName: 'BleGamepad.cpp',
-        origin: 'local',
-        content: fs.readFileSync('/Users/lucawarm/Desktop/BleGamepad.cpp').toString(),
-        targetPath: '/Users/lucawarm/Desktop/'
-    }), 1000);
 })
 
 // Quits the application if all windows are closed (windows & linux)
@@ -237,13 +225,8 @@ ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context));
  */
 function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadCallback = undefined)
 {
-    // Create a new window
-    let fileEditorWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
-        width: 1000,
-        height: 700
-    });
-    fileEditorWindows.push(fileEditorWindow);
 
+    // Assure that the context has the required object properties.
     if ( context && (context.origin === 'local' || !context.origin) )
     {
         context.origin = 'local';
@@ -251,22 +234,45 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
         context.content ||= fs.readFileSync(path.join(context.originPath, context.fileName)).toString();
     }
 
-    // Once the window has successfully opened
-    // temp folder and load its contents onto the file editor.
-    fileEditorWindow.webContents.on('did-finish-load', async _ =>
-    {
-        if ( context )
-            fileEditorWindow.webContents.send('file-editor-acquire-context', context);
-        webPageLoadCallback && webPageLoadCallback();
-    });
+    let targetWindow;
 
-    fileEditorWindow.on('close', _ =>
+    // If there exists another window with the same origin,
+    // Open the files in that window.
+    if ( fileEditorWindows.some(w => w.origin === context.origin) )
     {
-        // Remove from the list of file editor windows
-        fileEditorWindows.splice(fileEditorWindows.indexOf(fileEditorWindow), 1);
-        windowCloseCallback && windowCloseCallback();
-    });
-    return fileEditorWindow;
+        targetWindow = fileEditorWindows.find(w => w.origin === context.origin).window;
+        targetWindow.webContents.send('file-editor-acquire-context', context);
+        targetWindow.focus();
+    }
+    else
+    {
+        // Create a new window
+        targetWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
+            width: 1000,
+            height: 700
+        });
+        fileEditorWindows.push({
+            window: targetWindow,
+            origin: context.origin
+        });
+        // Once the window has successfully opened
+        // temp folder and load its contents onto the file editor.
+        targetWindow.webContents.on('did-finish-load', async _ =>
+        {
+            if ( context )
+                targetWindow.webContents.send('file-editor-acquire-context', context);
+            webPageLoadCallback && webPageLoadCallback();
+        });
+
+        targetWindow.on('close', _ =>
+        {
+            // Remove from the list of file editor windows
+            fileEditorWindows.splice(fileEditorWindows.findIndex((entry) => entry.window === targetWindow), 1);
+            windowCloseCallback && windowCloseCallback();
+        });
+    }
+
+    return targetWindow;
 }
 
 ipcMain.handle('save-local-file', async (_, path, content) =>
@@ -669,7 +675,7 @@ ipcMain.on('current-session', (event) =>
 
 ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
 
-ipcMain.on('log', (_, message, ...args) => log(args, ...args));
+ipcMain.on('log', (_, message, ...args) => log(message, ...args));
 
 ipcMain.handle('get-config', (event, fileName) =>
 {

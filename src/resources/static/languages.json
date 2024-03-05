@@ -71,7 +71,7 @@
         "page.file-editor.undo.tooltip": "Undo last changes",
         "page.file-editor.reload.tooltip": "Reload the file content from the server",
 
-        "contextmenu.open": "Open",
+        "contextmenu.edit": "Edit File",
         "contextmenu.download": "Download",
         "contextmenu.rename": "Rename",
         "contextmenu.execute": "Execute",
@@ -79,7 +79,8 @@
         "contextmenu.mkdir": "New Directory",
         "contextmenu.info": "Show Information",
         "contextmenu.delete": "Delete",
-        "contextmenu.open-with": "Open With"
+        "contextmenu.open-with": "Open With",
+        "contextmenu.open-with.builtin": "Built-in Editor"
 
     }
 }
