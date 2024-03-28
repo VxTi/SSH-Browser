@@ -52,12 +52,13 @@ window.events.on('file-editor-acquire-context', (context) => {
     fileElement.classList.add('action', 'open-file', 'content-text');
     fileElement.innerText = context.fileName;
     fileElement.setAttribute('context-id', contextId);
-    fileElement.setAttribute('selected', '');
+
     fileElement.title = (context.targetPath + '/' + context.fileName).replace(/\/\//g, '/');
     fileElement.addEventListener('click', _ => contextId === __currentContextId || __switchContext(contextId));
     document
         .getElementById('open-file-container')
         .appendChild(fileElement);
+
     __currentContextId = contextId;
 
     __switchContext(contextId);
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () =>
             );
         })
 
+    // Add reload file button functionality
     document
         .getElementById('action-reload')
         .addEventListener('click', async _ => await __reloadFile())

@@ -80,6 +80,7 @@
         "contextmenu.info": "Show Information",
         "contextmenu.delete": "Delete",
         "contextmenu.open-with": "Open With",
+        "contextmenu.clone": "Clone File",
         "contextmenu.open-with.builtin": "Built-in Editor"
 
     }

@@ -1,17 +1,16 @@
 /**
- * @file The main file for the SSH client.
+ * The main file for the SSH client.
  *
  * @Author Luca Warmenhoven
- * @Date
+ * @Date 14 / 02 / 2024
  */
-
+console.time('startup');
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
-const { exec } = require('child_process')
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -24,11 +23,11 @@ const StaticFiles = [ 'FILE_ICONS' ]
 
 const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
 
-const filter = new ansiHtml({ newline: true, escapeXML: false, stream: false });
+let ansiConverter;
 
 // Whether to reload the static content into the appdata directory
 // This is useful for testing and development purposes
-const LOAD_STATIC_CONTENT = true;
+const LOAD_STATIC_CONTENT = false;
 
 /** List of open connections
  * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
@@ -63,7 +62,7 @@ const OS = {
  */
 function createWindow(pagePath = null, createArgs = {})
 {
-    pagePath ||= path.join(__dirname, 'index.html');
+    pagePath ||= path.join(__dirname, '../index.html');
     let window = new BrowserWindow({
         width: 900,
         height: 700,
@@ -72,7 +71,6 @@ function createWindow(pagePath = null, createArgs = {})
         titleBarOverlay: false,
         icon: './resources/app_icon.png',
         titleBarStyle: 'hiddenInset',
-        vibrancy: 'under-window',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
@@ -80,6 +78,9 @@ function createWindow(pagePath = null, createArgs = {})
         },
         ...createArgs
     });
+
+    console.time('startup-page-load')
+    window.webContents.on('did-finish-load', () => console.timeEnd('startup-page-load'));
 
     // Show the window buttons on macOS
     if ( OS.isMac )
@@ -102,7 +103,7 @@ app.whenReady().then(() =>
     app.on('activate', _ =>
     {
         if ( BrowserWindow.getAllWindows().length === 0 )
-            createWindow()
+            createWindow();
     })
 
     // Create directory for storing SSH client data
@@ -124,9 +125,34 @@ app.whenReady().then(() =>
     }
 
     if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
-        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]))
+        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
+
+    console.timeEnd('startup');
+
 
 })
+
+/**
+ * Function that loads a file from the file system.
+ * Once the file has successfully been read, it calls the callback function
+ * provided as function parameter.
+ * If an error occurs, it calls the errorCallback function with the error as parameter.
+ * @param {string} path The path to read the file data from
+ */
+function loadFile(path)
+{
+    return new Promise((resolve, reject) => {
+
+        if (!fs.existsSync(path))
+            return reject("File does not exist.");
+
+        fs.readFile(path, 'utf-8', (err, data) => {
+            if (err)
+                return reject(err);
+            resolve(data);
+        });
+    });
+}
 
 // Quits the application if all windows are closed (windows & linux)
 app.on('window-all-closed', () => OS.isMac || app.quit())
@@ -142,20 +168,62 @@ ipcMain.on('open-terminal', async (_, directory) =>
         terminalWindow.focus();
         return;
     }
+
+    // Create terminal window
     terminalWindow = createWindow(path.join(__dirname, 'pages/page-external-terminal.html'), {
         width: 600,
         height: 480
     });
+
+    terminalWindow.messageQueue = terminalWindow.messageQueue || [];
+    terminalWindow.canReceiveMessages = false;
+    terminalWindow.dispatchMessages = _ =>
+    {
+        terminalWindow.messageQueue
+            .forEach(message => terminalWindow.webContents.send('message-received', message));
+        terminalWindow.messageQueue = [];
+    }
+
+    // Send all messages that have been received before the window was ready
+    terminalWindow.on('ready-to-show', _ => {
+        terminalWindow.dispatchMessages();
+        terminalWindow.canReceiveMessages = true;
+    });
+
+    // Create a new shell connection
     ssh()
         .requestShell({ term: process.env.TERM || 'xterm-256color' })
         .then((stream) =>
         {
+            // Ensure the filter has been created
+            ansiConverter ||= new ansiHtml({ newline: true, escapeXML: false, stream: false });
+
             stream.write('cd ' + directory + '\n');
             stream.setWindow(80, 24, 480, 600);
 
+            // Add event handlers for every stream type
             [ stream.stderr, stream.stdout ].forEach(stream =>
                 stream.on('data', data =>
-                    terminalWindow.webContents.send('message-received', filter.toHtml(data.toString()))))
+                    {
+                        // Check if we can receive messages
+                        if ( terminalWindow.isDestroyed() )
+                        {
+                            stream.end();
+                            return;
+                        }
+
+                        // If the terminal window is not ready to receive messages, add them to the message queue
+                        if ( !terminalWindow.canReceiveMessages )
+                            terminalWindow.messageQueue.push(ansiConverter.toHtml(data.toString()));
+                        else
+                        {
+                            if ( terminalWindow.messageQueue.length > 0 )
+                                terminalWindow.dispatchMessages();
+
+                            terminalWindow.webContents.send('message-received', ansiConverter.toHtml(data.toString()))
+                        }
+                    }
+                ));
 
             ipcMain.removeHandler('cmd');
             ipcMain.handle('cmd', async (_, command) =>
@@ -172,6 +240,10 @@ ipcMain.on('open-terminal', async (_, directory) =>
 
 ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 {
+    // If there's no active ssh connection, abort
+    if ( !isSSHConnected() )
+        return;
+
     // Temp folder to store the file in
     let localDirectory = app.getPath('temp');
     let localAbsoluteFilePath = path.join(localDirectory, fileName);
@@ -213,7 +285,7 @@ ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 /**
  * Event handler for opening a new file editor window.
  */
-ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context));
+ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context)); 
 
 /**
  *
@@ -243,8 +315,7 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
         targetWindow = fileEditorWindows.find(w => w.origin === context.origin).window;
         targetWindow.webContents.send('file-editor-acquire-context', context);
         targetWindow.focus();
-    }
-    else
+    } else
     {
         // Create a new window
         targetWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
@@ -275,11 +346,14 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
     return targetWindow;
 }
 
-ipcMain.handle('save-local-file', async (_, path, content) =>
+/**
+ * Event handler for saving a file to the local file system
+ */
+ipcMain.handle('save-local-file', async (_, absolutePath, content) =>
 {
     return new Promise((resolve, reject) =>
     {
-        fs.writeFile(path, content, err =>
+        fs.writeFile(absolutePath, content, err =>
         {
             if ( err )
             {
@@ -290,6 +364,9 @@ ipcMain.handle('save-local-file', async (_, path, content) =>
     });
 })
 
+/**
+ * Event handler for renaming a file on the local file system.
+ */
 ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileName) =>
 {
     return new Promise((resolve, reject) =>
@@ -683,10 +760,10 @@ ipcMain.handle('get-config', (event, fileName) =>
     if ( !FileNames[query] )
         throw new Error('Config file does not exist.');
 
-    if ( StaticFiles.includes(query) )
-        return JSON.parse(fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames[query])).toString());
-
-    return JSON.parse(fs.readFileSync(path.join(RESOURCES_PATH, FileNames[query])).toString());
+    return loadFile(
+            StaticFiles.includes(query) ?
+                path.join(__dirname, 'resources', 'static', FileNames[query]) :
+                path.join(RESOURCES_PATH, FileNames[query]))
 });
 
 /**

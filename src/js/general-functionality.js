@@ -10,7 +10,8 @@ let __keybindMappings = [];
 /** @type {Object} */
 let __languages;
 
-window.emitError = function (error) {
+window.emitError = function (error)
+{
     // TODO: Add implementation
 }
 
@@ -26,22 +27,32 @@ document.addEventListener('DOMContentLoaded', async () =>
     // Set the theme to the user's preference
     document.documentElement.dataset['theme'] = localStorage.theme || 'dark'
 
+    const forceLoad = (Boolean(localStorage['forceLoad'] || !1));
+
     // If the file icon map hasn't been loaded yet and the html
     // element has the load-icons attribute, load the file_icons.json file
-    if (typeof window.iconMap === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons'))
+    if ( typeof window.iconMap === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons') )
     {
-        window['iconMap'] = await window.config.get('file_icons');
+        window['iconMap'] = await window.config.get('file_icons').then(res => JSON.parse(res));
     }
-    __languages = await window.config.get('languages');
-    __keybinds  = await window.config.get('keybinds')
 
-    // Update local storage language variable. If it already exists, check if it exists in the language map.
-    __languages = __languages[localStorage.language || (localStorage.language = 'english')] || __languages['english']
-    if (!__languages)
-        throw new Error('No languages found in languages file.')
+    // Check if there's language data in local storage
+    // If not, load it from the language file.
+    if ( !localStorage['language-data'] && !forceLoad )
+        localStorage['language-data'] = await window.config.get('languages');
 
-    // Load languages onto the page
+    __languages = JSON.parse(localStorage['language-data']);
+    __languages = __languages[localStorage.language || (localStorage.language = 'english')] || __languages['english'];
+
+    if ( !__languages )
+        throw new Error('No languages found in languages file.');
+
     loadPageLanguages();
+
+    if ( !localStorage['keybinds'] && !forceLoad )
+        localStorage['keybinds'] = await window.config.get('keybinds');
+
+    __keybinds = JSON.parse(localStorage['keybinds']);
 })
 
 /**
@@ -53,12 +64,12 @@ window.resourceFromFileExtension = function (extension)
 {
     // There is a possibility that the iconMap isn't loaded yet when this
     // function is called. In that case, return an empty string
-    if (!window.iconMap)
+    if ( !window.iconMap )
         return '';
     extension = extension.toLowerCase().replace(/(\s+)/g, '')
     let icon = findIconMapEntry(extension) || findIconMapEntry('unknown')
     // If there isn't a fallback icon named 'unknown' in the file_icons.json file, throw an error
-    if (!icon)
+    if ( !icon )
         throw new Error("Error loading icon map.")
     return '../resources/file_icons/' + icon['resource'];
 }
@@ -70,7 +81,7 @@ window.resourceFromFileExtension = function (extension)
  */
 function findIconMapEntry(identifier)
 {
-    if (!window.iconMap)
+    if ( !window.iconMap )
         return null
     return window.iconMap.find(icon => icon.id === identifier || icon.extensions.includes(identifier))
 }
@@ -86,11 +97,11 @@ function loadPageLanguages()
     document.querySelectorAll('*:is([data-lang], [data-lang-title], [data-lang-value], [data-lang-placeholder])')
         .forEach(element =>
         {
-            [['lang', 'innerText'], ['langTitle', 'title'], ['langValue', 'value'], ['langPlaceholder', 'placeholder']]
-                .forEach(([data, attribute]) =>
+            [ [ 'lang', 'innerText' ], [ 'langTitle', 'title' ], [ 'langValue', 'value' ], [ 'langPlaceholder', 'placeholder' ] ]
+                .forEach(([ data, attribute ]) =>
                 {
                     // Check if the dataset attribute is present
-                    if (element.dataset[data])
+                    if ( element.dataset[data] )
                         element[attribute] = __languages[element.dataset[data]] || element.dataset[data];
                 })
         })
@@ -105,6 +116,9 @@ window.addEventListener('keyup', _ => __keyStates = {});
 window.addEventListener('keydown', (event) =>
 {
     __keyStates[event.key.toLowerCase()] = true;
+    // If it hasn't loaded yet, stop.
+    if ( !__keybinds )
+        return;
     Object.keys(__keybinds).forEach(keybind => __checkKeybindEntry(keybind, event));
 });
 
@@ -117,28 +131,28 @@ window.addEventListener('keydown', (event) =>
  */
 function __checkKeybindEntry(keybindIdentifier, event)
 {
-    if (!__keybinds[keybindIdentifier])
+    if ( !__keybinds[keybindIdentifier] )
         return
     Object.entries(__keybinds[keybindIdentifier]['content'])
-        .forEach(([keybind, value]) =>
+        .forEach(([ keybind, value ]) =>
         {
-            if (!value['combination']) // If there is no combination property, continue
+            if ( !value['combination'] ) // If there is no combination property, continue
                 return
 
             // Combinations are separated by '|' in the keybinds.json file
             let combinations = value['combination'].split('|')
-            for (let combination of combinations)
+            for ( let combination of combinations )
             {
                 let keys = combination.split('+').map(entry => entry.toLowerCase());
-                if (keys.length === 0) // skip empty combinations
+                if ( keys.length === 0 ) // skip empty combinations
                     continue
 
                 // If the required keys aren't pressed, skip checking
-                if (!keys.every(isKeyPressed))
+                if ( !keys.every(isKeyPressed) )
                     continue;
 
                 // Check if there aren't any other keys pressed
-                if (keys.length !== Object.keys(__keyStates).filter(key => __keyStates[key]).length)
+                if ( keys.length !== Object.keys(__keyStates).filter(key => __keyStates[key]).length )
                     continue;
 
                 __fireKeybindEvent(keybind)
@@ -156,8 +170,8 @@ function __checkKeybindEntry(keybindIdentifier, event)
  */
 function __fireKeybindEvent(keybind)
 {
-    for (let keybindMapping of __keybindMappings)
-        if (keybindMapping[keybind] && typeof keybindMapping[keybind] === 'function')
+    for ( let keybindMapping of __keybindMappings )
+        if ( keybindMapping[keybind] && typeof keybindMapping[keybind] === 'function' )
             keybindMapping[keybind]()
 }
 
@@ -183,6 +197,7 @@ function isKeyPressed(key)
     return __keyStates[key.toLowerCase()] || false
 }
 
-window.events.on('context-menu-interact', (event) => {
+window.events.on('context-menu-interact', (event) =>
+{
     console.log("Context menu interacted with", event)
 })

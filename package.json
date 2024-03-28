@@ -2,7 +2,7 @@
   "name": "ssh-ftp",
   "version": "1.0.0",
   "description": "A Simple SSH File Browser",
-  "main": "src/index.js",
+  "main": "src/core/index.js",
   "scripts": {
     "build_linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",
     "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds",

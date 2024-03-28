@@ -164,7 +164,7 @@ $(document).ready(() =>
 
             fileRenameTarget = getFile(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name'))
             enabled.push(
-                ...(['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with']
+                ...(['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with', 'clone']
                     .map(e => document.getElementById(`ctx-${e}`)))
             );
 
@@ -205,6 +205,8 @@ $(document).ready(() =>
     // Downloading a selected file
     $('#ctx-download').on('click', _ => downloadSelected())
     let renameFileInput = $('#file-rename');
+
+    $('#ctx-clone').on('click', _ => cloneSelected());
 
     // Viewing the information of a selected file
     $('#ctx-info').on('click', _ => showFileInfo());
@@ -673,6 +675,20 @@ function addFiles()
                 {
                     busy(false)
                 });
+        })
+}
+
+/**
+ *
+ */
+function cloneSelected()
+{
+    getSelectedFiles()
+        .forEach(fileElement => {
+            let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
+            if (file === null)
+                return;
+
         })
 }
 

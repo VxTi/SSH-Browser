@@ -19,8 +19,8 @@
     --theme-6: #1E1F22;
     --theme-7: #A00505;
 
-    --border-1: #000;
-    --border-2: #343840;
+        --border-1: #000;
+        --border-2: #343840;
 
     --text-color: #fff;
     --text-color-2: #ccc;
@@ -104,9 +104,19 @@ body {
     height: var(--navigator-height);
     background-color: var(--theme-1);
     z-index: -1;
-    border-radius: var(--default-rounding) var(--default-rounding) 0 0;
+    border-radius: 10px 10px 0 0;
     -webkit-user-select: none;
     -webkit-app-region: drag;
+}
+
+.navigator-title {
+    width: 100%;
+    height: 100%;
+    display: block;
+    text-align: center;
+    line-height: var(--navigator-height);
+    font-family: var(--font);
+    color: var(--text-color);
 }
 
 .content {
@@ -250,22 +260,8 @@ body {
     align-items: center;
 }
 
-
-
 .grid {
     display: grid;
-}
-
-.grid-h-2 {
-    grid-template-columns: 1fr 1fr;
-}
-
-.grid-v-2 {
-    grid-template-rows: 1fr 1fr;
-}
-
-.al-s-c {
-    align-self: center;
 }
 
 .nav-btn {
@@ -275,7 +271,6 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     z-index: 999;
-    transition: scale 0.2s ease-in-out;
 }
 
 .btn-back {
@@ -302,10 +297,6 @@ body {
 .fill-content {
     width: 100%;
     height: 100%;
-}
-
-.nav-btn:hover {
-    scale: 0.95;
 }
 
 .container {
