@@ -1,26 +1,16 @@
-@font-face {
-    font-family: 'San Francisco';
-    font-weight: 400;
-    src: url('../resources/fonts/sf-pro.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'JetBrains Mono';
-    font-weight: normal;
-    src: url('../resources/fonts/JetBrainsMono-Regular.ttf') format('truetype');
-}
+@import url('fonts.css');
 
 :root {
-    --theme-1:#22252A;
-    --theme-2: #282C33;
+    --theme-1: #0a1019;/*#22252A;*/
+    --theme-2: #101826;/*#282C33;*/
     --theme-3: #292C33;
     --theme-4: #2358C9;
     --theme-5: #4D5052;
     --theme-6: #1E1F22;
     --theme-7: #A00505;
 
-        --border-1: #000;
-        --border-2: #343840;
+    --border-1: #000;
+    --border-2: #343840;
 
     --text-color: #fff;
     --text-color-2: #ccc;
@@ -33,7 +23,7 @@
 
     --background-opacity: 0.95;
 
-    --default-rounding: 5px;
+    --default-rounding: 3px;
 
     --navigator-height: 35px;
 
@@ -42,6 +32,7 @@
     --navigator-padding: 10px;
     --font: 'San Francisco', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+    --font-barlow: 'Barlow-Thin', sans-serif;
 
     --back-button-size: 30px;
     --back-button-padding: 3px;
@@ -74,7 +65,6 @@ html, body {
 body {
     border-radius: 10px;
     background-color: var(--theme-1);
-    outline: 1px solid var(--border-1);
     border: 1px solid var(--theme-5);
 }
 
@@ -121,7 +111,7 @@ body {
 
 .content {
     width: 100vw;
-    height: calc(100vh - var(--navigator-height));
+    height: calc(100vh - var(--navigator-height) - 2px);
     top: var(--navigator-height);
     z-index: 0;
     background-color: var(--theme-1);
@@ -273,6 +263,7 @@ body {
     z-index: 999;
 }
 
+
 .btn-back {
     background-image: url('../resources/left_arrow.png');
 }
@@ -300,7 +291,7 @@ body {
 }
 
 .container {
-    background-color: var(--theme-6);
+    background-color: var(--theme-2);
     border-radius: var(--default-rounding);
     border: 1px solid var(--border-2);
     outline: 1px solid var(--border-1);
@@ -315,6 +306,16 @@ body {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+.border-bottom::after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: var(--border-2);
+    bottom: 0;
 }
 
 .border-left-1 { border-left: 1px solid var(--border-1); }
@@ -357,7 +358,7 @@ body {
     padding: calc(0.5 * var(--action-element-margins));
     min-width: var(--action-element-size);
     min-height: var(--action-element-size);
-    border-radius: 5px;
+    border-radius: var(--default-rounding);
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;

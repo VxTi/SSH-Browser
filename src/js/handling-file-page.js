@@ -82,7 +82,7 @@ registerKeybindMapping({
     }
 })
 
-$(document).ready(() =>
+document.addEventListener('DOMContentLoaded', _ =>
 {
     // Add loading animation (bottom right)
     const bladeCount = 8;
@@ -359,7 +359,11 @@ $(document).ready(() =>
 function loadFileViewer()
 {
     if (currentUser === undefined)
-        currentUser = window.ssh.sessions.currentSession().username;
+    {
+        let currentSession = window.ssh.sessions.currentSession();
+        currentUser = currentSession.username;
+        window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port}`);
+    }
 
     // If for whatever reason currentDir is not defined, return to home menu.
     if (currentDir === undefined)

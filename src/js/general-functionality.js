@@ -24,6 +24,20 @@ window.emitError = function (error)
  */
 document.addEventListener('DOMContentLoaded', async () =>
 {
+
+    if ( !document.querySelector('.navigator.navigator-title'))
+    {
+        let navigatorTitle = document.createElement('span');
+        navigatorTitle.classList.add('navigator-title');
+        navigatorTitle.innerText = 'SSH FTP';
+        document.querySelector('.navigator').appendChild(navigatorTitle);
+    }
+
+    window.setTitle = function (title)
+    {
+        document.querySelector('.navigator-title').innerText = title;
+    }
+
     // Set the theme to the user's preference
     document.documentElement.dataset['theme'] = localStorage.theme || 'dark'
 

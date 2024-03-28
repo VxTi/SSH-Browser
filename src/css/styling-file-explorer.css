@@ -20,7 +20,7 @@
     justify-items: center;
     background-color: var(--theme-1);
     user-select: none;
-    border-top: 1px solid var(--border-1);
+    border-top: 1px solid var(--border-2);
 }
 
 .path-section {

@@ -35,10 +35,11 @@ const ANSI = {
         regex: /\x1b\[\d{1,2}m/g
     },
 }
-
-$(document).ready(() => {
+document.addEventListener('DOMContentLoaded', _=> {
 
     terminalContent = document.querySelector('.terminal-content');
+
+    window.setTitle('Terminal Shell')
 
     // Implementation of resizing of the terminal.
     $('.terminal-resize-horizontal')

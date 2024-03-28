@@ -4,7 +4,7 @@
  * @Author Luca Warmenhoven
  * @Date 14 / 02 / 2024
  */
-console.time('startup');
+
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const fs = require('fs')
 const os = require('os')
@@ -62,7 +62,7 @@ const OS = {
  */
 function createWindow(pagePath = null, createArgs = {})
 {
-    pagePath ||= path.join(__dirname, '../index.html');
+    pagePath ||= path.join(__dirname, 'index.html');
     let window = new BrowserWindow({
         width: 900,
         height: 700,
@@ -74,7 +74,7 @@ function createWindow(pagePath = null, createArgs = {})
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: true,
-            preload: path.join(__dirname, "preload.js")
+            preload: path.join(__dirname, "core", "preload.js")
         },
         ...createArgs
     });
@@ -126,10 +126,6 @@ app.whenReady().then(() =>
 
     if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
-
-    console.timeEnd('startup');
-
-
 })
 
 /**
