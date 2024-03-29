@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="../css/loading_spinner.css">
     <script src="../js/lib/jquery-3.7.1.js"></script>
     <script src="../js/general-functionality.js"></script>
+
     <script src="../js/custom_elements/file-element.js"></script>
+    <script src="../js/custom_elements/file-search-result-element.js"></script>
+
     <script src="../js/file/file_permissions_object.js"></script>
     <script src="../js/file/file_object.js"></script>
     <script src="../js/file/file-caching.js"></script>
@@ -39,13 +42,20 @@
             </div>
         </div>
         <!-- File viewer action container -->
-        <div class="action-container">
+        <div class="action-container border-bottom">
 
             <div class="action nav-btn btn-back" id="navigate-back" data-lang-title="page.files.navigate.previous.tooltip"></div>
             <div class="action nav-btn btn-forward" id="navigate-forward" data-lang-title="page.files.navigate.next.tooltip"></div>
-
-            <input type="text" name="filter" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
-
+            <div class="expand">
+                <label for="file-filter" class="action">
+                    <input type="text" name="filter" class="text-box-clean" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
+                </label>
+                <div class="relative-container">
+                    <div class="file-search-results-container container">
+                        <div class="file-search-results" id="file-search-results"></div>
+                    </div>
+                </div>
+            </div>
             <div class="action-sub-container flex f-row f-d-center">
                 <div class="action action-terminal" id="action-terminal"    data-lang-title="page.files.terminal.tooltip"></div>
                 <div class="action action-home"     id="action-home"        data-lang-title="page.files.navigate.home"></div>
@@ -59,6 +69,12 @@
 
         <div class="file-section">
             <input type="text" id="file-rename" class="file-rename" name="rename-file">
+
+            <div class="file-hierarchy-container border-right">
+                <div class="file-hierarchy" id="file-hierarchy">
+
+                </div>
+            </div>
 
             <!-- Container displaying file contents -->
             <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path"></div>

@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron/renderer');
 const hljs = require('highlight.js'); // Highlight.js
 
+const path = require('path');
+
 hljs.addPlugin({
     "after:highlight": (params) => {
         const openTags = [];
@@ -126,6 +128,29 @@ contextBridge.exposeInMainWorld('logger', {
     },
     error: (message, ...args) => {
         ipcRenderer.send('log', `\x1b[38;2;200;0;0m${message}\x1b[0m`, args);
+    }
+})
+
+contextBridge.exposeInMainWorld('path', {
+    sep: path.sep,
+    delimiter: path.delimiter,
+    join: (...paths) => path.join(...paths),
+    resolve: (...paths) => path.resolve(...paths),
+
+    /**
+     * Dissect a file path into its components
+     * @param {string} filePath - The file path to dissect
+     * @returns {string[]} - An array of path segments
+     */
+    dissect: (filePath) => {
+        // Split the directory path using the path separator
+        let segments = filePath
+            .split(path.sep)
+            .filter(segment => segment !== '');
+
+        segments.unshift('/')
+
+        return segments;
     }
 })
 

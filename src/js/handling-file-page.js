@@ -272,15 +272,16 @@ document.addEventListener('DOMContentLoaded', _ =>
         }
     })
 
-    // Add file filtering functionality
-    $('#file-filter').on('input', (event) =>
-        $('file-element').each((i, file) =>
-        {
-            if (file.getAttribute('name').indexOf(event.target.value) < 0)
-                file.setAttribute('hidden', '')
-            else
-                file.removeAttribute('hidden');
-        }))
+    /**
+     * File filtering functionality implementation
+     */
+    let fileFilter =  document.getElementById('file-filter');
+    fileFilter.addEventListener('input', manageFileFilteringInput);
+    fileFilter.addEventListener('focus', _ => manageFileFilteringInput());
+    document.addEventListener('click', _ => {
+        document.getElementById('file-search-results').innerHTML = '';
+        fileFilter.value = '';
+    });
 
     /** Functionality for the 'refresh' button in the action bar */
     $('#action-refresh').on('click', reloadContent);
@@ -377,14 +378,14 @@ function loadFileViewer()
 
     let pathContainer = document.querySelector('.path-section');
 
-    let pathSegments = currentDir.match(/\/?([^\/]+)/g) || ['/']
+    let pathSegments = path.dissect(currentDir);
 
     // Add all the path segments to the path container
     // These are just directories
     for (let i = 0; i < pathSegments.length; i++)
     {
         let pathElement = document.createElement('file-element');
-        pathElement.setAttribute('name', pathSegments[i].replace('/', ''));
+        pathElement.setAttribute('name', pathSegments[i]);
         if (i === 0)
             pathElement.setAttribute('nick-name', 'root')
         pathElement.setAttribute('path', pathSegments.slice(0, i).join(''))
@@ -394,7 +395,9 @@ function loadFileViewer()
         pathElement.classList.add('path-separator');
 
         pathElement.addEventListener('click', () =>
-            navigateTo(pathElement.getAttribute('path') + '/' + pathElement.getAttribute('name')))
+            navigateTo(
+                path.join(pathElement.getAttribute('path'), pathElement.getAttribute('name'))
+            ))
 
         /** Directory separator arrow **/
         let arrow = document.createElement('div');
@@ -748,4 +751,45 @@ function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = {left: 0, t
         frame = $(frame);
     frame.css('left', Math.max(margins.left, Math.min(window.innerWidth - frame.width() - margins.right, nextLeft)))
     frame.css('top', Math.max(margins.bottom, Math.min(window.innerHeight - frame.height() - margins.top, nextTop)))
+}
+
+/**
+ * Function for filtering files from the current working directory,
+ * and adding them to the file filter results in the search box.
+ * @param {Event} [inputEvent] The input event that triggered this function
+ */
+function manageFileFilteringInput(inputEvent = null)
+{
+    let inputElement = inputEvent?.target || document.getElementById('file-filter');
+
+    let input = inputElement.value.trim();
+
+    let fileSearchResults = document.getElementById('file-search-results');
+
+    fileSearchResults.innerHTML = '';
+
+    if (input.length === 0)
+        return;
+
+    let filteredFiles = getFileElements()
+        .filter(e => e.getAttribute('name').toLowerCase().includes(input.toLowerCase()))
+        .sort((a, b) => a.getAttribute('name').localeCompare(b.getAttribute('name')));
+    filteredFiles
+        .forEach(result => {
+            let fileSearchResult = document.createElement('file-search-result');
+            fileSearchResult.setAttribute('name', result.getAttribute('name'));
+            fileSearchResult.setAttribute('path', result.getAttribute('path'));
+            fileSearchResult.setAttribute('type', result.getAttribute('type'));
+            fileSearchResult.addEventListener('click', () => {
+                if (result.hasAttribute('directory'))
+                    navigateTo(
+                        path.join(result.getAttribute('path'), result.getAttribute('name'))
+                    );
+                else {
+                    result.setAttribute('selected', '');
+                    showFileInfo();
+                }
+            });
+            fileSearchResults.appendChild(fileSearchResult);
+        })
 }
