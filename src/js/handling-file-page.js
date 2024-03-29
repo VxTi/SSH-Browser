@@ -280,6 +280,9 @@ document.addEventListener('DOMContentLoaded', _ =>
     fileFilter.addEventListener('focus', _ => manageFileFilteringInput());
     document.addEventListener('click', _ => {
         document.getElementById('file-search-results').innerHTML = '';
+        document
+            .getElementById('file-filter-results-container')
+            .setAttribute('hidden', '');
         fileFilter.value = '';
     });
 
@@ -408,6 +411,7 @@ function loadFileViewer()
 
     // Load all files in the current directory
     loadFileElements();
+    loadFileHierarchy();
 }
 
 /**
@@ -765,11 +769,16 @@ function manageFileFilteringInput(inputEvent = null)
     let input = inputElement.value.trim();
 
     let fileSearchResults = document.getElementById('file-search-results');
-
+    let resultsContainer = document.getElementById('file-filter-results-container');
     fileSearchResults.innerHTML = '';
 
     if (input.length === 0)
+    {
+        resultsContainer.setAttribute('hidden', '');
         return;
+    }
+    else
+        resultsContainer.removeAttribute('hidden');
 
     let filteredFiles = getFileElements()
         .filter(e => e.getAttribute('name').toLowerCase().includes(input.toLowerCase()))
@@ -792,4 +801,36 @@ function manageFileFilteringInput(inputEvent = null)
             });
             fileSearchResults.appendChild(fileSearchResult);
         })
+}
+
+/**
+ * Function for loading the file hierarchy and adding
+ * the elements to the file hierarchy container.
+ */
+function loadFileHierarchy()
+{
+    let hierarchyContainer = document.getElementById('file-hierarchy');
+    hierarchyContainer.innerHTML = '';
+
+    // Add all the path segments to the hierarchy container
+    let segments = path.dissect(currentDir);
+
+    segments.forEach((segment, index) => {
+        let hierarchyElement = document.createElement('file-hierarchy-element');
+        hierarchyElement.setAttribute('name', segment);
+        hierarchyElement.setAttribute('path', segments.slice(0, index).join('/'));
+        hierarchyElement.setAttribute('type', 'dir');
+        hierarchyElement.setAttribute('nesting-level', index.toString());
+        hierarchyContainer.appendChild(hierarchyElement);
+    });
+
+    // Add all files in the current directory to the hierarchy container
+    getFiles(currentDir).forEach(file => {
+        let hierarchyElement = document.createElement('file-hierarchy-element');
+        hierarchyElement.setAttribute('name', file.name);
+        hierarchyElement.setAttribute('path', file.path);
+        hierarchyElement.setAttribute('type', file.directory ? 'dir' : file.name.substring(file.name.lastIndexOf('.') + 1));
+        hierarchyElement.setAttribute('nesting-level', segments.length.toString());
+        hierarchyContainer.appendChild(hierarchyElement);
+    });
 }
