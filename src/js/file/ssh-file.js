@@ -1,8 +1,10 @@
+import { FilePermissions } from './file-permissions.js';
+
 /**
  * Class for representing a file on the server.
- * @class File
+ * @class SSHFile
  */
-class File
+export class SSHFile
 {
     /** @type boolean */
     #loaded = false;            // Whether the file info has been loaded
@@ -196,5 +198,4 @@ class File
                 this.#refElement.querySelector('.file-name').innerText = newName;
             })
     }
-
 }

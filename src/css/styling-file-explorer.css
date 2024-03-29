@@ -3,6 +3,7 @@
     --file-navigator-height: 45px;
     --file-path-font-size: 1rem;
     --file-element-size: 50px;
+    --file-hierarchy-width: 250px;
 
     --file-information-width: 280px;
     --file-container-height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
@@ -82,14 +83,14 @@
 
 /** File Hierarchy Container **/
 .file-hierarchy-container {
-    width: 200px;
+    width: var(--file-hierarchy-width);
     height: 100%;
     display: flex;
     flex-flow: column nowrap;
     align-items: flex-start;
     justify-content: flex-start;
     transition: width 0.2s ease-in-out;
-    overflow: auto;
+    overflow: hidden;
 }
 .file-hierarchy-container[collapsed] {
     width: 0;
@@ -98,6 +99,7 @@
 .file-hierarchy {
     width: 100%;
     height: max-content;
+    overflow: auto;
 }
 
 .navigate-back, .navigate-forward {
@@ -109,6 +111,8 @@
     --file-hierarchy-element-size: 30px;
     --file-hierarchy-element-margin: 6px;
     height: var(--file-hierarchy-element-size);
+    min-width: 100%;
+    width: max-content;
     line-height: var(--file-hierarchy-element-size);
     font-size: calc(var(--file-hierarchy-element-size) * 0.4);
     color: var(--text-color-2);
@@ -129,11 +133,12 @@
 
 .file-hierarchy-element__name {
     margin-left: 10px;
-    margin-right: auto;
+    flex: 1;
+    margin-right: 10px;
 }
 
 .file-hierarchy-element:hover {
-    background-color: var(--theme-2);
+    background-color: var(--theme-3);
     cursor: pointer;
 }
 
@@ -312,9 +317,8 @@ file-element[selected] { background-color: var(--theme-5); }
     background-color: var(--theme-2);
 }
 
-.file-container[columns] {
-    flex-flow: column nowrap;
-    align-items: flex-start;
+.file-container[dragging-over] {
+    background-color: var(--theme-3);
 }
 
 #ctx-open-with-container {
@@ -343,7 +347,7 @@ file-element[selected] { background-color: var(--theme-5); }
     z-index: 10;
     position: relative;
     height: max-content;
-    width: max-content;
+    width: 100%;
     top: 0;
     display: flex;
     flex-flow: column nowrap;
@@ -389,7 +393,7 @@ file-element[selected] { background-color: var(--theme-5); }
 }
 
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 600px), screen and (max-device-width: 600px) {
     .action-sub-container {
         opacity: 0;
         display: none;

@@ -1,10 +1,11 @@
+import { findIconMapEntry, resourceFromFileExtension } from '../general-functionality.js';
 /**
  * Implementation of the file-element custom element.
  *
  * @author Luca Warmenhoven
  * @date 16/02/2024
  */
-class FileElement extends HTMLElement
+export class FileElement extends HTMLElement
 {
     static #defaultSize = '50px';
     static #containerHeight = '25px'
@@ -49,12 +50,12 @@ class FileElement extends HTMLElement
         if (this.hasAttribute('path-segment'))
             mainElement.classList.add('path-segment')
 
-        if ((window.findIconMapEntry(this.getAttribute('type')) || {})['id'] === 'executable')
+        if ((findIconMapEntry(this.getAttribute('type')) || {})['id'] === 'executable')
             this.setAttribute('executable', '')
 
         let fileIcon = document.createElement('div');
         fileIcon.classList.add('center', 'file-icon');
-        fileIcon.style.backgroundImage = `url(${window.resourceFromFileExtension(this.getAttribute('type'))})`
+        fileIcon.style.backgroundImage = `url(${resourceFromFileExtension(this.getAttribute('type'))})`
 
         // Add the file name to the file element
         let fileTitle = document.createElement('span');
@@ -124,8 +125,8 @@ class FileElement extends HTMLElement
     #setThumbnail(extension)
     {
         this.shadowRoot.querySelector('.file-icon')
-            .style.backgroundImage = `url(${window.resourceFromFileExtension(extension)})`;
-        console.log("Setting thumbnail for", extension, "to", window.resourceFromFileExtension(extension));
+            .style.backgroundImage = `url(${resourceFromFileExtension(extension)})`;
+        console.log("Setting thumbnail for", extension, "to", resourceFromFileExtension(extension));
     }
 
     /**
@@ -157,14 +158,17 @@ class FileElement extends HTMLElement
      */
     _dragOver(event)
     {
-        let sourceDragTarget = document.querySelector('[dragging]');
-        let sourcePath = sourceDragTarget.getAttribute('path') + '/' + sourceDragTarget.getAttribute('name')
-        let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name')
-
-        event.dataTransfer.dropEffect = 'none';
-
         event.preventDefault();
         event.stopImmediatePropagation();
+        event.dataTransfer.dropEffect = 'none';
+
+        let sourceDragTarget = document.querySelector('[dragging]');
+
+        if (!sourceDragTarget)
+            return;
+
+        let sourcePath = sourceDragTarget.getAttribute('path') + '/' + sourceDragTarget.getAttribute('name')
+        let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name')
 
         // If it's a path segment, we have to check paths differently.
         // Wouldn't wanna drag a file in a directory it's already in...

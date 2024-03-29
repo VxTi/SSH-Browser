@@ -1,11 +1,13 @@
-let delete_button;
+let deleteButton;
 
-document.addEventListener('DOMContentLoaded', () => {
-    delete_button = document.querySelector('.delete-button');
-    document.onclick = () => delete_button.style.visibility = 'hidden';
+document.addEventListener('DOMContentLoaded', () =>
+{
+    deleteButton = document.querySelector('.delete-button');
+    document.onclick = () => deleteButton.style.visibility = 'hidden';
 
     window.ssh.sessions.get()
-        .then(results => {
+        .then(results =>
+        {
             results.forEach(session => addSession(session));
             document.getElementById('add-sessions')
                 .addEventListener('click', () => window.location.href = './pages/page-login-ssh.html');
@@ -13,47 +15,51 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
 /**
  * Method for adding a session to the list of sessions.
  * @param {{port: number, host: string, username: string, password: string, privateKey: string, passphrase: string}} session
  */
-function addSession(session) {
-    let session_container = document.querySelector('.session-content');
+function addSession(session)
+{
+    let sessionContainer = document.querySelector('.session-content');
 
-    let session_element = document.createElement('div');
-    session_element.classList.add('session-element', 'user-interact');
-    session_container.appendChild(session_element);
-    session_element.dataset.langTitle = 'session.join.tooltip'
+    let sessionElement = document.createElement('div');
+    sessionElement.classList.add('session-element', 'user-interact');
+    sessionContainer.appendChild(sessionElement);
+    sessionElement.dataset.langTitle = 'session.join.tooltip'
 
-    let session_host = document.createElement('span');
-    session_host.classList.add('session-name');
-    session_host.innerText = session.host;
-    session_element.appendChild(session_host);
+    let sessionHostName = document.createElement('span');
+    sessionHostName.classList.add('session-name');
+    sessionHostName.innerText = session.host;
+    sessionElement.appendChild(sessionHostName);
 
-    let session_name = document.createElement('span');
-    session_name.classList.add('session-name');
-    session_name.innerText = session.username;
-    session_element.appendChild(session_name);
+    let sessionUserName = document.createElement('span');
+    sessionUserName.classList.add('session-name');
+    sessionUserName.innerText = session.username;
+    sessionElement.appendChild(sessionUserName);
 
-    session_element.addEventListener('click', () => {
+    sessionElement.addEventListener('click', () =>
+    {
         document.querySelector('.session-container').style.visibility = 'hidden';
-        document.querySelector('.loading').style.visibility = 'visible';
+        document.getElementById('connection-status').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)
             .then(_ => window.location.href = './pages/page-file-explorer.html')
-            .catch(_ => {
-                document.querySelector('.loading').style.visibility = 'hidden';
+            .catch(_ =>
+            {
+                document.getElementById('connection-status').style.visibility = 'hidden';
                 document.querySelector('.session-container').style.visibility = 'visible'
             });
     })
 
-    session_element.addEventListener('contextmenu', (event) => {
-        delete_button.style.setProperty('--delete-pos-x', `${session_element.offsetLeft}px`);
-        delete_button.style.setProperty('--delete-pos-y', `${session_element.offsetTop + session_element.offsetHeight + 4}px`);
-        delete_button.style.visibility = 'visible';
-        delete_button.onclick = () => {
-            window.ssh.sessions.delete(session.host, session.username);
-            session_element.remove();
+    sessionElement.addEventListener('contextmenu', (event) =>
+    {
+        deleteButton.style.setProperty('--delete-pos-x', `${sessionElement.offsetLeft}px`);
+        deleteButton.style.setProperty('--delete-pos-y', `${sessionElement.offsetTop + sessionElement.offsetHeight + 4}px`);
+        deleteButton.style.visibility = 'visible';
+        deleteButton.onclick = async _ =>
+        {
+            sessionElement.remove();
+            await window.ssh.sessions.delete(session.host, session.username);
         }
     })
 }

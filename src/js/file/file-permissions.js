@@ -1,16 +1,16 @@
 /**
  * File permissions object.
  */
-class FilePermissions {
+export class FilePermissions {
 
     /** @type string */
     #permissions;
-    /** @type File */
+    /** @type SSHFile */
     #file;
 
     /**
      * Constructor for file permissions.
-     * @param {File} file The file object
+     * @param {SSHFile} file The file object
      * @param {string} permissions File permissions, in the form of rwxrwxrwx (Linux/Unix format)
      */
     constructor(file, permissions= null ) {

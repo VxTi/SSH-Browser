@@ -4,10 +4,11 @@
   "description": "A Simple SSH File Browser",
   "main": "src/index.js",
   "scripts": {
-    "build_linux": "electron-packager . --overwrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",
-    "build_macos": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds",
-    "build_win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
-    "build_all": "electron-packager . --overwrite --platform=all --arch=all --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
+    "pack": "webpack",
+    "build_linux": "webpack && electron-packager . --overwelrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",
+    "build_macos": "webpack && electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds",
+    "build_win": "webpack && electron-packager . --overwrite --platform=win32 --arch=x64 --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
+    "build_all": "webpack && electron-packager . --overwrite --platform=all --arch=all --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
     "test": "echo \\\"Error: no test specified\\\" && exit 1",
     "start": "electron . --unhandled-rejections=strict"
   },
@@ -26,6 +27,8 @@
     "@electron/rebuild": "^3.5.0",
     "@types/ssh2": "^1.11.19",
     "electron": "^28.1.4",
-    "electron-packager": "^17.1.2"
+    "electron-packager": "^17.1.2",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
   }
 }

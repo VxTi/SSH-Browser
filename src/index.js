@@ -79,9 +79,6 @@ function createWindow(pagePath = null, createArgs = {})
         ...createArgs
     });
 
-    console.time('startup-page-load')
-    window.webContents.on('did-finish-load', () => console.timeEnd('startup-page-load'));
-
     // Show the window buttons on macOS
     if ( OS.isMac )
         window.setWindowButtonVisibility(true);

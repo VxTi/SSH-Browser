@@ -6,9 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/styling-login-ssh.css">
-    <script src="../js/lib/jquery-3.7.1.js"></script>
-    <script src="../js/general-functionality.js"></script>
-    <script src="../js/handling-login-page.js"></script>
+    <script src="../js/packed/login-page-packed.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -40,7 +38,10 @@
             <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase" data-lang-title="page.login.passphrase.tooltip" data-lang-placeholder="page.login.passphrase.placeholder">
             <input type="button" class="page-button user-interact" id="ssh-login" data-lang="page.login.connect" data-lang-value="page.login.connect">
         </div>
-        <div class="loading"></div>
+        <div class="loading-container" id="connection-status">
+            <div class="loading-text">Joining session...</div>
+            <div class="loading"></div>
+        </div>
     </div>
 </body>
 </html>

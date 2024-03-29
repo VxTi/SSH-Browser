@@ -1,4 +1,6 @@
-class FileHierarchyElement extends HTMLElement {
+import { resourceFromFileExtension } from "../general-functionality";
+
+export class FileHierarchyElement extends HTMLElement {
 
     #mainElement;
     #fileIconElement;
@@ -30,7 +32,7 @@ class FileHierarchyElement extends HTMLElement {
 
         this.#fileIconElement = document.createElement('span');
         this.#fileIconElement.classList.add('file-hierarchy-element__icon', 'icon');
-        this.#fileIconElement.style.backgroundImage = `url(${window.resourceFromFileExtension(this.getAttribute('type'))})`;
+        this.#fileIconElement.style.backgroundImage = `url(${resourceFromFileExtension(this.getAttribute('type'))})`;
 
         this.#fileNameElement = document.createElement('span');
         this.#fileNameElement.classList.add('file-hierarchy-element__name');
@@ -54,7 +56,7 @@ class FileHierarchyElement extends HTMLElement {
                 this.querySelector('.file-hierarchy-element__name').innerText = newValue;
             else if (name === 'type')
                 this.querySelector('.file-hierarchy-element__icon').style.backgroundImage =
-                    `url(${window.resourceFromFileExtension(newValue)})`;
+                    `url(${resourceFromFileExtension(newValue)})`;
             else if (name === 'nesting-level')
                 this.querySelector('.file-hierarchy-element').style.paddingLeft = `${parseInt(newValue) * 10}px`;
         }

@@ -10,11 +10,6 @@ let __keybindMappings = [];
 /** @type {Object} */
 let __languages;
 
-window.emitError = function (error)
-{
-    // TODO: Add implementation
-}
-
 /**
  *  Once the page has successfully been loaded, we'll have
  *  to load all languages from the languages.json file and
@@ -25,7 +20,7 @@ window.emitError = function (error)
 document.addEventListener('DOMContentLoaded', async () =>
 {
 
-    if ( !document.querySelector('.navigator.navigator-title'))
+    if ( !document.querySelector('.navigator.navigator-title') )
     {
         let navigatorTitle = document.createElement('span');
         navigatorTitle.classList.add('navigator-title');
@@ -74,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () =>
  * @param {string} extension The extension of the file
  * @returns {string} The path to the icon
  */
-window.resourceFromFileExtension = function (extension)
+export function resourceFromFileExtension(extension)
 {
     // There is a possibility that the iconMap isn't loaded yet when this
     // function is called. In that case, return an empty string
@@ -93,7 +88,7 @@ window.resourceFromFileExtension = function (extension)
  * @param {string} identifier The identifier to search for
  * @returns {*}
  */
-function findIconMapEntry(identifier)
+export function findIconMapEntry(identifier)
 {
     if ( !window.iconMap )
         return null
@@ -196,7 +191,7 @@ function __fireKeybindEvent(keybind)
  * are pressed. The keys in the provided object must match the one in the keybinds file.
  * @param {Object<Function>} keybinds
  */
-function registerKeybindMapping(keybinds)
+export function registerKeybindMapping(keybinds)
 {
     __keybindMappings.push(keybinds)
 }
@@ -206,7 +201,7 @@ function registerKeybindMapping(keybinds)
  * @param {string} key The key to check
  * @returns {boolean} Whether the key is pressed
  */
-function isKeyPressed(key)
+export function isKeyPressed(key)
 {
     return __keyStates[key.toLowerCase()] || false
 }

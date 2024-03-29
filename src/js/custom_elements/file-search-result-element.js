@@ -1,4 +1,6 @@
-class FileSearchResultElement extends HTMLElement {
+import {resourceFromFileExtension} from "../general-functionality.js";
+
+export class FileSearchResultElement extends HTMLElement {
 
     constructor()
     {
@@ -9,7 +11,7 @@ class FileSearchResultElement extends HTMLElement {
     {
         this.innerHTML = `
             <div class="file-search-result">
-                <span class="element-icon" style="background-image: url(${window.resourceFromFileExtension(this.getAttribute('type'))});"></span>
+                <span class="element-icon" style="background-image: url(${resourceFromFileExtension(this.getAttribute('type'))});"></span>
                 <span class="element-title">${this.getAttribute('name')}</span>
             </div>
         `;

@@ -37,6 +37,8 @@
     background-image: url('../resources/eye_opened.svg');
 }
 
+.show-password[shown="false"] { background-image: url('../resources/eye_closed.svg'); }
+
 .select-private-key {
     width: var(--input-box-height);
     height: var(--input-box-height);

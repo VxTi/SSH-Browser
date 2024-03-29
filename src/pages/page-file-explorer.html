@@ -7,17 +7,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/styling-file-explorer.css">
     <link rel="stylesheet" href="../css/loading_spinner.css">
-    <script src="../js/lib/jquery-3.7.1.js"></script>
-    <script src="../js/general-functionality.js"></script>
-
-    <script src="../js/custom_elements/file-element.js"></script>
-    <script src="../js/custom_elements/file-search-result-element.js"></script>
-    <script src="../js/custom_elements/file-hierarchy-element.js"></script>
-
-    <script src="../js/file/file_permissions_object.js"></script>
-    <script src="../js/file/file_object.js"></script>
-    <script src="../js/file/file-caching.js"></script>
-    <script src="../js/handling-file-page.js"></script>
+    <script src="../js/packed/file-explorer-packed.js"></script>
 </head>
 <body>
     <div class="navigator"></div>
@@ -82,7 +72,7 @@
             </div>
 
             <!-- Container displaying file contents -->
-            <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path"></div>
+            <div class="file-container scrollbar no-drag" data-context-menu="new-dir cpy-path" id="file-container"></div>
 
             <!-- File information -->
             <div class="file-information container" hidden>

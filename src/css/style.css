@@ -1,5 +1,20 @@
-@import url('fonts.css');
+@font-face {
+    font-family: 'San Francisco';
+    font-weight: 400;
+    src: url('../resources/fonts/sf-pro.otf') format('opentype');
+}
 
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-weight: normal;
+    src: url('../resources/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Barlow-Thin';
+    font-weight: bold;
+    src: url('../resources/fonts/Barlow-Thin.ttf') format('truetype');
+}
 :root {
     --theme-1: #0a1019;/*#22252A;*/
     --theme-2: #101826;/*#282C33;*/
@@ -115,35 +130,6 @@ body {
     top: var(--navigator-height);
     z-index: 0;
     background-color: var(--theme-1);
-}
-
-/** Loading animation **/
-.loading {
-    width: 65px;
-    height: 30px;
-    position: absolute;
-    display: block;
-    z-index: 999;
-    visibility: hidden;
-}
-.loading:before {
-    content: "";
-    position: absolute;
-    display: block;
-    border-radius: 50px;
-    box-shadow: 0 0 0 3px inset #fff;
-    animation: l3 1s infinite alternate;
-}
-@keyframes l3 {
-    0% {
-        inset: 0 35px 0 0;
-    }
-    50% {
-        inset: 0 0 0 0;
-    }
-    100% {
-        inset: 0 0 0 35px;
-    }
 }
 
 .title-text {
@@ -449,4 +435,53 @@ body {
 .text-box-clean:focus {
     outline: none;
     background-color: var(--theme-2);
+}
+
+
+.loading-container {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    visibility: hidden;
+}
+
+.loading-text {
+    font-family: var(--font-barlow);
+    font-size: 1.5rem;
+    color: var(--text-color);
+    margin-bottom: 20px;
+}
+
+/** Loading animation **/
+.loading {
+    width: 65px;
+    height: 30px;
+    position: relative;
+    display: block;
+    z-index: 999;
+    margin-bottom: 30px;
+}
+.loading:before {
+    content: "";
+    position: absolute;
+    display: block;
+    border-radius: 50px;
+    box-shadow: 0 0 0 3px inset #fff;
+    animation: l3 1s infinite alternate;
+}
+@keyframes l3 {
+    0% {
+        inset: 0 35px 0 0;
+    }
+    50% {
+        inset: 0 0 0 0;
+    }
+    100% {
+        inset: 0 0 0 35px;
+    }
 }

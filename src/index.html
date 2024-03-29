@@ -6,20 +6,22 @@
         <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/styling-sessions-page.css">
-        <script src="js/general-functionality.js"></script>
-        <script src="js/handling-sessions-page.js"></script>
+        <script src="js/packed/main-page-packed.js"></script>
     </head>
     <body>
         <div class="navigator"></div>
-        <div class="delete-button user-interact" data-lang="session.delete"></div>
+        <div class="delete-button user-interact">Delete Session</div>
         <div class="content center-x center-y">
             <div class="session-container container">
-                <p class="session-title" data-lang="session.join"></p>
+                <p class="session-title">SSH Sessions</p>
                 <div class="session-content">
-                    <div id="add-sessions" class="session-element add-session user-interact" data-lang-title="session.create.tooltip"></div>
+                    <div id="add-sessions" class="session-element add-session user-interact" title="Add a new SSH Session"></div>
                 </div>
             </div>
-            <div class="loading"></div>
+            <div class="loading-container" id="connection-status">
+                <div class="loading-text">Joining session...</div>
+                <div class="loading"></div>
+            </div>
         </div>
     </body>
 </html>
