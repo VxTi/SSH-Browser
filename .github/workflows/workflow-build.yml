@@ -22,3 +22,76 @@ jobs:
 
       - name: Build
         run: npm run
+
+      - name: Produce Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run
+
+      - name: Produce Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+  build_macos:
+runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run
+
+      - name: Produce Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+
