@@ -21,19 +21,22 @@ jobs:
         run: npm install
 
       - name: Build
-        run: npm run
+        run: npm run build_win
 
       - name: Produce Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build
-          path: dist
+          name: build-windows
+          path: release-builds
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build
-          path: dist
+          name: build-windows
+          path: release-builds
+
+      - name: Cleanup
+        run: rm -rf release-builds
 
   build_linux:
     runs-on: ubuntu-latest
@@ -51,43 +54,52 @@ jobs:
         run: npm install
 
       - name: Build
-        run: npm run
+        run: npm run build_linux
 
       - name: Produce Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build
-          path: dist
+          name: build-linux
+          path: release-builds
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build
-          path: dist
-  build_macos:
+          name: build-linux
+          path: release-builds
+
+      - name: Cleanup
+        run: rm -rf release-builds
+
+  build_mac:
     runs-on: macos-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        persist-credentials: false
-    - name: Install NodeJS
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-    - name: Install dependencies
-      run: npm install
-    - name: Build
-      run: npm run
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-    - name: Produce Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: dist
+      - name: Install dependencies
+        run: npm install
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: dist
+      - name: Build
+        run: npm run build_macos
+
+      - name: Produce Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-mac
+          path: release-builds
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-mac
+          path: release-builds
+
+      - name: Cleanup
+        run: rm -rf release-builds
