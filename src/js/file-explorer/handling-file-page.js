@@ -4,12 +4,13 @@
  |                                           |
  ** - - - - - - - - - - - - - - - - - - - - **/
 
-import { RemoteFile } from "./file/remote-file.js";
+import RemoteFile from "./file/remote-file.js";
 import { getFile, getFiles, storeFiles } from "./file/file-caching.js";
 import { FileElement } from "../custom-elements/file-element.js";
 import { registerKeybindMapping, resourceFromFileExtension } from "../general-functionality.js";
-import { default as contextmenu} from "../context-menu";
+import contextmenu from "../context-menu";
 import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
+import { assembleFileHierarchy } from "./file-hierarchy-impl";
 
 /**
  * @param {Promise<*>} promise The promise which has to be resolved before the loading animation is hidden.
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     spinner.classList.add('spinner');
     document.querySelector('.process-loading').appendChild(spinner);
     document.getElementById('log-out')
-        .addEventListener('click', () => window.location.href = '../../index.html');
+        .addEventListener('click', () => window.location.href = '../index.html');
 
     fileContainer = document.getElementById('file-container');
 
@@ -129,8 +130,8 @@ document.addEventListener('DOMContentLoaded', _ =>
         .then(res =>
         {
             /** Current dir is defined in file-caching.js **/
-            currentDir = res.path;
-            homeDir = res.path;
+            window.currentDir = res.path;
+            window.homeDir = res.path;
             document.querySelector('.inner-content-container').dataset.path = res.path;
             storeFiles(res.files, res.path);
             loadFileViewer();
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     {
         console.log(event.target)
         if ( event.target instanceof Element && (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu'))
-            document.getElementById('context-menu').remove();
+            contextmenu.destroy();
     });
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
@@ -321,7 +322,7 @@ function loadFileViewer()
     // If for whatever reason currentDir is not defined, return to home menu.
     if ( currentDir === undefined )
     {
-        window.location.href = '../../index.html';
+        window.location.href = '../index.html';
         return;
     }
 
@@ -360,7 +361,11 @@ function loadFileViewer()
 
     // Load all files in the current directory
     loadFileElements();
-    loadFileHierarchy();
+    assembleFileHierarchy(
+        async (path) =>
+            await window.ssh.listFiles(path).then(res => res.split('\n')),
+        currentDir,
+        document.getElementById('file-hierarchy'));
 }
 
 /**
@@ -375,6 +380,8 @@ function loadFileElements(path = currentDir, clearOld = true)
     if ( clearOld )
         document.querySelectorAll('file-element:not(.path-separator)')
             .forEach(e => e.remove());
+
+    console.
 
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
@@ -405,7 +412,7 @@ function navigateTo(target)
             navigationHistory.push({ from: currentDir, to: target });
             navigationHistoryIndex++
             storeFiles(result, target);
-            currentDir = target;
+            window.currentDir = target;
             loadFileViewer(); // reload the file viewer
             let pathSection = document.querySelector('.path-section');
             pathSection.scrollLeft = pathSection.scrollWidth;
@@ -414,7 +421,7 @@ function navigateTo(target)
         .catch(_ =>
         {   // If an error occurs whilst
             window.logger.log('Error occurred whilst attempting to navigate', _)
-            //window.location.href = '../index.html';
+            // TODO: Add error handling
         }));
 }
 
@@ -481,7 +488,7 @@ async function checkFsDifferences()
         .catch(_ =>
         {
             // TODO: Add action menu for when connection fails
-            window.location.href = '../../index.html'
+            window.location.href = '../index.html'
         });
 }
 
@@ -748,38 +755,4 @@ function manageFileFilteringInput(inputEvent = null)
             });
             fileSearchResults.appendChild(fileSearchResult);
         })
-}
-
-/**
- * Function for loading the file hierarchy and adding
- * the elements to the file hierarchy container.
- */
-function loadFileHierarchy()
-{
-    let hierarchyContainer = document.getElementById('file-hierarchy');
-    hierarchyContainer.innerHTML = '';
-
-    // Add all the path segments to the hierarchy container
-    let segments = path.dissect(currentDir);
-
-    segments.forEach((segment, index) =>
-    {
-        let hierarchyElement = document.createElement('file-hierarchy-element');
-        hierarchyElement.setAttribute('name', segment);
-        hierarchyElement.setAttribute('path', segments.slice(0, index).join('/'));
-        hierarchyElement.setAttribute('type', 'dir');
-        hierarchyElement.setAttribute('nesting-level', index.toString());
-        hierarchyContainer.appendChild(hierarchyElement);
-    });
-
-    // Add all files in the current directory to the hierarchy container
-    getFiles(currentDir).forEach(file =>
-    {
-        let hierarchyElement = document.createElement('file-hierarchy-element');
-        hierarchyElement.setAttribute('name', file.name);
-        hierarchyElement.setAttribute('path', file.path);
-        hierarchyElement.setAttribute('type', file.directory ? 'dir' : file.name.substring(file.name.lastIndexOf('.') + 1));
-        hierarchyElement.setAttribute('nesting-level', segments.length.toString());
-        hierarchyContainer.appendChild(hierarchyElement);
-    });
 }

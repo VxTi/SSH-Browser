@@ -1,4 +1,4 @@
-import { RemoteFile } from "./remote-file.js";
+import RemoteFile from "./remote-file.js";
 
 /** @type {Map<string, RemoteFile[]>} */
 window.fileCache = new Map();

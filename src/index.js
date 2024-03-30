@@ -5,12 +5,13 @@
  * @Date 14 / 02 / 2024
  */
 
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu, TouchBar, systemPreferences } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
+const { platform } = require("os");
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -748,6 +749,18 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) =>
         else reject('Not connected');
     })
 });
+
+ipcMain.on('can-prompt-touch-id', (event) => event.returnValue = systemPreferences.canPromptTouchID());
+
+ipcMain.handle('request-touch-id-auth', async (_, message) =>
+{
+    if ( !systemPreferences.canPromptTouchID() )
+    {
+        console.warn("Touch ID is not supported on this device.");
+        return Promise.resolve();
+    }
+    return systemPreferences.promptTouchID(message);
+})
 
 ipcMain.on('current-session', (event) =>
 {

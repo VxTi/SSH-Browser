@@ -154,6 +154,12 @@ contextBridge.exposeInMainWorld('path', {
         return segments;
     }
 })
+
+contextBridge.exposeInMainWorld('auth', {
+    requestFingerprint: async (message) => ipcRenderer.invoke('request-touch-id-auth', message),
+    canRequestFingerprint: () => ipcRenderer.sendSync('can-prompt-touch-id'),
+})
+
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
     get: (file) => ipcRenderer.invoke('get-config', file),

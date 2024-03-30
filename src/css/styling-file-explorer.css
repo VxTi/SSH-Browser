@@ -3,6 +3,9 @@
     --file-navigator-height: 45px;
     --file-path-font-size: 1rem;
     --file-element-size: 50px;
+
+    --file-hierarchy-element-size: 30px;
+    --file-hierarchy-element-margin: 6px;
     --file-hierarchy-width: 250px;
 
     --nesting-size: 15px;
@@ -124,44 +127,14 @@
 }
 
 /** File Hierarchy Element Styles **/
-.file-hierarchy-element {
-    --file-hierarchy-element-size: 30px;
-    --file-hierarchy-element-margin: 6px;
-    height: var(--file-hierarchy-element-size);
-    min-width: 100%;
-    width: max-content;
-    line-height: var(--file-hierarchy-element-size);
-    font-size: calc(var(--file-hierarchy-element-size) * 0.4);
-    box-sizing: border-box;
-}
 
-.file-hierarchy-element[selected] {
+file-hierarchy-element[selected] {
     background-color: var(--file-selected-color);
 }
 
-.file-hierarchy-element:hover {
+file-hierarchy-element:hover {
     background-color: var(--theme-3);
     cursor: pointer;
-}
-
-/** File Hierarchy Element -> Inner Elements */
-.file-hierarchy-element__name {
-    margin-left: 10px;
-    flex: 1;
-    margin-right: 10px;
-}
-
-.file-hierarchy-element__icon {
-    margin-left: 10px;
-    display: block;
-    width: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
-    height: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
-}
-
-.file-hierarchy-element__nesting {
-    width: var(--nesting-size);
-    height: 100%;
-    display: block;
 }
 
 .file-hierarchy-element__nesting::after {

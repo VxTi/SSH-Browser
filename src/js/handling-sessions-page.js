@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () =>
 
 /**
  * Method for adding a session to the list of sessions.
- * @param {{port: number, host: string, username: string, password: string, privateKey: string, passphrase: string}} session
+ * @param {{port: number, host: string, username: string, password: string, privateKey: string, passphrase: string, fingerprintAuth?: boolean}} session
  */
 function addSession(session)
 {
@@ -38,8 +38,11 @@ function addSession(session)
     sessionUserName.innerText = session.username;
     sessionElement.appendChild(sessionUserName);
 
-    sessionElement.addEventListener('click', () =>
+    sessionElement.addEventListener('click', async () =>
     {
+        if (session.hasOwnProperty('fingerprintAuth') && session.fingerprintAuth && window.auth.canRequestFingerprint())
+            await window.auth.requestFingerprint('SSH Connection Authentication');
+
         document.querySelector('.session-container').style.visibility = 'hidden';
         document.getElementById('connection-status').style.visibility = 'visible';
         window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)

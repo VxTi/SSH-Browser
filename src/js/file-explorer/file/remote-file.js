@@ -4,7 +4,7 @@ import { FilePermissions } from './file-permissions.js';
  * Class for representing a file on the server.
  * @class RemoteFile
  */
-export class RemoteFile
+export default class RemoteFile
 {
     /** @type boolean */
     #loaded = false;            // Whether the file info has been loaded

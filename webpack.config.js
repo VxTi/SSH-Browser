@@ -6,11 +6,12 @@ module.exports = {
             './src/js/general-functionality.js',
             './src/js/context-menu.ts',
             './src/js/custom-elements/file-element.js',
-            './src/js/custom-elements/file-hierarchy-element.js',
+            './src/js/custom-elements/file-hierarchy-element.ts',
             './src/js/custom-elements/file-search-result-element.js',
             './src/js/file-explorer/file/file-caching.js',
             './src/js/file-explorer/file/remote-file.js',
             './src/js/file-explorer/file/file-permissions.js',
+            './src/js/file-explorer/file-hierarchy-impl.ts',
             './src/js/file-explorer/handling-file-page.js',
         ],
         "main-page": [
@@ -51,5 +52,5 @@ module.exports = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
     },
-    mode: 'production'
+    mode: 'development'
 }
