@@ -26,7 +26,7 @@ function addSession(session)
     let sessionElement = document.createElement('div');
     sessionElement.classList.add('session-element', 'user-interact');
     sessionContainer.appendChild(sessionElement);
-    sessionElement.dataset.langTitle = 'session.join.tooltip'
+    sessionElement.title = 'Join SSH session'
 
     let sessionHostName = document.createElement('span');
     sessionHostName.classList.add('session-name');

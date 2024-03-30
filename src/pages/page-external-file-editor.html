@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>SSH File Editor</title>
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';"/>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/styling-file-editor.css">
     <link rel="stylesheet" href="../css/styling-code-highlighting.css">
     <script src="../js/packed/file-editor-page-packed.js"></script>
 </head>
 <body>
-    <div class="navigator"></div>
-    <div class="action-container border-bottom">
-        <div class="action action-special action-upload" id="save-file" data-lang="page.file-editor.upload"></div>
-        <div class="action action-refresh" id="action-reload" data-lang-title="page.file-editor.reload.tooltip"></div>
-        <div class="action action-redo" id="action-redo" data-lang-title="page.file-editor.redo.tooltip"></div>
-        <div class="action action-undo" id="action-undo" data-lang-title="page.file-editor.undo.tooltip"></div>
-        <div class="open-file-container flex f-row f-start f-nowrap hide-scrollbar" id="open-file-container"></div>
+<div class="navigator"></div>
+<div class="action-container border-bottom">
+    <div class="action action-special action-upload" id="save-file">Upload</div>
+    <div class="action action-refresh" id="action-reload" title="Redo action(s)"></div>
+    <div class="action action-redo" id="action-redo" title="Redo action(s)"></div>
+    <div class="action action-undo" id="action-undo" title="Undo action(s)"></div>
+    <div class="open-file-container flex f-row f-start f-nowrap hide-scrollbar" id="open-file-container"></div>
+</div>
+<div class="content inner-content-wrapper">
+    <div class="line-numbers-container" id="line-numbers-container"></div>
+    <div class="file-content">
+        <div class="cursor" id="cursor"></div>
+        <div class="code-content" id="file-editor-content"></div>
     </div>
-    <div class="content inner-content-wrapper">
-        <div class="line-numbers-container" id="line-numbers-container"></div>
-        <div class="file-content">
-            <div class="cursor" id="cursor"></div>
-            <div class="code-content" id="file-editor-content"></div>
-        </div>
-    </div>
-    <div class="action-container border-top flex f-row-rev f-d-center">
-        <div class="progress-bar" id="progress-bar" style="display: none;"></div>
-        <div class="content-text" id="cursor-position"></div>
-    </div>
+</div>
+<div class="action-container border-top flex f-row-rev f-d-center">
+    <div class="progress-bar" id="progress-bar" style="display: none;"></div>
+    <div class="content-text" id="cursor-position"></div>
+</div>
 </body>
 </html>

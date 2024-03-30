@@ -134,13 +134,15 @@ app.whenReady().then(() =>
  */
 function loadFile(path)
 {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) =>
+    {
 
-        if (!fs.existsSync(path))
+        if ( !fs.existsSync(path) )
             return reject("File does not exist.");
 
-        fs.readFile(path, 'utf-8', (err, data) => {
-            if (err)
+        fs.readFile(path, 'utf-8', (err, data) =>
+        {
+            if ( err )
                 return reject(err);
             resolve(data);
         });
@@ -178,7 +180,8 @@ ipcMain.on('open-terminal', async (_, directory) =>
     }
 
     // Send all messages that have been received before the window was ready
-    terminalWindow.on('ready-to-show', _ => {
+    terminalWindow.on('ready-to-show', _ =>
+    {
         terminalWindow.dispatchMessages();
         terminalWindow.canReceiveMessages = true;
     });
@@ -278,7 +281,7 @@ ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 /**
  * Event handler for opening a new file editor window.
  */
-ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context)); 
+ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context));
 
 /**
  *
@@ -308,7 +311,8 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
         targetWindow = fileEditorWindows.find(w => w.origin === context.origin).window;
         targetWindow.webContents.send('file-editor-acquire-context', context);
         targetWindow.focus();
-    } else
+    }
+    else
     {
         // Create a new window
         targetWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
@@ -352,7 +356,8 @@ ipcMain.handle('save-local-file', async (_, absolutePath, content) =>
             {
                 log('An error occurred whilst attempting to save file:', err);
                 reject(err);
-            } else resolve();
+            }
+            else resolve();
         })
     });
 })
@@ -370,7 +375,8 @@ ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileNam
             {
                 log('An error occurred whilst attempting to rename file:', err);
                 reject(err);
-            } else resolve();
+            }
+            else resolve();
         })
     });
 })
@@ -387,7 +393,8 @@ ipcMain.handle('open-files', async () =>
             dialog.showOpenDialog({ properties: [ 'openFile', 'multiSelections' ] })
                 .then(result => resolve(result.filePaths))
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -417,7 +424,8 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) =>
             })
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -448,7 +456,8 @@ ipcMain.handle('list-files', async (_, path) =>
                 {
                     reject(err)
                 });
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     });
 });
 
@@ -470,7 +479,8 @@ ipcMain.handle('delete-file', async (_, directory, fileName) =>
                     {
                         reject(err)
                     });
-            } else reject('Not connected');
+            }
+            else reject('Not connected');
         });
     }
 });
@@ -614,7 +624,8 @@ ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[
             })
                 .then(_ => resolve())
                 .catch(e => reject(e))
-        } else resolve('Not connected');
+        }
+        else resolve('Not connected');
     })
 })
 
@@ -632,7 +643,8 @@ ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) =>
             ssh().execCommand(`mv ${path.join(srcPath, fileName)} ${path.join(dstPath, fileName)}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 })
 
@@ -651,7 +663,8 @@ ipcMain.handle('rename-file', async (_, directory, fileName, newName) =>
             ssh().execCommand(`cd ${directory} && mv ${fileName} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 })
 
@@ -677,7 +690,8 @@ ipcMain.handle('starting-directory', async _ =>
                     files: result.stdout.split('\n').slice(1)
                 }))
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -705,7 +719,8 @@ ipcMain.handle('create-directory', async (_, directory, dirName) =>
                     console.log("An error occurred whilst attempting to create directory:", err);
                     reject(err)
                 });
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -729,7 +744,8 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) =>
                     })
                 })
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -754,9 +770,9 @@ ipcMain.handle('get-config', (event, fileName) =>
         throw new Error('Config file does not exist.');
 
     return loadFile(
-            StaticFiles.includes(query) ?
-                path.join(__dirname, 'resources', 'static', FileNames[query]) :
-                path.join(RESOURCES_PATH, FileNames[query]))
+        StaticFiles.includes(query) ?
+            path.join(__dirname, 'resources', 'static', FileNames[query]) :
+            path.join(RESOURCES_PATH, FileNames[query]))
 });
 
 /**
@@ -894,3 +910,4 @@ function fmtPaths(...paths)
 {
     return paths.map(p => p.replaceAll(' ', '\\ '));
 }
+

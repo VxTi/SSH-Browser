@@ -12,37 +12,17 @@
 <body>
     <div class="navigator"></div>
     <div class="content">
-        <!-- Context menu -- When the user right-clicks, these items will pop-up. -->
-        <div class="context-menu" id="context-menu">
-            <div class="ctx-item" id="ctx-edit"      data-lang="contextmenu.edit"></div>
-            <div class="ctx-item" id="ctx-execute"   data-lang="contextmenu.execute"></div>
-            <div class="ctx-item" id="ctx-new-dir"   data-lang="contextmenu.mkdir"></div>
-            <div class="ctx-item" id="ctx-info"      data-lang="contextmenu.info"></div>
-            <div class="ctx-item" id="ctx-rename"    data-lang="contextmenu.rename"></div>
-            <div class="ctx-item" id="ctx-delete"    data-lang="contextmenu.delete"></div>
-            <div class="ctx-item" id="ctx-download"  data-lang="contextmenu.download"></div>
-            <div class="ctx-item" id="ctx-cpy-path"  data-lang="contextmenu.copy-path"></div>
-            <div class="ctx-item" id="ctx-clone"     data-lang="contextmenu.clone"></div>
-            <div class="ctx-item" id="ctx-open-with" data-lang="contextmenu.open-with"></div>
-            <div class="context-menu" id="ctx-open-with-container">
-                <div class="ctx-item" id="ctx-open-with-builtin" data-lang="contextmenu.open-with.builtin"></div>
-                <div class="ctx-item" id="ctx-open-with-vscode">VSCode</div>
-                <div class="ctx-item" id="ctx-open-with-clion">CLion</div>
-                <div class="ctx-item" id="ctx-open-with-webstorm">WebStorm</div>
-                <div class="ctx-item" id="ctx-open-with-sublime">Sublime Text 3</div>
-            </div>
-        </div>
         <!-- File viewer action container -->
         <div class="action-container border-bottom">
 
             <!-- Navigation -->
-            <div class="action nav-btn btn-back" id="navigate-back" data-lang-title="page.files.navigate.previous.tooltip"></div>
-            <div class="action nav-btn btn-forward" id="navigate-forward" data-lang-title="page.files.navigate.next.tooltip"></div>
+            <div class="action nav-btn btn-back" id="navigate-back" title="Navigate backward"></div>
+            <div class="action nav-btn btn-forward" id="navigate-forward" title="Navigate forward"></div>
 
             <!-- File Filtering -->
             <div class="expand">
                 <label for="file-filter">
-                    <input type="text" name="filter" class="text-box-clean" id="file-filter" data-lang-title="page.files.find.tooltip" data-lang-placeholder="page.files.find.placeholder">
+                    <input type="text" name="filter" class="text-box-clean" id="file-filter" title="Search for a file in the provided directory" placeholder="Find a file">
                 </label>
                 <div class="relative-container">
                     <div class="container file-search-results-container" id="file-filter-results-container" hidden>
@@ -54,17 +34,17 @@
             <!-- Action Container -->
             <div class="action action-toggle-visibility icon"></div>
             <div class="action-sub-container flex f-row f-d-center">
-                <div class="action action-terminal" id="action-terminal"    data-lang-title="page.files.terminal.tooltip"></div>
-                <div class="action action-home"     id="action-home"        data-lang-title="page.files.navigate.home"></div>
-                <div class="action action-add-dir"  id="action-add-dir"     data-lang-title="page.files.mkdir.tooltip"></div>
-                <div class="action action-refresh"  id="action-refresh"     data-lang-title="page.files.refresh.tooltip"></div>
-                <div class="action action-delete"   id="action-delete-file" data-lang-title="page.files.delete.tooltip"></div>
-                <div class="action action-add"      id="action-add-file"    data-lang-title="page.files.upload.tooltip"></div>
+                <div class="action action-terminal" id="action-terminal" title="Open a terminal in the current directory"></div>
+                <div class="action action-home"     id="action-home" title="Navigate to the home directory"></div>
+                <div class="action action-add-dir"  id="action-add-dir" title="Create new directory"></div>
+                <div class="action action-refresh"  id="action-refresh" title="Reload remote changes"></div>
+                <div class="action action-delete"   id="action-delete-file" title="Delete selected file(s)"></div>
+                <div class="action action-add"      id="action-add-file" title="Upload file(s)"></div>
             </div>
         </div>
 
         <!-- Inner Container-->
-        <div class="file-section">
+        <div class="inner-content-container">
             <input type="text" id="file-rename" class="file-rename" name="rename-file">
 
             <div class="file-hierarchy-container border-right">
@@ -80,21 +60,21 @@
                 <div class="flex f-column f-nowrap f-m-center f-d-center f-gap-15">
                     <div class="file-info" id="file-info-title"></div>
                     <div class="grid-2-3">
-                        <div class="file-info" data-lang="page.files.info.modified"></div>
+                        <div class="file-info">Date modified</div>
                         <span class="file-info" id="file-info-modified"></span>
-                        <div class="file-info" data-lang="page.files.info.createdby"></div>
-                        <span class="file-info" id="file-info-owner"></span>
-                        <div class="file-info" data-lang="page.files.info.size"></div>
+                        <div class="file-info">Created by</div>
+                        <span class="file-info"></span>
+                        <div class="file-info">Size</div>
                         <span class="file-info" id="file-info-size"></span>
                     </div>
                     <div class="file-info file-accessibility">
-                        <span data-lang="page.files.info.accessibility"></span>
+                        <span>Accessibility</span>
                         <div class="file-info grid-2-3">
-                            <span class="f-access-title" data-lang="page.files.info.permissions.user"></span>
+                            <span class="f-access-title">User</span>
                             <span id="file-info-perm-user"></span>
-                            <span class="f-access-title" data-lang="page.files.info.permissions.group"></span>
+                            <span class="f-access-title">Group</span>
                             <span id="file-info-perm-group"></span>
-                            <span class="f-access-title" data-lang="page.files.info.permissions.others"></span>
+                            <span class="f-access-title">Other</span>
                             <span id="file-info-perm-other"></span>
                         </div>
                     </div>
@@ -104,7 +84,7 @@
 
         <!-- Directory path container  -->
         <div class="path-container">
-            <div class="action home-button" id="log-out" data-lang-title="page.files.logout.tooltip"></div>
+            <div class="action home-button" id="log-out" title="Logout of current session"></div>
             <div class="path-section"></div>
             <div class="process-loading"></div>
             <div class="progress-bars"></div>

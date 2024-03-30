@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () =>
         let navigatorTitle = document.createElement('span');
         navigatorTitle.classList.add('navigator-title');
         navigatorTitle.innerText = 'SSH FTP';
-        document.querySelector('.navigator').appendChild(navigatorTitle);
+        document.querySelector('.navigator')?.appendChild(navigatorTitle);
     }
 
     window.setTitle = function (title)
@@ -44,19 +44,6 @@ document.addEventListener('DOMContentLoaded', async () =>
     {
         window['iconMap'] = await window.config.get('file_icons').then(res => JSON.parse(res));
     }
-
-    // Check if there's language data in local storage
-    // If not, load it from the language file.
-    if ( !localStorage['language-data'] && !forceLoad )
-        localStorage['language-data'] = await window.config.get('languages');
-
-    __languages = JSON.parse(localStorage['language-data']);
-    __languages = __languages[localStorage.language || (localStorage.language = 'english')] || __languages['english'];
-
-    if ( !__languages )
-        throw new Error('No languages found in languages file.');
-
-    loadPageLanguages();
 
     if ( !localStorage['keybinds'] && !forceLoad )
         localStorage['keybinds'] = await window.config.get('keybinds');
@@ -95,31 +82,10 @@ export function findIconMapEntry(identifier)
     return window.iconMap.find(icon => icon.id === identifier || icon.extensions.includes(identifier))
 }
 
-/**
- * Function for loading the languages from the languages.json file
- * and updating them onto the current page.
- */
-function loadPageLanguages()
-{
-    // Go through all elements with 'data-lang', 'data-lang-title', 'data-lang-value', or 'data-lang-placeholder' attribute
-    // and replace their properties with the corresponding language from the languages file
-    document.querySelectorAll('*:is([data-lang], [data-lang-title], [data-lang-value], [data-lang-placeholder])')
-        .forEach(element =>
-        {
-            [ [ 'lang', 'innerText' ], [ 'langTitle', 'title' ], [ 'langValue', 'value' ], [ 'langPlaceholder', 'placeholder' ] ]
-                .forEach(([ data, attribute ]) =>
-                {
-                    // Check if the dataset attribute is present
-                    if ( element.dataset[data] )
-                        element[attribute] = __languages[element.dataset[data]] || element.dataset[data];
-                })
-        })
-}
-
-/* Upon keyup, reset all the key states. This prevents any keys from staying in the 'pressed' state */
+/** Upon keyup, reset all the key states. This prevents any keys from staying in the 'pressed' state */
 window.addEventListener('keyup', _ => __keyStates = {});
 
-/*
+/**
  * Upon keydown, set the key state to true for the pressed key
  */
 window.addEventListener('keydown', (event) =>

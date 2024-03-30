@@ -1,5 +1,8 @@
 import { resourceFromFileExtension } from "../general-functionality";
 
+/**
+ * A custom element that represents a file in the file hierarchy.
+ */
 export class FileHierarchyElement extends HTMLElement {
 
     #mainElement;
@@ -21,6 +24,13 @@ export class FileHierarchyElement extends HTMLElement {
 
     connectedCallback()
     {
+        const shadow = this.attachShadow({mode: 'open'});
+
+        let styles = document.createElement('style');
+        styles.textContent =
+            `
+                .main { display: flex; flex-flow: row nowrap; justify-content: flex-start; align-items: center; color: bbb; }
+            `;
 
         this.#mainElement = document.createElement('div');
         this.#mainElement.classList.add('file-hierarchy-element');
@@ -48,7 +58,7 @@ export class FileHierarchyElement extends HTMLElement {
         this.#mainElement.appendChild(this.#fileIconElement);
         this.#mainElement.appendChild(this.#fileNameElement);
 
-        this.appendChild(this.#mainElement);
+        shadow.appendChild(this.#mainElement);
         this.#initialized = true;
     }
 

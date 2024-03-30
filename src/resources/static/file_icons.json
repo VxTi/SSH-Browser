@@ -53,9 +53,16 @@
     },
     {
         "id": "compressed",
-        "resource": "file_compressed_icon.png",
+        "resource": "ext-compressed.png",
         "extensions": [
             "zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz"
+        ]
+    },
+    {
+        "id": "cpp",
+        "resource": "ext-cpp.png",
+        "extensions": [
+            "cpp"
         ]
     },
     {

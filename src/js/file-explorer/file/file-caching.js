@@ -1,6 +1,6 @@
-import { SSHFile } from "./ssh-file.js";
+import { RemoteFile } from "./remote-file.js";
 
-/** @type {Map<string, SSHFile[]>} */
+/** @type {Map<string, RemoteFile[]>} */
 window.fileCache = new Map();
 window.currentDir = "~";
 window.homeDir = '~';
@@ -26,18 +26,18 @@ export function storeFiles(files, path, forceLoad = false, loadFileInfo = false)
 
         let filesToAdd = files.filter(f => !fileCache.get(path).find(f2 => f2.name === f));
         if (filesToAdd.length > 0)
-            fileCache.get(path).push(...filesToAdd.map(fileName => new SSHFile(fileName, path, loadFileInfo)));
+            fileCache.get(path).push(...filesToAdd.map(fileName => new RemoteFile(fileName, path, loadFileInfo)));
 
     } else {
         // If the path is not loaded in the file map, we'll add the files to the map.
-        fileCache.set(path, files.map(fileName => new SSHFile(fileName, path, loadFileInfo)));
+        fileCache.set(path, files.map(fileName => new RemoteFile(fileName, path, loadFileInfo)));
     }
 }
 
 /**
  * Method for retrieving files from the cache.
  * @param {string} path The path where the files are located at
- * @returns {SSHFile[]} Array containing the names of the files
+ * @returns {RemoteFile[]} Array containing the names of the files
  */
 export function getFiles(path) {
     return fileCache.get(path) || [];
@@ -47,7 +47,7 @@ export function getFiles(path) {
  * Method for retrieving a file from the cache.
  * @param {string} path The path where the file is located at
  * @param {string} name The name of the file
- * @returns {SSHFile} The file object
+ * @returns {RemoteFile} The file object
  */
 export function getFile(path, name) {
     return fileCache.get(path)?.find(f => f.name === name) || null

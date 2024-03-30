@@ -3,14 +3,15 @@ const path = require('path');
 module.exports = {
     entry: {
         "file-explorer-page": [
-            './src/js/general-functionality',
-            './src/js/custom_elements/file-element.js',
-            './src/js/custom_elements/file-hierarchy-element.js',
-            './src/js/custom_elements/file-search-result-element.js',
-            './src/js/file/file-caching.js',
-            './src/js/file/ssh-file.js',
-            './src/js/file/file-permissions.js',
-            './src/js/handling-file-page.js',
+            './src/js/general-functionality.js',
+            './src/js/context-menu.ts',
+            './src/js/custom-elements/file-element.js',
+            './src/js/custom-elements/file-hierarchy-element.js',
+            './src/js/custom-elements/file-search-result-element.js',
+            './src/js/file-explorer/file/file-caching.js',
+            './src/js/file-explorer/file/remote-file.js',
+            './src/js/file-explorer/file/file-permissions.js',
+            './src/js/file-explorer/handling-file-page.js',
         ],
         "main-page": [
             "./src/js/general-functionality.js",
@@ -37,6 +38,18 @@ module.exports = {
     node: {
         __dirname: false,
         __filename: false
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+        ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
     },
     mode: 'production'
 }

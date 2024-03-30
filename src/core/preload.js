@@ -65,6 +65,7 @@ contextBridge.exposeInMainWorld('ssh',  {
      */
     grantPermissions: async (directory, file, permissions) => ipcRenderer.invoke('grant-permissions', directory, file, permissions),
 
+    /** @returns {Promise<string[]>} */
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
     startingDir: async () => ipcRenderer.invoke('starting-directory'),
@@ -153,7 +154,6 @@ contextBridge.exposeInMainWorld('path', {
         return segments;
     }
 })
-
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
     get: (file) => ipcRenderer.invoke('get-config', file),

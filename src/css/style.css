@@ -149,7 +149,7 @@ body {
 .input-box {
     display: inline-block;
     color: var(--text-color);
-    background-color: var(--theme-2);
+    background-color: var(--theme-1);
     border: none;
     width: var(--input-box-width);
     height: var(--input-box-height);

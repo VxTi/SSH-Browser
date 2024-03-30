@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>SSH Browser</title>
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';"/>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/styling-login-ssh.css">
     <script src="../js/packed/login-page-packed.js"></script>
 </head>
 <body>
-    <div class="navigator"></div>
-    <div class="content center-x center-y">
-        <div class="login-container container fade-in">
-            <span class="error-message container" id="error-message"></span>
+<div class="navigator"></div>
+<div class="content center-x center-y">
+    <div class="login-container container fade-in">
+        <span class="error-message container" id="error-message"></span>
 
-            <!-- Login text boxes for connecting with SSH -->
-            <div class="title-container">
-                <div class="action nav-btn btn-back" id="ssh-back-button" data-lang-title="page.login.return-main.tooltip"></div>
-                <h1 class="title-text" data-lang="page.login.title"></h1>
-            </div>
-            <div class="host-input">
-                <input type="url" name="host" class="input-box user-interact" id="ssh-host" data-lang-title="page.login.host.tooltip" data-lang-placeholder="page.login.host.placeholder">
-                <input type="number" name="port" class="input-box user-interact" id="ssh-port" data-default="22" data-lang-title="page.login.port.tooltip" data-lang-placeholder="page.login.port.placeholder">
-            </div>
-            <input type="text" name="username" class="input-box user-interact" id="ssh-username" data-lang-title="page.login.username.tooltip" data-lang-placeholder="page.login.username.placeholder">
-
-            <!-- Container for password and show password button-->
-            <div class="flex f-nowrap f-row f-d-center f-m-center">
-                <input type="password" name="password" class="input-box user-interact" id="ssh-password" data-lang-title="page.login.password.tooltip" data-lang-placeholder="page.login.password.placeholder">
-                <input type="button" name="show-password" class="show-password password-invisible" id="ssh-show-password" data-lang-title="page.login.password.visibility">
-            </div>
-
-            <div class="flex f-nowrap f-row f-d-center f-m-center">
-                <input type="text" name="private-key" class="input-box user-interact" id="ssh-private-key" data-lang-title="page.login.privatekey.tooltip" data-lang-placeholder="page.login.privatekey.placeholder">
-                <div class="select-private-key" data-lang-title="page.login.select-privatekey.tooltip"></div>
-            </div>
-            <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase" data-lang-title="page.login.passphrase.tooltip" data-lang-placeholder="page.login.passphrase.placeholder">
-            <input type="button" class="page-button user-interact" id="ssh-login" data-lang="page.login.connect" data-lang-value="page.login.connect">
+        <!-- Login text boxes for connecting with SSH -->
+        <div class="title-container">
+            <div class="action nav-btn btn-back" id="ssh-back-button" title="Return to main page"></div>
+            <h1 class="title-text">Login to SSH</h1>
         </div>
-        <div class="loading-container" id="connection-status">
-            <div class="loading-text">Joining session...</div>
-            <div class="loading"></div>
+        <div class="host-input">
+            <input type="url" name="host" class="input-box user-interact" id="ssh-host"
+                   title="The host or IP address of the server" placeholder="Host">
+            <input type="number" name="port" class="input-box user-interact" id="ssh-port" data-default="22"
+                   title="The port of the server. Default is 22" placeholder="Port">
         </div>
+        <input type="text" name="username" class="input-box user-interact" id="ssh-username"
+               title="The username for the server" placeholder="Username">
+
+        <!-- Container for password and show password button-->
+        <div class="flex f-nowrap f-row f-d-center f-m-center">
+            <input type="password" name="password" class="input-box user-interact" id="ssh-password"
+                   title="The password for the server" placeholder="Password">
+            <input type="button" name="show-password" class="show-password" id="ssh-show-password"
+                   title="Show or hide password visibility">
+        </div>
+
+        <div class="flex f-nowrap f-row f-d-center f-m-center">
+            <input type="text" name="private-key" class="input-box user-interact" id="ssh-private-key"
+                   title="The private key for the server" placeholder="Private Key">
+            <div class="select-private-key" title="Select a private key file" id="ssh-select-private-key"></div>
+        </div>
+        <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase"
+               title="The passphrase for the private key" placeholder="Passphrase">
+        <input type="button" class="page-button user-interact" id="ssh-login" value="Connect">
     </div>
+    <div class="loading-container" id="connection-status">
+        <div class="loading-text">Joining session...</div>
+        <div class="loading"></div>
+    </div>
+</div>
 </body>
 </html>
