@@ -28,11 +28,18 @@ export class FileHierarchyElement extends HTMLElement {
         this.#mainElement.setAttribute('type', this.getAttribute('type'));
         this.#mainElement.setAttribute('nesting-level', this.getAttribute('nesting-level'));
         this.#mainElement.setAttribute('path', this.getAttribute('path'));
-        this.#mainElement.style.paddingLeft = `${parseInt(this.getAttribute('nesting-level')) * 10}px`;
 
         this.#fileIconElement = document.createElement('span');
         this.#fileIconElement.classList.add('file-hierarchy-element__icon', 'icon');
         this.#fileIconElement.style.backgroundImage = `url(${resourceFromFileExtension(this.getAttribute('type'))})`;
+
+        for (let i = 0; i < parseInt(this.getAttribute('nesting-level')) || 0; i++)
+        {
+            let nestingElement = document.createElement('span');
+            nestingElement.classList.add('file-hierarchy-element__nesting');
+            nestingElement.setAttribute('nesting-level', i);
+            this.#mainElement.appendChild(nestingElement);
+        }
 
         this.#fileNameElement = document.createElement('span');
         this.#fileNameElement.classList.add('file-hierarchy-element__name');

@@ -5,6 +5,8 @@
     --file-element-size: 50px;
     --file-hierarchy-width: 250px;
 
+    --nesting-size: 10px;
+
     --file-information-width: 280px;
     --file-container-height: calc(100vh - var(--file-navigator-height) * 2 - var(--navigator-height));
 }
@@ -131,15 +133,16 @@
     background-color: var(--file-selected-color);
 }
 
+.file-hierarchy-element:hover {
+    background-color: var(--theme-3);
+    cursor: pointer;
+}
+
+/** File Hierarchy Element -> Inner Elements */
 .file-hierarchy-element__name {
     margin-left: 10px;
     flex: 1;
     margin-right: 10px;
-}
-
-.file-hierarchy-element:hover {
-    background-color: var(--theme-3);
-    cursor: pointer;
 }
 
 .file-hierarchy-element__icon {
@@ -147,6 +150,12 @@
     display: block;
     width: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
     height: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
+}
+
+.file-hierarchy-element__nesting {
+    width: var(--nesting-size);
+    height: 100%;
+    display: block;
 }
 
 
