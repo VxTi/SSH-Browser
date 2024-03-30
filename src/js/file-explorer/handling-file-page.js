@@ -381,8 +381,6 @@ function loadFileElements(path = currentDir, clearOld = true)
         document.querySelectorAll('file-element:not(.path-separator)')
             .forEach(e => e.remove());
 
-    console.
-
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
 }

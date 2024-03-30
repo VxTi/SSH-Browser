@@ -1,101 +1,130 @@
 
 :root {
     --login-container-width: 50vw;
+
+    --input-box-margin: 4px 0;
+    --input-box-padding: 0 10px;
+    --input-box-font-size: 0.8rem;
+    --input-box-min-width: 300px;
+    --input-box-height: 55px;
 }
 
 .login-container {
     width: 50vw;
     height: auto;
+    min-width: calc(var(--input-box-min-width) + 2 * var(--input-box-height));
+    background-color: var(--theme-2);
+    border-radius: var(--default-rounding);
+    padding: 0 20px 20px 20px;
+}
+
+.login-container, .content {
     display: flex;
-    min-width: calc(var(--input-box-width) + 20px);
     flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
-    background-color: var(--theme-2);
-    border-radius: var(--default-rounding);
-    padding-bottom: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
 }
 
 .login-container.loading { visibility: hidden; }
 
 /** Button for toggling password visibility (without image) **/
 .show-password {
-    width: var(--input-box-height);
-    height: var(--input-box-height);
-    transform: translateX(calc(var(--input-box-width) / 2 - var(--input-box-height) / 2));
     border: none;
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    background-size: 75%;
-    background-position: center;
-    background-repeat: no-repeat;
-    z-index: 999;
     transition: background-image 0.2s ease-in-out;
     background-image: url('../resources/eye_opened.svg');
 }
 
 .show-password[shown="false"] { background-image: url('../resources/eye_closed.svg'); }
 
-.select-private-key {
-    width: var(--input-box-height);
-    height: var(--input-box-height);
-    transform: translateX(calc(var(--input-box-width) / 2 - var(--input-box-height) / 2));
-    border: none;
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    z-index: 999;
-    background-size: 75%;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('../resources/three_dots_icon.png');
-}
-
-.password-input .input-box {
-    width: calc(var(--input-box-width));
-}
 
 /** Image for button for password visibility, hide password (image) **/
 .password-invisible { background-image: url('../resources/eye_closed.svg'); }
-
-
-/** Container for text input and toggle password button **/
-.password-input {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-    align-items: center;
-}
-
-
-/** Make the port input box rectangular **/
-.host-input > #ssh-port {
-    height: var(--input-box-height);
-    width: var(--input-box-height);
-    margin-left: 0;
-}
+.select-private-key { background-image: url('../resources/three_dots_icon.png'); }
 
 /** Remove the arrows on the port input box **/
-.host-input > #ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
+.ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
     border-left: none;
 }
 
-.host-input > #ssh-host {
-    width: calc(var(--input-box-width) - var(--input-box-height) - 21px);
-    margin-right: 0;
-    border-right: none;
-}
-
-.host-input {
-    display: flex;
-    flex-flow: row nowrap;
-}
-
 .title-text {
     width: calc(var(--login-container-width) - 2 * (var(--back-button-size) + var(--back-button-margin) + var(--back-button-padding)));
+}
+
+/** Input Box Styles **/
+.input-box {
+    width: var(--input-box-min-width);
+    height: var(--input-box-height);
+    background-color: var(--theme-1);
+    border: 1px solid var(--border-2);
+    box-sizing: border-box;
+    margin: var(--input-box-margin);
+    padding: var(--input-box-padding);
+    font-size: var(--input-box-font-size);
+    color: var(--text-color);
+    outline: none;
+}
+
+.input-box:focus {
+    outline: none;
+    background-color: var(--theme-2);
+}
+
+.input-box::placeholder {
+    color: var(--text-color-2);
+}
+
+/** Password Container */
+
+.input-button-container {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    width: var(--input-box-min-width);
+    height: var(--input-box-height);
+    margin: var(--input-box-margin);
+}
+
+/** Textbox for within input container */
+.nested-input {
+    width: calc(var(--input-box-min-width) - var(--input-box-height));
+    height: var(--input-box-height);
+}
+/** Button or input field for within input container */
+.nested-button {
+    display: block;
+    width: calc(var(--input-box-height));
+    height: calc(var(--input-box-height));
+    cursor: pointer;
+    background-size: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--theme-1);
+    border: 1px solid var(--border-2);
+    border-left: none;
+    box-sizing: border-box;
+}
+
+/** Login button **/
+.page-button {
+    width: var(--input-box-min-width);
+    height: calc(0.8 * var(--input-box-height));
+    color: var(--text-color-2);
+    margin: var(--input-box-margin);
+    background-color: var(--theme-2);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.page-button:hover {
+    background-color: var(--theme-1);
+}
+
+@media screen and (max-width: 600px), screen and (max-device-width: 600px) {
+    :root {
+        --login-container-width: 80vw;
+        --input-box-min-width: 70vw;
+    }
 }

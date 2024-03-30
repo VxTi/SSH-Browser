@@ -52,5 +52,5 @@ module.exports = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
     },
-    mode: 'development'
+    mode: 'production'
 }

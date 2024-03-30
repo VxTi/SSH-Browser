@@ -31,13 +31,27 @@ function addSession(session)
     let sessionHostName = document.createElement('span');
     sessionHostName.classList.add('session-name');
     sessionHostName.innerText = session.host;
-    sessionElement.appendChild(sessionHostName);
 
     let sessionUserName = document.createElement('span');
     sessionUserName.classList.add('session-name');
     sessionUserName.innerText = session.username;
-    sessionElement.appendChild(sessionUserName);
 
+    let leftSpacing = document.createElement('span');
+    leftSpacing.classList.add('inner-icon');
+
+    let rightSpacing = document.createElement('span');
+    rightSpacing.classList.add('inner-icon');
+
+    if (session.hasOwnProperty('fingerprintAuth') && session.fingerprintAuth)
+    {
+        rightSpacing.classList.add('fingerprint-icon');
+        rightSpacing.title = 'Fingerprint Authentication';
+    }
+
+    sessionElement.appendChild(leftSpacing);
+    sessionElement.appendChild(sessionHostName);
+    sessionElement.appendChild(sessionUserName);
+    sessionElement.appendChild(rightSpacing);
     sessionElement.addEventListener('click', async () =>
     {
         if (session.hasOwnProperty('fingerprintAuth') && session.fingerprintAuth && window.auth.canRequestFingerprint())

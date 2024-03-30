@@ -1,25 +1,31 @@
 
 :root {
-    --session-width: 120px;
+    --session-width: calc(100% - 30px);
     --session-height: 50px;
-    --session-margin: 15px 5px;
+    --session-margin: 5px 5px;
     --session-rounding: 10px;
     --session-padding: 0 10px;
 }
 
-.session-container {
+.session-container, .session-content, .session-element {
     display: flex;
+}
+
+.session-content, .session-element {
+    justify-content: center;
+    align-items: center;
+}
+
+.session-container {
     flex-flow: column wrap;
-    width: 50vw;
-    max-width: 75vw;
+    width: 80vw;
+    max-width: 800px;
     min-width: 200px;
+    max-height: 80vh;
 }
 
 .session-content {
-    display: flex;
     flex-flow: row wrap;
-    justify-content: center;
-    align-content: center;
     padding: 10px;
 
 }
@@ -31,13 +37,26 @@
     background-color: var(--theme-1);
     margin: var(--session-margin);
     padding: var(--session-padding);
-    display: flex;
     flex-flow: column wrap;
-    justify-content: center;
-    align-items: center;
     cursor: pointer;
     user-select: none;
+    box-sizing: border-box;;
 }
+
+.inner-icon {
+    width: var(--session-height);
+    height: var(--session-height);
+    background-size: calc(var(--session-height) - 10px);
+    background-position: center;
+    background-repeat: no-repeat;
+    flex: 0.1;
+}
+
+.session-title, .session-name {
+    flex: 0.4;
+}
+
+.fingerprint-icon { background-image: url("../resources/fingerprint.png"); }
 
 .session-element:hover {
     border-color: var(--text-color-2);
@@ -57,12 +76,6 @@
     text-align: center;
 }
 
-.add-session {
-    background-image: url("../resources/add_icon.png");
-    background-size: 25%;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 .delete-button {
     --delete-pos-x: 0;
     --delete-pos-y: 0;
@@ -80,4 +93,32 @@
     font-family: var(--font);
     text-align: center;
     z-index: 99;
+}
+
+.content {
+    box-sizing: border-box;
+}
+
+.session-element {
+    width: var(--session-width);
+    height: 40px;
+    flex-flow: row nowrap;
+    justify-content: space-evenly;
+}
+
+.fingerprint-icon {
+    width: var(--session-height);
+    height: var(--session-height);
+    background-size: calc(var(--session-height) - 10px);
+}
+.add-session {
+    background-image: url("../resources/add_icon.png");
+}
+
+@media screen and (max-width: 650px), screen and (max-device-width: 650px) {
+    .session-container {
+        width: 90vw;
+        min-width: calc(100% - 40px);
+        max-height: calc(100% - 40px);
+    }
 }

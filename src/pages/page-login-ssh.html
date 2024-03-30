@@ -10,7 +10,7 @@
 </head>
 <body>
 <div class="navigator"></div>
-<div class="content center-x center-y">
+<div class="content">
     <div class="login-container container fade-in">
         <span class="error-message container" id="error-message"></span>
 
@@ -19,31 +19,39 @@
             <div class="action nav-btn btn-back" id="ssh-back-button" title="Return to main page"></div>
             <h1 class="title-text">Login to SSH</h1>
         </div>
-        <div class="host-input">
-            <input type="url" name="host" class="input-box user-interact" id="ssh-host"
+
+        <!-- Host and port -->
+        <div class="input-button-container">
+            <input type="url" name="host" class="input-box user-interact nested-input" id="ssh-host"
                    title="The host or IP address of the server" placeholder="Host">
-            <input type="number" name="port" class="input-box user-interact" id="ssh-port" data-default="22"
+            <input type="number" name="port" class="input-box user-interact nested-button ssh-port nested-button" id="ssh-port" data-default="22"
                    title="The port of the server. Default is 22" placeholder="Port">
         </div>
+        <!-- Username -->
         <input type="text" name="username" class="input-box user-interact" id="ssh-username"
                title="The username for the server" placeholder="Username">
 
         <!-- Container for password and show password button-->
-        <div class="flex f-nowrap f-row f-d-center f-m-center">
-            <input type="password" name="password" class="input-box user-interact" id="ssh-password"
+        <div class="input-button-container">
+            <input type="password" name="password" class="input-box user-interact nested-input" id="ssh-password"
                    title="The password for the server" placeholder="Password">
-            <input type="button" name="show-password" class="show-password" id="ssh-show-password"
+            <input type="button" name="show-password" class="show-password nested-button" id="ssh-show-password"
                    title="Show or hide password visibility">
         </div>
 
-        <div class="flex f-nowrap f-row f-d-center f-m-center">
-            <input type="text" name="private-key" class="input-box user-interact" id="ssh-private-key"
+        <!-- Container for private key and select private key button-->
+        <div class="input-button-container">
+            <input type="text" name="private-key" class="input-box user-interact nested-input" id="ssh-private-key"
                    title="The private key for the server" placeholder="Private Key">
-            <div class="select-private-key" title="Select a private key file" id="ssh-select-private-key"></div>
+            <div class="select-private-key nested-button" title="Select a private key file" id="ssh-select-private-key"></div>
         </div>
+
+        <!-- Passphrase -->
         <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase"
                title="The passphrase for the private key" placeholder="Passphrase">
-        <input type="button" class="page-button user-interact" id="ssh-login" value="Connect">
+        <div class="relative-container" id="touch-id-option"></div>
+        <!-- Connect button -->
+        <input type="button" class="page-button user-interact" id="ssh-login" title="Connect to SSH session" value="Connect">
     </div>
     <div class="loading-container" id="connection-status">
         <div class="loading-text">Joining session...</div>

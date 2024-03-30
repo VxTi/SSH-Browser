@@ -42,8 +42,6 @@
 
     --navigator-height: 35px;
 
-    --input-box-width: 300px;
-    --input-box-height: 30px;
     --navigator-padding: 10px;
     --font: 'San Francisco', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
@@ -146,43 +144,6 @@ body {
     align-items: center;
 }
 
-.input-box {
-    display: inline-block;
-    color: var(--text-color);
-    background-color: var(--theme-1);
-    border: none;
-    width: var(--input-box-width);
-    height: var(--input-box-height);
-    border-radius: 5px;
-    margin: 5px 0;
-    padding: var(--navigator-padding);
-}
-
-.input-box:focus {
-    outline: none;
-    background-color: var(--theme-2);
-}
-
-/** Styles for text-boxes when they're not empty **/
-.input-box::placeholder {
-    color: var(--text-color-2);
-}
-
-/** Login button **/
-.page-button {
-    width: calc(var(--input-box-width) + 2 * var(--navigator-padding));
-    height: var(--input-box-height);
-    color: var(--text-color-2);
-    margin: 5px 0 15px;
-    background-color: var(--theme-2);
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.page-button:hover {
-    background-color: var(--theme-5);
-}
-
 .error-message {
     position: relative;
     text-align: center;
@@ -192,7 +153,7 @@ body {
     margin: 10px 0;
     padding: 10px 0;
     border-radius: var(--default-rounding);
-    min-width: calc(var(--input-box-width) + 20px);
+    min-width: calc(var(--input-box-min-width) + 20px);
     color: #900;
     text-shadow: #000 1px 1px;
     font-family: var(--font);
@@ -273,6 +234,7 @@ body {
 
 .relative-container {
     position: relative;
+    left: 0; top: 0;
 }
 
 .fill-content {
