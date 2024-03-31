@@ -6,6 +6,26 @@ document.addEventListener('DOMContentLoaded', async () =>
     deleteButton = document.querySelector('.delete-button');
     document.onclick = () => deleteButton.style.visibility = 'hidden';
 
+    let searchElements = document.getElementById('search-sessions');
+    let targetContainer = document.getElementById('sessions-inner-container');
+
+    // Add search input functionality
+    searchElements.addEventListener('input', event => {
+        let searchValue = event.target.value.toLowerCase();
+        let sessionElements = targetContainer.querySelectorAll('.session-element');
+
+        // Check if any of the text contents contains the input text
+        sessionElements.forEach(element => {
+
+            if ([...element.querySelectorAll('.session-name')]
+                .some(name => name.innerText.toLowerCase().includes(searchValue))) {
+                element.removeAttribute('hidden');
+            } else {
+                element.setAttribute('hidden', '');
+            }
+        });
+    });
+
     window.ssh.sessions.get()
         .then(results =>
         {

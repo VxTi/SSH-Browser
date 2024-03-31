@@ -11,7 +11,7 @@
     display: flex;
 }
 
-.session-content, .session-element, .content, .spacing {
+.session-element, .content, .spacing {
     justify-content: center;
     align-items: center;
 }
@@ -29,16 +29,19 @@
 }
 
 .session-content {
-    flex-flow: row wrap;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: center;
     padding: 10px;
     max-height: 70vh;
+    height: 690px;
     overflow: auto;
 }
 
 .sessions-inner-container {
     display: flex;
     flex-flow: row wrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
 }
@@ -109,6 +112,7 @@
 
 .search-bar:focus {
     background-color: var(--theme-2);
+    border-color: var(--text-color-2);
 }
 
 .session-title {
@@ -158,6 +162,18 @@
     width: var(--session-width);
     flex-flow: row nowrap;
     justify-content: space-evenly;
+    transition: opacity 0.2s ease-in-out, height 0.3s ease-in-out;
+}
+.session-element[hidden] > * {
+    opacity: 0;
+}
+.session-element[hidden] {
+    color: transparent;
+    height: 0;
+    opacity: 0;
+    min-height: 0;
+    margin: 0;
+    border: none;
 }
 
 .fingerprint-icon {
