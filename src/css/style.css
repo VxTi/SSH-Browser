@@ -135,6 +135,7 @@ body {
     font-size: 2em;
     font-family: var(--font);
     text-align: center;
+    margin-top: 5px;
 }
 
 .title-container {
@@ -142,6 +143,7 @@ body {
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
+    padding-bottom: 10px;
 }
 
 .error-message {

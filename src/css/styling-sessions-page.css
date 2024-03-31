@@ -1,27 +1,27 @@
 
 :root {
     --session-width: calc(100% - 30px);
-    --session-height: 50px;
+    --session-height: 40px;
     --session-margin: 5px 5px;
     --session-rounding: 10px;
     --session-padding: 0 10px;
 }
 
-.session-container, .session-content, .session-element, .content {
+.session-container, .session-content, .session-element, .content, .spacing {
     display: flex;
 }
 
-.session-content, .session-element, .content {
+.session-content, .session-element, .content, .spacing {
     justify-content: center;
     align-items: center;
 }
 
-.content {
+.content, .spacing {
     flex-flow: column nowrap;
 }
 
 .session-container {
-    flex-flow: column wrap;
+    flex-flow: column nowrap;
     width: 80vw;
     max-width: 800px;
     min-width: 200px;
@@ -31,12 +31,21 @@
 .session-content {
     flex-flow: row wrap;
     padding: 10px;
+    max-height: 70vh;
+    overflow: auto;
+}
 
+.sessions-inner-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .session-element {
     min-width: var(--session-width);
-    height: var(--session-height);
+    min-height: var(--session-height);
     border-radius: 3px;
     background-color: var(--theme-1);
     margin: var(--session-margin);
@@ -73,11 +82,49 @@
     width: auto;
     font-size: 1rem;
 }
+
+.title-container {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    box-sizing: border-box;
+    padding-top: 10px;
+}
+
+.spacing {
+    flex: 0.33;
+}
+
+.search-bar {
+    width: 100%;
+    height: 30px;
+    background-color: var(--theme-1);
+    color: var(--text-color);
+    font-family: var(--font);
+    font-size: 1rem;
+    box-sizing: border-box;
+    border: 1px solid var(--border-2);
+    outline: none;
+}
+
+.search-bar:focus {
+    background-color: var(--theme-2);
+}
+
 .session-title {
     color: var(--text-color);
     font-family: var(--font);
     font-size: 1.3rem;
     text-align: center;
+}
+
+.title-container {
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    padding-bottom: 10px;
+    padding-top: 10px;
 }
 
 .delete-button {
@@ -109,7 +156,6 @@
 
 .session-element {
     width: var(--session-width);
-    height: 40px;
     flex-flow: row nowrap;
     justify-content: space-evenly;
 }
@@ -120,6 +166,7 @@
     background-size: calc(var(--session-height) - 10px);
 }
 .add-session {
+    display: flex;
     background-image: url("../resources/add_icon.png");
 }
 

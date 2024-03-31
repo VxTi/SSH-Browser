@@ -25,11 +25,10 @@ document.addEventListener('DOMContentLoaded', async () =>
  */
 function addSession(session)
 {
-    let sessionContainer = document.querySelector('.session-content');
+    let sessionContainer = document.getElementById('sessions-inner-container');
 
     let sessionElement = document.createElement('div');
     sessionElement.classList.add('session-element', 'user-interact');
-    sessionContainer.appendChild(sessionElement);
     sessionElement.title = 'Join SSH session'
 
     let sessionHostName = document.createElement('span');
@@ -90,4 +89,6 @@ function addSession(session)
             await window.ssh.sessions.delete(session.host, session.username);
         }
     })
+    sessionContainer.appendChild(sessionElement);
+
 }
