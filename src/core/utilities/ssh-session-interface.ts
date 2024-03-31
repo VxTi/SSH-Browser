@@ -9,4 +9,5 @@ export default interface ISSHSession {
     port?: number;
     privateKey?: string;
     passphrase?: string;
+    requiresFingerprintAuth?: boolean;
 }

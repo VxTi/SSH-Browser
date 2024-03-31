@@ -28,14 +28,9 @@ hljs.addPlugin({
  */
 contextBridge.exposeInMainWorld('ssh',  {
     connected: async () => ipcRenderer.invoke('connection-status'),
-    /** @param {string} host
-     *  @param {string} username
-     *  @param {string} password
-     *  @param {number} port
-     *  @param {string} privateKey
-     *  @param {string} passphrase */
-    connect: async (host, username, password, port = 22, privateKey = null, passphrase = null) => {
-        return ipcRenderer.invoke('connect', host, username, password, port, privateKey, passphrase)
+    /** @param {ISSHSession} configuration The configuration to provide */
+    connect: async (configuration) => {
+        return ipcRenderer.invoke('connect', configuration)
     },
     /** @param {string} remoteDirectory
      *  @param {string[]} localFilePaths */
@@ -92,6 +87,7 @@ contextBridge.exposeInMainWorld('ssh',  {
     getFileInfo: async (directory, file) => ipcRenderer.invoke('get-file-info', directory, file),
 
     sessions: {
+        /** @returns {Promise<ISSHSession[]>} */
         get: async () => ipcRenderer.invoke('retrieve-sessions'),
         currentSession: () => ipcRenderer.sendSync('current-session'),
         delete: async (host, username) => ipcRenderer.invoke('delete-session', host, username)

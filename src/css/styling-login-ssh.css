@@ -48,6 +48,8 @@
     border-left: none;
 }
 
+.ssh-port { text-align: center; }
+
 .title-text {
     width: calc(var(--login-container-width) - 2 * (var(--back-button-size) + var(--back-button-margin) + var(--back-button-padding)));
 }
@@ -80,11 +82,12 @@
 .input-button-container {
     display: flex;
     flex-flow: row nowrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     width: var(--input-box-min-width);
     height: var(--input-box-height);
     margin: var(--input-box-margin);
+    box-sizing: border-box;
 }
 
 /** Textbox for within input container */
@@ -110,17 +113,63 @@
 /** Login button **/
 .page-button {
     width: var(--input-box-min-width);
-    height: calc(0.8 * var(--input-box-height));
     color: var(--text-color-2);
     margin: var(--input-box-margin);
     background-color: var(--theme-2);
     cursor: pointer;
     box-sizing: border-box;
 }
-
 .page-button:hover {
     background-color: var(--theme-1);
 }
+/** Reduced height (login button, fingerprint auth */
+.reduced-height {
+    height: calc(0.8 * var(--input-box-height));
+}
+
+.fingerprint-auth {
+    display: block;
+    width: 100%;
+    height: 100%;
+    mask-image: url('../resources/fingerprint.svg');
+    height: calc(0.8 * var(--input-box-height));
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: cover;
+    z-index: 10;
+}
+
+.fingerprint-bg[active] {
+    display: block;
+}
+
+.fingerprint-bg {
+    display: none;
+    background: linear-gradient(180deg, rgb(0,168,33), white);
+    background-size: 100% 300%;
+    background-position: 0% 100%;
+}
+
+.fingerprint-bg[enabled="true"] {
+    animation: fingerprintEnabled 0.3s 1;
+    animation-fill-mode: forwards;
+}
+
+.fingerprint-auth[enabled="false"] {
+    animation: fingerprintDisabled 0.3s 1;
+    animation-fill-mode: backwards;
+}
+
+
+@keyframes fingerprintEnabled {
+    0% {
+        background-position: 0% 100%;
+    }
+    100% {
+        background-position: 0% 0%;
+    }
+}
+
 
 @media screen and (max-width: 600px), screen and (max-device-width: 600px) {
     :root {

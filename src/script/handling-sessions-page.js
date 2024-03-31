@@ -1,6 +1,7 @@
 let deleteButton;
 
-document.addEventListener('DOMContentLoaded', () =>
+console.time('Index Page Load Time');
+document.addEventListener('DOMContentLoaded', async () =>
 {
     deleteButton = document.querySelector('.delete-button');
     document.onclick = () => deleteButton.style.visibility = 'hidden';
@@ -8,7 +9,10 @@ document.addEventListener('DOMContentLoaded', () =>
     window.ssh.sessions.get()
         .then(results =>
         {
+            document.querySelectorAll('.session-loading')
+                .forEach(element => element.remove());
             results.forEach(session => addSession(session));
+            console.timeEnd('Index Page Load Time');
             document.getElementById('add-sessions')
                 .addEventListener('click', () => window.location.href = './pages/page-login-ssh.html');
         })
@@ -17,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () =>
 
 /**
  * Method for adding a session to the list of sessions.
- * @param {{port: number, host: string, username: string, password: string, privateKey: string, passphrase: string, fingerprintAuth?: boolean}} session
+ * @param {ISSHSession} session
  */
 function addSession(session)
 {
@@ -42,7 +46,7 @@ function addSession(session)
     let rightSpacing = document.createElement('span');
     rightSpacing.classList.add('inner-icon');
 
-    if (session.hasOwnProperty('fingerprintAuth') && session.fingerprintAuth)
+    if (session.requiresFingerprintAuth)
     {
         rightSpacing.classList.add('fingerprint-icon');
         rightSpacing.title = 'Fingerprint Authentication';
@@ -54,12 +58,19 @@ function addSession(session)
     sessionElement.appendChild(rightSpacing);
     sessionElement.addEventListener('click', async () =>
     {
-        if (session.hasOwnProperty('fingerprintAuth') && session.fingerprintAuth && window.auth.canRequestFingerprint())
+        if (session.requiresFingerprintAuth && window.auth.canRequestFingerprint())
             await window.auth.requestFingerprint('SSH Connection Authentication');
 
         document.querySelector('.session-container').style.visibility = 'hidden';
         document.getElementById('connection-status').style.visibility = 'visible';
-        window.ssh.connect(session.host, session.username, session.password, session.port, session.privateKey, session.passphrase)
+        window.ssh.connect({
+            host: session.host,
+            username: session.username,
+            password: session.password,
+            port: session.port,
+            privateKey: session.privateKey,
+            passphrase: session.passphrase
+        })
             .then(_ => window.location.href = './pages/page-file-explorer.html')
             .catch(_ =>
             {

@@ -11,7 +11,19 @@ document.addEventListener('DOMContentLoaded', _ =>
         let passwordInput = document.getElementById('ssh-password');
         passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
         showPasswordElement.setAttribute('shown', passwordInput.type === 'text' ? 'true' : 'false');
-    })
+    });
+
+    let fingerprintEnabled = false;
+
+    if (window.auth.canRequestFingerprint())
+    {
+        let targetElement = document.getElementById('ssh-fingerprint-auth');
+        targetElement.setAttribute('active', '');
+        targetElement.addEventListener('click', event => {
+            fingerprintEnabled = !fingerprintEnabled;
+            targetElement.setAttribute('enabled',  fingerprintEnabled ? 'true' : 'false');
+        });
+    }
 
     // Add the back button functionality
     document.getElementById('ssh-back-button')
@@ -20,13 +32,9 @@ document.addEventListener('DOMContentLoaded', _ =>
     // Add the login functionality
     document.getElementById('ssh-login').addEventListener('click', () =>
     {
-        console.log(host.value, username.value, password.value);
-        console.log(host.value.length, username.value.length, password.value.length)
-
         // Check if there's actually input in the fields
         if ( host.value.length === 0 || username.value.length === 0 )
         {
-            console.log(host, username)
             let errorContainer = document.querySelector('.error-message');
             errorContainer.style.visibility = 'visible';
             errorContainer.textContent = 'Please enter a valid host and username.';
@@ -39,7 +47,15 @@ document.addEventListener('DOMContentLoaded', _ =>
             .style.visibility = 'visible';
 
         // Send a request to log in with the retrieved input.
-        window.ssh.connect(host.value, username.value, password.value, parseInt(port.value), privateKey.value, passphrase.value)
+        window.ssh.connect({
+            host: host.value,
+            username: username.value,
+            password: password.value,
+            port: parseInt(port.value),
+            privateKey: privateKey.value,
+            passphrase: passphrase.value,
+            requiresFingerprintAuth: fingerprintEnabled
+        })
             .then(_ => window.location.href = './page-file-explorer.html')     // Redirect to the file viewer page.
             .catch(err =>
             {

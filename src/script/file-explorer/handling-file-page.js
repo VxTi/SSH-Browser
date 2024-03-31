@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     busy(window.ssh.startingDir()
         .then(res =>
         {
-            /** Current dir is defined in file-caching.js **/
+            /** Current dir is defined in file-caching **/
             window.currentDir = res.path;
             window.homeDir = res.path;
             document.querySelector('.inner-content-container').dataset.path = res.path;

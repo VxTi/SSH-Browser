@@ -225,10 +225,14 @@ body {
 
 @keyframes fadeIn {
     0% {
-        opacity: 0;
+        opacity: 0.5;
+        scale: 0.98;
+        transform: translateY(5px);
     }
     100% {
         opacity: 1;
+        scale: 1;
+        transform: translateY(0);
     }
 }
 
@@ -433,7 +437,7 @@ body {
     position: absolute;
     display: block;
     border-radius: 50px;
-    box-shadow: 0 0 0 3px inset #fff;
+    box-shadow: 0 0 0 1.5px inset #fff;
     animation: l3 1s infinite alternate;
 }
 @keyframes l3 {

@@ -10,5 +10,5 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },
-    "exclude": ["webpack.config.js"]
+    "exclude": ["webpack.config.js", "release-builds"]
 }
