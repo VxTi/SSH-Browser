@@ -162,12 +162,10 @@
     width: var(--session-width);
     flex-flow: row nowrap;
     justify-content: space-evenly;
-    transition: opacity 0.2s ease-in-out, height 0.3s ease-in-out;
+    transition: all 0.4s ease-in-out;
 }
-.session-element[hidden] > * {
-    opacity: 0;
-}
-.session-element[hidden] {
+
+.session-element[invisible] {
     color: transparent;
     height: 0;
     opacity: 0;

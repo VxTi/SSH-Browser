@@ -1,3 +1,10 @@
+
+/**
+ * Whether fingerprint authentication should be enabled,
+ * if the device supports it.
+ */
+const FINGERPRINT_AUTHENTICATION = true;
+
 document.addEventListener('DOMContentLoaded', _ =>
 {
     // Get the input fields
@@ -13,7 +20,7 @@ document.addEventListener('DOMContentLoaded', _ =>
         showPasswordElement.setAttribute('shown', passwordInput.type === 'text' ? 'true' : 'false');
     });
 
-    let fingerprintEnabled = false;
+    let fingerprintEnabled = FINGERPRINT_AUTHENTICATION;
 
     if (window.auth.canRequestFingerprint())
     {

@@ -7,7 +7,7 @@ module.exports = {
             './src/script/context-menu.ts',
             './src/script/custom-elements/file-element.js',
             './src/script/custom-elements/file-hierarchy-element.ts',
-            './src/script/custom-elements/file-search-result-element.js',
+            './src/script/custom-elements/file-search-result-element.ts',
             './src/script/file-explorer/file/file-caching.js',
             './src/script/file-explorer/file/remote-file.js',
             './src/script/file-explorer/file/file-permissions.js',

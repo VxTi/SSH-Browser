@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', async () =>
 
             if ([...element.querySelectorAll('.session-name')]
                 .some(name => name.innerText.toLowerCase().includes(searchValue))) {
-                element.removeAttribute('hidden');
+                element.removeAttribute('invisible');
             } else {
-                element.setAttribute('hidden', '');
+                element.setAttribute('invisible', '');
             }
         });
     });

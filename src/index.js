@@ -4,16 +4,12 @@
  * @Author Luca Warmenhoven
  * @Date 14 / 02 / 2024
  */
-console.time('App started');
-console.time('Modules loaded');
 const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 const ansiHtml = require('ansi-to-html')
-
-console.timeEnd('Modules loaded');
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -67,6 +63,7 @@ function createWindow(pagePath = null, createArgs = {})
         transparent: true,
         titleText: 'SSH Client',
         titleBarOverlay: false,
+        show: false,
         icon: './resources/app_icon.png',
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -81,6 +78,7 @@ function createWindow(pagePath = null, createArgs = {})
     if ( OS.isMac )
         window.setWindowButtonVisibility(true);
 
+    window.webContents.on('did-finish-load', _ => window.show());
     window.loadFile(pagePath).catch(console.error);
 
     return window;
@@ -92,22 +90,9 @@ function createWindow(pagePath = null, createArgs = {})
  */
 app.whenReady().then(() =>
 {
-    console.time('Window created')
     mainWindow = createWindow();
     mainWindow.hide();
-    console.timeEnd('Window created')
     mainWindow.setMinimumSize(600, 500);
-
-    let loaded = false;
-
-    mainWindow.webContents.on('did-finish-load', () => {
-        if (!loaded)
-        {
-            console.timeEnd('App started');
-            mainWindow.show();
-        }
-        loaded = true;
-    });
 
     app.on('activate', _ =>
     {

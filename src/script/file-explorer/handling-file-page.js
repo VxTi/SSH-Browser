@@ -1,8 +1,7 @@
-/** - - - - - - - - - - - - - - - - - - - - **
- |                                           |
- |            File Handling Page             |
- |                                           |
- ** - - - - - - - - - - - - - - - - - - - - **/
+/**
+ * Implementation of the file explorer page.
+ * This page is used for browsing the file system of the remote server.
+ */
 
 import RemoteFile from "./file/remote-file.js";
 import { getFile, getFiles, storeFiles } from "./file/file-caching.js";
@@ -82,7 +81,7 @@ registerKeybindMapping({
         let selected =
             document.querySelectorAll('file-element[selected]:not(.path-separator)');
         let next = selected[selected.length - 1].nextElementSibling;
-        if ( selected.length === 0 || next.length === 0 )
+        if ( selected.length === 0 || !next )
             next = document.querySelector('file-element:not(.path-separator)');
         [ ...selected ].forEach(s => s.removeAttribute('selected'));
         next.setAttribute('selected', '');
@@ -91,7 +90,7 @@ registerKeybindMapping({
     {
         let selected = document.querySelectorAll('file-element[selected]:not(.path-separator)');
         let next = selected[0].previousElementSibling;
-        if ( selected.length === 0 || next.length === 0 )
+        if ( selected.length === 0 || !next )
         {
             let elements = document.querySelectorAll('file-element:not(.path-separator)');
             next = elements[elements.length - 1];
@@ -167,10 +166,11 @@ document.addEventListener('DOMContentLoaded', _ =>
             })
     })
 
-    /** - - - - - - - - - - - - - - - **
-     | Context menu (Right-clicking)   |
-     ** - - - - - - - - - - - - - - - **/
-
+    /**
+     * Context-menu action registration
+     * These actions are the ones that become visible when
+     * right-clicking on a file-element, or a file-hierarchy-element.
+     */
     contextmenu.register('file-element', [
         { title: 'Edit File', type: 'normal', click: (target) => {
                 if ( target instanceof FileElement )
@@ -212,10 +212,11 @@ document.addEventListener('DOMContentLoaded', _ =>
             contextmenu.show('file-element', event.clientX, event.clientY, event.target);
     });
 
-    /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
+    // 'Terminal' button functionality
+    document.getElementById('action-terminal')
+        .addEventListener('click', _ => window.extWindows.openTerminal(currentDir));
 
-    document.getElementById('action-terminal').addEventListener('click', _ => window.extWindows.openTerminal(currentDir));
-
+    // 'Create Directory' button functionality
     document.getElementById('action-add-dir')
         .addEventListener('click', _ => createDirectory());
 
@@ -316,7 +317,7 @@ function loadFileViewer()
     {
         let currentSession = window.ssh.sessions.currentSession();
         currentUser = currentSession.username;
-        window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port}`);
+        window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port || 22}`);
     }
 
     // If for whatever reason currentDir is not defined, return to home menu.
