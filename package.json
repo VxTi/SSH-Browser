@@ -28,6 +28,8 @@
     "@types/ssh2": "^1.11.19",
     "electron": "^28.1.4",
     "electron-packager": "^17.1.2",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.3",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
   }

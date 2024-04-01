@@ -1,73 +1,80 @@
 [
     {
         "id": "css",
-        "resource": "css_icon.png",
+        "resource": "ext-css.png",
         "extensions": [
             "css"
         ]
     },
     {
         "id": "html",
-        "resource": "html_icon.png",
+        "resource": "ext-html.png",
         "extensions": [
             "html"
         ]
     },
     {
         "id": "js",
-        "resource": "javascript_icon.png",
+        "resource": "ext-js.png",
         "extensions": [
             "js", "mjs"
         ]
     },
     {
         "id": "json",
-        "resource": "json_icon.png",
+        "resource": "ext-json.png",
         "extensions": [
             "json"
         ]
     },
     {
         "id": "md",
-        "resource": "markdown_icon.png",
+        "resource": "ext-md.png",
         "extensions": [
             "md", "markdown"
         ]
     },
     {
         "id": "dir",
-        "resource": "folder_icon.png",
+        "resource": "ext-folder.png",
         "extensions": []
     },
     {
         "id": "txt",
-        "resource": "plaintext_icon.png",
+        "resource": "ext-generic.png",
         "extensions": [
             "txt"
         ]
     },
     {
         "id": "unknown",
-        "resource": "file_icon.png",
+        "resource": "ext-generic.png",
         "extensions": []
     },
     {
         "id": "compressed",
-        "resource": "file_compressed_icon.png",
+        "resource": "ext-compressed.png",
         "extensions": [
             "zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz"
         ]
     },
     {
+        "id": "cpp",
+        "resource": "ext-cpp.png",
+        "extensions": [
+            "cpp"
+        ]
+    },
+    {
         "id": "executable",
-        "resource": "executable_icon.png",
+        "resource": "ext-executable.png",
         "extensions": [
             "exe", "msi", "bat", "sh", "cmd"
         ]
     },
     {
         "id": "image",
-        "resource": "image_icon.png",
+        "resource": "ext-img.png",
         "extensions": [
             "png", "jpg", "jpeg", "gif", "bmp", "tiff", "webp", "svg"
         ]

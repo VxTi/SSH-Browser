@@ -4,8 +4,7 @@
  * @Author Luca Warmenhoven
  * @Date 14 / 02 / 2024
  */
-
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('node:path')
@@ -15,7 +14,6 @@ const ansiHtml = require('ansi-to-html')
 const FileNames = {
     KEYBINDS: 'keybinds.json',
     SESSIONS: 'sessions.json',
-    LANGUAGES: 'languages.json',
     FILE_ICONS: 'file_icons.json'
 }
 
@@ -25,12 +23,8 @@ const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
 
 let ansiConverter;
 
-// Whether to reload the static content into the appdata directory
-// This is useful for testing and development purposes
-const LOAD_STATIC_CONTENT = false;
-
 /** List of open connections
- * @type {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}[]}*/
+ * @type {{ssh: NodeSSH, session: ISSHSession}[]}*/
 let connections = [];
 let currentConnection = 0;
 
@@ -69,6 +63,7 @@ function createWindow(pagePath = null, createArgs = {})
         transparent: true,
         titleText: 'SSH Client',
         titleBarOverlay: false,
+        show: false,
         icon: './resources/app_icon.png',
         titleBarStyle: 'hiddenInset',
         webPreferences: {
@@ -83,6 +78,7 @@ function createWindow(pagePath = null, createArgs = {})
     if ( OS.isMac )
         window.setWindowButtonVisibility(true);
 
+    window.webContents.on('did-finish-load', _ => window.show());
     window.loadFile(pagePath).catch(console.error);
 
     return window;
@@ -95,6 +91,7 @@ function createWindow(pagePath = null, createArgs = {})
 app.whenReady().then(() =>
 {
     mainWindow = createWindow();
+    mainWindow.hide();
     mainWindow.setMinimumSize(600, 500);
 
     app.on('activate', _ =>
@@ -106,20 +103,6 @@ app.whenReady().then(() =>
     // Create directory for storing SSH client data
     if ( !fs.existsSync(RESOURCES_PATH) )
         fs.mkdirSync(RESOURCES_PATH)
-
-    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS)) || LOAD_STATIC_CONTENT )
-    {
-        let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.KEYBINDS));
-        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.KEYBINDS), defaultContent)
-        log("Created keybinds file")
-    }
-
-    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES)) || LOAD_STATIC_CONTENT )
-    {
-        let defaultContent = fs.readFileSync(path.join(__dirname, 'resources', 'static', FileNames.LANGUAGES));
-        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.LANGUAGES), defaultContent)
-        log("Created languages file")
-    }
 
     if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
         fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
@@ -134,13 +117,15 @@ app.whenReady().then(() =>
  */
 function loadFile(path)
 {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) =>
+    {
 
-        if (!fs.existsSync(path))
+        if ( !fs.existsSync(path) )
             return reject("File does not exist.");
 
-        fs.readFile(path, 'utf-8', (err, data) => {
-            if (err)
+        fs.readFile(path, 'utf-8', (err, data) =>
+        {
+            if ( err )
                 return reject(err);
             resolve(data);
         });
@@ -178,7 +163,8 @@ ipcMain.on('open-terminal', async (_, directory) =>
     }
 
     // Send all messages that have been received before the window was ready
-    terminalWindow.on('ready-to-show', _ => {
+    terminalWindow.on('ready-to-show', _ =>
+    {
         terminalWindow.dispatchMessages();
         terminalWindow.canReceiveMessages = true;
     });
@@ -278,7 +264,7 @@ ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 /**
  * Event handler for opening a new file editor window.
  */
-ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context)); 
+ipcMain.on('open-file-editor', (_, context) => __openFileEditor(context));
 
 /**
  *
@@ -308,7 +294,8 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
         targetWindow = fileEditorWindows.find(w => w.origin === context.origin).window;
         targetWindow.webContents.send('file-editor-acquire-context', context);
         targetWindow.focus();
-    } else
+    }
+    else
     {
         // Create a new window
         targetWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
@@ -352,7 +339,8 @@ ipcMain.handle('save-local-file', async (_, absolutePath, content) =>
             {
                 log('An error occurred whilst attempting to save file:', err);
                 reject(err);
-            } else resolve();
+            }
+            else resolve();
         })
     });
 })
@@ -370,7 +358,8 @@ ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileNam
             {
                 log('An error occurred whilst attempting to rename file:', err);
                 reject(err);
-            } else resolve();
+            }
+            else resolve();
         })
     });
 })
@@ -387,7 +376,8 @@ ipcMain.handle('open-files', async () =>
             dialog.showOpenDialog({ properties: [ 'openFile', 'multiSelections' ] })
                 .then(result => resolve(result.filePaths))
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -417,7 +407,8 @@ ipcMain.handle('download-file', async (_, remotePath, fileName) =>
             })
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -448,7 +439,8 @@ ipcMain.handle('list-files', async (_, path) =>
                 {
                     reject(err)
                 });
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     });
 });
 
@@ -470,7 +462,8 @@ ipcMain.handle('delete-file', async (_, directory, fileName) =>
                     {
                         reject(err)
                     });
-            } else reject('Not connected');
+            }
+            else reject('Not connected');
         });
     }
 });
@@ -487,42 +480,35 @@ ipcMain.handle('connection-status', isSSHConnected)
  * When the connection is successful, the promise is resolved and the connection credentials
  * are saved locally in the sessions.json file.
  **/
-ipcMain.handle('connect', async (_, host, username, password, port = 22, privateKey = null, passphrase = null) =>
+ipcMain.handle('connect', async (_, properties) =>
 {
     return new Promise((resolve, reject) =>
     {
         let cur = getCurrentSession();
 
-        port ||= 22;
-
         // If the connection is already active and one is
         // trying to connect with the same credentials, resolve the promise.
-        if ( (cur?.ssh.isConnected()) && cur.host === host && cur.username === username && cur.port === port )
+        if ( (cur?.ssh.isConnected()) && cur?.session.host === properties.host && cur.session.username === properties.username && cur?.session.port === properties.port )
         {
             currentConnection = connections.indexOf(cur);
             log('Connection already active');
             return resolve();
         }
 
-        log('Attempting to connect to ' + host + ' with username ' + username + ' on port ' + port);
+        log('Attempting to connect to ' + properties.host + ' with username ' + properties.username + ' on port ' + properties.port);
 
         let connection = {
             ssh: new NodeSSH(),
-            port: port,
-            host: host,
-            username: username,
-            password: password,
-            privateKey: privateKey,
-            passphrase: passphrase
+            session: properties
         }
 
         connection.ssh.connect({
-            host: connection.host,
-            privateKey: connection.privateKey,
-            username: connection.username,
-            password: connection.password,
-            port: connection.port,
-            passphrase: connection.passphrase,
+            host: properties.host,
+            privateKey: properties?.privateKey,
+            username: properties?.username || '',
+            password: properties?.password,
+            port: properties?.port || 22,
+            passphrase: properties?.passphrase,
             tryKeyboard: true,
 
             onKeyboardInteractive: (name, instructions, instructionsLang, prompts, finish) =>
@@ -530,11 +516,11 @@ ipcMain.handle('connect', async (_, host, username, password, port = 22, private
         })
             .then(ssh =>
             {
-                storeSession(connection); // store the session in sessions.json
+                storeSession(properties); // store the session in sessions.json
 
-                log('Connected to ' + host + ' with username ' + username + ' on port ' + port);
+                log('Connected to ' + properties.host + ' with username ' + properties.username + ' on port ' + properties.port);
 
-                connections.push(connection);
+                connections.push({ ssh: ssh, session: properties});
                 currentConnection = connections.length - 1;
                 resolve();
 
@@ -614,7 +600,8 @@ ipcMain.handle('upload-files', async (_, remoteDirectoryPath, /** @type {string[
             })
                 .then(_ => resolve())
                 .catch(e => reject(e))
-        } else resolve('Not connected');
+        }
+        else resolve('Not connected');
     })
 })
 
@@ -632,7 +619,8 @@ ipcMain.handle('move-file', async (_, fileName, srcPath, dstPath) =>
             ssh().execCommand(`mv ${path.join(srcPath, fileName)} ${path.join(dstPath, fileName)}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 })
 
@@ -651,7 +639,8 @@ ipcMain.handle('rename-file', async (_, directory, fileName, newName) =>
             ssh().execCommand(`cd ${directory} && mv ${fileName} ${newName}`)
                 .then(_ => resolve())
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 })
 
@@ -677,7 +666,8 @@ ipcMain.handle('starting-directory', async _ =>
                     files: result.stdout.split('\n').slice(1)
                 }))
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -705,7 +695,8 @@ ipcMain.handle('create-directory', async (_, directory, dirName) =>
                     console.log("An error occurred whilst attempting to create directory:", err);
                     reject(err)
                 });
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
@@ -729,21 +720,33 @@ ipcMain.handle('get-file-info', async (_, directory, fileName) =>
                     })
                 })
                 .catch(err => reject(err));
-        } else reject('Not connected');
+        }
+        else reject('Not connected');
     })
 });
 
-ipcMain.on('current-session', (event) =>
+ipcMain.on('can-prompt-touch-id', (event) => event.returnValue = systemPreferences.canPromptTouchID());
+
+ipcMain.handle('request-touch-id-auth', async (_, message) =>
 {
-    if ( !isSSHConnected() ) return event.returnValue = null;
-    event.returnValue = {
-        username: getCurrentSession().username,
-        host: getCurrentSession().host,
-        port: getCurrentSession().port
-    };
+    if ( !systemPreferences.canPromptTouchID() )
+    {
+        console.warn("Touch ID is not supported on this device.");
+        return Promise.resolve();
+    }
+    return systemPreferences.promptTouchID(message);
 })
 
-ipcMain.handle('delete-session', (_, host, username) => deleteSession(host, username));
+ipcMain.on('current-session', (event) =>
+{
+    event.returnValue = isSSHConnected() ? {
+        username: getCurrentSession().session.username,
+        host: getCurrentSession().session.host,
+        port: getCurrentSession().session.port
+    } : null;
+})
+
+ipcMain.handle('delete-session', (_, host, username) => deleteSession({ host: host, username: username }));
 
 ipcMain.on('log', (_, message, ...args) => log(message, ...args));
 
@@ -754,9 +757,9 @@ ipcMain.handle('get-config', (event, fileName) =>
         throw new Error('Config file does not exist.');
 
     return loadFile(
-            StaticFiles.includes(query) ?
-                path.join(__dirname, 'resources', 'static', FileNames[query]) :
-                path.join(RESOURCES_PATH, FileNames[query]))
+        StaticFiles.includes(query) ?
+            path.join(__dirname, 'resources', 'static', FileNames[query]) :
+            path.join(RESOURCES_PATH, FileNames[query]))
 });
 
 /**
@@ -770,11 +773,11 @@ function isSSHConnected()
 
 /**
  * Function for retrieving the current session.
- * @returns {{ssh: NodeSSH, host: string, username: string, password: string, port: number, privateKey: string, passphrase: string}}
+ * @returns {{ssh: NodeSSH, session: ISSHSession} | null}
  */
 function getCurrentSession()
 {
-    return connections[currentConnection];
+    return connections[currentConnection] || null;
 }
 
 /**
@@ -799,11 +802,10 @@ async function retrieveSessions()
             if ( err ) return reject(err);
 
             let content = {};
-            try
-            {
+            try {
                 content = JSON.parse(data.toString());
-            } catch (e)
-            {
+            } catch (e) {
+                return reject(e)
             }
 
             resolve(content);
@@ -813,7 +815,7 @@ async function retrieveSessions()
 
 /**
  * Method for updating the sessions file with a new successful connection.
- * @param {{host: string, username: string, password: string, port: number, privateKey: string | null, passphrase: string | null}} session
+ * @param {ISSHSession} session
  * The connection object to update the sessions file with.
  */
 function storeSession(session)
@@ -834,14 +836,7 @@ function storeSession(session)
         if ( !sessions.some(ses => ses.host === session.host && ses.username === session.username && ses.port === session.port) )
         {
             // Add new data
-            sessions.push({
-                host: session.host,
-                username: session.username,
-                password: session.password,
-                port: session.port,
-                privateKey: session.privateKey,
-                passphrase: session.passphrase
-            });
+            sessions.push(session);
 
             // TODO: Encrypt the data before writing it to the file.
 
@@ -860,18 +855,22 @@ function storeSession(session)
 
 /**
  * Method for deleting a session from the sessions file.
- * @param {string} host The host of the session to delete.
- * @param {string} username The username of the session to delete.
+ * @param {ISSHSession} session The session to delete.
  */
-function deleteSession(host, username)
+function deleteSession(session)
 {
     fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
     {
         if ( error )
             throw error;
 
+        /** @type {ISSHSession[]} */
         let sessions = JSON.parse(data.toString());
-        let index = sessions.findIndex(session => session.host === host && session.username === username);
+        let index = sessions.findIndex(compare => {
+            return compare.host === session.host &&
+                compare.username === session.username &&
+                (compare?.port || 22) === (session?.port || 22);
+        });
         if ( index !== -1 )
         {
             sessions.splice(index, 1);
@@ -894,3 +893,4 @@ function fmtPaths(...paths)
 {
     return paths.map(p => p.replaceAll(' ', '\\ '));
 }
+

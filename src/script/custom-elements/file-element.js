@@ -36,7 +36,7 @@ export class FileElement extends HTMLElement
         let styles = document.createElement('style');
         styles.textContent =
            `.center {display: flex;flex-flow: column nowrap;align-items: center;justify-content: center;}
-            .file {color: var(--text-color--, #fff);font-family: var(--font--, Arial);width: calc(1.5 * ${FileElement.#defaultSize});margin: 5px;cursor: pointer;flex-shrink: 1 0 auto;}
+            .file {color: var(--text-color, #fff);font-family: var(--font, Arial);width: calc(1.5 * ${FileElement.#defaultSize});margin: 5px;cursor: pointer;flex-shrink: 1 0 auto;}
             .file-icon {background-size: contain;background-repeat: no-repeat;background-position: center;width: ${FileElement.#defaultSize};height: ${FileElement.#defaultSize};}
             .file.path-segment {flex-flow: row nowrap;justify-content: flex-start;height: ${FileElement.#containerHeight};width: max-content; margin: 0 2px; }
             .file.path-segment .file-icon {width: ${FileElement.#containerHeight};height: ${FileElement.#containerHeight};}

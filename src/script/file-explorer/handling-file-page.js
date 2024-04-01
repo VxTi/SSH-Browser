@@ -1,15 +1,15 @@
-/** - - - - - - - - - - - - - - - - - - - - **
- |                                           |
- |            File Handling Page             |
- |                                           |
- ** - - - - - - - - - - - - - - - - - - - - **/
+/**
+ * Implementation of the file explorer page.
+ * This page is used for browsing the file system of the remote server.
+ */
 
-"use strict";
-
-import { SSHFile } from "./file/ssh-file.js";
-import { storeFiles, getFiles, getFile } from "./file/file-caching.js";
-import { FileElement } from "./custom_elements/file-element.js";
-import { registerKeybindMapping, resourceFromFileExtension } from "./general-functionality.js";
+import RemoteFile from "./file/remote-file.js";
+import { getFile, getFiles, storeFiles } from "./file/file-caching.js";
+import { FileElement } from "../custom-elements/file-element.js";
+import { registerKeybindMapping, resourceFromFileExtension } from "../general-functionality.js";
+import contextmenu from "../context-menu";
+import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
+import { assembleFileHierarchy } from "./file-hierarchy-impl";
 
 /**
  * @param {Promise<*>} promise The promise which has to be resolved before the loading animation is hidden.
@@ -18,7 +18,8 @@ let busy = (promise) =>
 {
     let loadingElement = document.querySelector('.process-loading');
     loadingElement.style.visibility = 'visible';
-    Promise.resolve(promise).then(_ => {
+    Promise.resolve(promise).then(_ =>
+    {
         loadingElement.style.visibility = 'hidden';
     });
 };
@@ -29,7 +30,7 @@ let currentUser = undefined
 /** @type HTMLElement */
 let fileContainer = null
 
-/** @type {SSHFile | null} */
+/** @type {RemoteFile | null} */
 let fileRenameTarget = null;
 
 /**
@@ -38,9 +39,6 @@ let fileRenameTarget = null;
  */
 let navigationHistory = [];
 let navigationHistoryIndex = 0;
-
-// Which element the context menu is targeting
-let contextMenuTarget = null;
 
 // Register all keybind mappings for the file viewer
 registerKeybindMapping({
@@ -55,7 +53,7 @@ registerKeybindMapping({
     'deselect_all_files': () => getFileElements().forEach(e => e.removeAttribute('selected')),
     'navigate_back': () =>
     {
-        if (navigationHistoryIndex > 0)
+        if ( navigationHistoryIndex > 0 )
         {
             navigationHistoryIndex--;
             navigateTo(navigationHistory[navigationHistoryIndex].from);
@@ -63,7 +61,7 @@ registerKeybindMapping({
     },
     'navigate_forward': () =>
     {
-        if (navigationHistoryIndex < navigationHistory.length - 1)
+        if ( navigationHistoryIndex < navigationHistory.length - 1 )
         {
             navigationHistoryIndex++;
             navigateTo(navigationHistory[navigationHistoryIndex].to);
@@ -72,7 +70,7 @@ registerKeybindMapping({
     'navigate_directory': () =>
     {
         let selected = getSelectedFiles()
-        if (selected.length === 1)
+        if ( selected.length === 1 )
             navigateTo(
                 path.join(
                     selected[0].getAttribute('path'),
@@ -83,16 +81,16 @@ registerKeybindMapping({
         let selected =
             document.querySelectorAll('file-element[selected]:not(.path-separator)');
         let next = selected[selected.length - 1].nextElementSibling;
-        if (selected.length === 0 || next.length === 0)
+        if ( selected.length === 0 || !next )
             next = document.querySelector('file-element:not(.path-separator)');
-        [...selected].forEach(s => s.removeAttribute('selected'));
+        [ ...selected ].forEach(s => s.removeAttribute('selected'));
         next.setAttribute('selected', '');
     },
     'select_previous_file': () =>
     {
         let selected = document.querySelectorAll('file-element[selected]:not(.path-separator)');
         let next = selected[0].previousElementSibling;
-        if (selected.length === 0 || next.length === 0)
+        if ( selected.length === 0 || !next )
         {
             let elements = document.querySelectorAll('file-element:not(.path-separator)');
             next = elements[elements.length - 1];
@@ -112,7 +110,8 @@ document.addEventListener('DOMContentLoaded', _ =>
     // Add loading animation (bottom right)
     const bladeCount = 8;
     let spinner = document.createElement('div');
-    for (let i = 0; i < bladeCount; i++) {
+    for ( let i = 0; i < bladeCount; i++ )
+    {
         let loadingSpinner = document.createElement('div');
         loadingSpinner.classList.add('blade');
         spinner.appendChild(loadingSpinner);
@@ -129,10 +128,10 @@ document.addEventListener('DOMContentLoaded', _ =>
     busy(window.ssh.startingDir()
         .then(res =>
         {
-            /** Current dir is defined in file-caching.js **/
-            currentDir = res.path;
-            homeDir = res.path;
-            document.querySelector('.file-section').dataset.path = res.path;
+            /** Current dir is defined in file-caching **/
+            window.currentDir = res.path;
+            window.homeDir = res.path;
+            document.querySelector('.inner-content-container').dataset.path = res.path;
             storeFiles(res.files, res.path);
             loadFileViewer();
         })
@@ -149,170 +148,86 @@ document.addEventListener('DOMContentLoaded', _ =>
     setInterval(checkFsDifferences, 3000);
 
     // When the user clicks on the screen outside a file element, hide the context menu.
-    document.addEventListener('click', _ => {
-        document.getElementById('context-menu').style.display = 'none';
+    document.addEventListener('click', event =>
+    {
+        console.log(event.target)
+        if ( event.target instanceof Element && (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu'))
+            contextmenu.destroy();
     });
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
-    document.addEventListener('dblclick', () => {
+    document.addEventListener('dblclick', () =>
+    {
         document.querySelectorAll('file-element[selected]')
             .forEach((e) =>
-        {
-            e.removeAttribute('selected')
-            document.querySelector('.file-information').setAttribute('hidden', '')
-        })
+            {
+                e.removeAttribute('selected')
+                document.querySelector('.file-information').setAttribute('hidden', '')
+            })
     })
 
-    /** - - - - - - - - - - - - - - - **
-     | Context menu (Right-clicking)   |
-     ** - - - - - - - - - - - - - - - **/
-    document.addEventListener('contextmenu', async (event) =>
+    /**
+     * Context-menu action registration
+     * These actions are the ones that become visible when
+     * right-clicking on a file-element, or a file-hierarchy-element.
+     */
+    contextmenu.register('file-element', [
+        { title: 'Edit File', type: 'normal', click: (target) => {
+                if ( target instanceof FileElement )
+                    window.extWindows.openFileEditor(target.getAttribute('path'), target.getAttribute('name'));
+            },
+            visible: (target) => (target instanceof FileElement || target instanceof FileHierarchyElement)
+                && !target.hasAttribute('directory')
+        },
+        { title: 'Show Information', type: 'normal', click: showFileInfo },
+        { title: 'New Folder', type: 'normal', click: createDirectory, visible: (target) => target.hasAttribute('directory') },
+        { title: 'Download', type: 'normal', click: downloadSelected },
+        { type: 'separator' },
+        { title: 'Rename', type: 'normal', click: () => {} },
+        { title: 'Clone', type: 'normal', click: cloneSelected },
+        { type: 'separator' },
+        { title: 'Copy Path', type: 'normal', click: (target) =>
+            {
+                if ( target && target instanceof Element && target.hasAttribute('path') && target.hasAttribute('name') )
+                    navigator.clipboard
+                        .writeText(target.getAttribute('path') + '/' + target.getAttribute('name'))
+                        .catch(_ => window.logger.log('Error occurred whilst attempting to copy path', _))
+            }
+        },
+        { title: 'Delete', type: 'normal', click: deleteSelected },
+    ]);
+
+    document.addEventListener('contextmenu', event =>
     {
-        // If the document isn't focused we can't check for context menu interaction.
-        // Errors will be thrown otherwise.
-        if (!document.hasFocus())
+        if ( !document.hasFocus() )
             return;
 
         event.preventDefault();
         event.stopImmediatePropagation();
 
-        // Which items are enabled in the context menu
-        /** @type {HTMLElement[]} */
-        let enabled = []
 
-        contextMenuTarget = event.target;
+        console.log(event.target);
 
-        // Check if the clicked-on element is a file
-        if (contextMenuTarget instanceof FileElement)
-        {
-            document.querySelectorAll('file-element')
-                .forEach(e => e.removeAttribute('selected'))
-
-            contextMenuTarget.setAttribute('selected', '')
-
-            fileRenameTarget = getFile(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name'))
-            enabled.push(
-                ...(['info', 'delete', 'rename', 'download', 'cpy-path', 'open-with', 'clone']
-                    .map(e => document.getElementById(`ctx-${e}`)))
-            );
-
-            if (!contextMenuTarget.hasAttribute('directory'))
-                enabled.push(document.getElementById('ctx-edit'));
-            if (contextMenuTarget.hasAttribute('executable'))
-                enabled.push(document.getElementById('ctx-execute'));
-        }
-
-        // Disable all context actions first.
-        document.querySelectorAll('#context-menu > .ctx-item')
-            .forEach(element => element.classList.add('disabled'));
-
-        // If the target has a 'context-menu' dataset property, we enable the items specified in the property.
-        // First, check whether it has a 'context-menu' dataset property.
-        if (contextMenuTarget.dataset['contextMenu'])
-        {
-            let items = contextMenuTarget.dataset.contextMenu.split(' ');
-            items.forEach(ctxMenuItem =>
-            {
-                let element = document.getElementById('ctx-' + ctxMenuItem.trim());
-
-                if (element !== null)
-                    enabled.push(element);
-            })
-        }
-        enabled.forEach(e => e.classList.remove('disabled'));
-        // If there's any enabled items, we show the context menu.
-        if (enabled.length > 0)
-        {
-            let menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            ensureFrameWithinWindow(menu, event.clientX, event.clientY, {left: 5, top: 5, right: 5, bottom: 5})
-        }
+        if ( event.target instanceof FileElement || event.target instanceof FileHierarchyElement )
+            contextmenu.show('file-element', event.clientX, event.clientY, event.target);
     });
 
-    /** IMPLEMENTATION OF CONTEXT MENU FUNCTIONALITY **/
+    // 'Terminal' button functionality
+    document.getElementById('action-terminal')
+        .addEventListener('click', _ => window.extWindows.openTerminal(currentDir));
 
-    // Downloading a selected file
-    document.getElementById('ctx-download').addEventListener('click', _ => downloadSelected());
-    document.getElementById('ctx-clone').addEventListener('click', _ => cloneSelected());
-
-    let renameFileInput = document.getElementById('file-rename');
-
-    // Viewing the information of a selected file
-    document.getElementById('ctx-info').addEventListener('click', _ => showFileInfo());
-
-    // Copy file path
-    document.getElementById('ctx-cpy-path').addEventListener('click', _ =>
-    {
-        if (contextMenuTarget instanceof FileElement)
-        {
-            navigator.clipboard.writeText(contextMenuTarget.getAttribute('path') + '/' + contextMenuTarget.getAttribute('name'))
-                .catch(_ => window.logger.log('Error occurred whilst attempting to copy path', _));
-        }
-    })
-    // FIXME: Not working correctly (Broken after making file-element)
-    document.getElementById('ctx-rename').addEventListener('click', () =>
-    {
-        if (fileRenameTarget !== null)
-        {
-            renameFileInput.addClass('active');
-            renameFileInput.val(fileRenameTarget.name);
-
-            // TODO: Fix this
-            let fileNameElement = fileRenameTarget.refElement.querySelector('.file-name');
-            fileNameElement.style.opacity = '0';
-            renameFileInput.css('left', fileNameElement.offsetLeft);
-            renameFileInput.css('top', fileNameElement.offsetTop);
-            renameFileInput.focus();
-        }
-    })
-
-    document.getElementById('action-terminal').addEventListener('click', _ => window.extWindows.openTerminal(currentDir));
-
-    document.querySelectorAll('#ctx-new-dir, #action-add-dir')
-        .forEach(e => e.addEventListener('click', createDirectory));
-
-    document.querySelectorAll('#ctx-edit, #ctx-open-with-builtin')
-        .forEach(e => e.addEventListener('click', _ =>
-            window.extWindows.openFileEditor(contextMenuTarget.getAttribute('path'), contextMenuTarget.getAttribute('name'))));
-
-    renameFileInput.addEventListener('keypress', (e) =>
-    {
-        // If there isn't any file targeted for renaming, we hide the input and return.
-        if (fileRenameTarget == null)
-        {
-            renameFileInput.removeClass('active')
-            return;
-        }
-        e.stopImmediatePropagation()
-
-        switch (e.key)
-        {
-            case 'Enter':
-                e.preventDefault();
-                fileRenameTarget.rename(e.target.value)
-                    .then(_ =>
-                    {
-                        renameFileInput.removeClass('active');
-                        fileRenameTarget.refElement.querySelector('.file-name').style.opacity = '1';
-                        fileRenameTarget = null;
-                        loadFileViewer();
-                    })
-                    .catch(_ => window.logger.log('Error occurred whilst attempting to rename file', _))
-                break;
-            case 'Escape':
-                fileRenameTarget = null;
-                renameFileInput.removeClass('active');
-                break;
-        }
-    })
+    // 'Create Directory' button functionality
+    document.getElementById('action-add-dir')
+        .addEventListener('click', _ => createDirectory());
 
     /**
      * File filtering functionality implementation
      */
-    let fileFilter =  document.getElementById('file-filter');
+    let fileFilter = document.getElementById('file-filter');
     fileFilter.addEventListener('input', manageFileFilteringInput);
     fileFilter.addEventListener('focus', _ => manageFileFilteringInput());
-    document.addEventListener('click', _ => {
+    document.addEventListener('click', _ =>
+    {
         document.getElementById('file-search-results').innerHTML = '';
         document
             .getElementById('file-filter-results-container')
@@ -327,8 +242,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     document.getElementById('action-add-file').addEventListener('click', addFiles);
 
     /** Functionality for the 'delete file' button in the action bar */
-    document.querySelectorAll('#action-delete-file, #ctx-delete')
-        .forEach(element => element.addEventListener('click', deleteSelected));
+    document.getElementById('action-delete-file').addEventListener('click', deleteSelected);
 
     /** Functionality for the 'home' button */
     document.getElementById('action-home').addEventListener('click', () => navigateTo(homeDir));
@@ -350,12 +264,12 @@ document.addEventListener('DOMContentLoaded', _ =>
         event.preventDefault();
         event.stopImmediatePropagation();
         // Check if there are any files to upload
-        if (!event.dataTransfer.hasOwnProperty('files') || event.dataTransfer.files.length === 0)
+        if ( !event.dataTransfer.hasOwnProperty('files') || event.dataTransfer.files.length === 0 )
             return;
 
         /** @type {string[]} */
         let pathArr = [];
-        for (const f of event.dataTransfer.files)
+        for ( const f of event.dataTransfer.files )
             pathArr.push(f.path);
 
         busy(window.ssh.uploadFiles(currentDir, pathArr)
@@ -363,7 +277,7 @@ document.addEventListener('DOMContentLoaded', _ =>
             {
                 // Update the file cache with the new files
                 getFiles(currentDir).push(...pathArr.map(p =>
-                    new SSHFile(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
+                    new RemoteFile(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements();
             }))
     });
@@ -371,24 +285,24 @@ document.addEventListener('DOMContentLoaded', _ =>
     /** Navigate Backward Arrow**/
     document.getElementById('navigate-back')
         .addEventListener('click', () =>
-    {
-        if (navigationHistoryIndex > 0)
         {
-            navigationHistoryIndex--;
-            navigateTo(navigationHistory[navigationHistoryIndex].from);
-        }
-    })
+            if ( navigationHistoryIndex > 0 )
+            {
+                navigationHistoryIndex--;
+                navigateTo(navigationHistory[navigationHistoryIndex].from);
+            }
+        })
 
     /** Navigate Forward Arrow **/
     document.getElementById('navigate-forward')
         .addEventListener('click', () =>
-    {
-        if (navigationHistoryIndex < navigationHistory.length - 1)
         {
-            navigationHistoryIndex++;
-            navigateTo(navigationHistory[navigationHistoryIndex].to);
-        }
-    })
+            if ( navigationHistoryIndex < navigationHistory.length - 1 )
+            {
+                navigationHistoryIndex++;
+                navigateTo(navigationHistory[navigationHistoryIndex].to);
+            }
+        })
 });
 
 /**
@@ -399,15 +313,15 @@ document.addEventListener('DOMContentLoaded', _ =>
  */
 function loadFileViewer()
 {
-    if (currentUser === undefined)
+    if ( currentUser === undefined )
     {
         let currentSession = window.ssh.sessions.currentSession();
         currentUser = currentSession.username;
-        window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port}`);
+        window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port || 22}`);
     }
 
     // If for whatever reason currentDir is not defined, return to home menu.
-    if (currentDir === undefined)
+    if ( currentDir === undefined )
     {
         window.location.href = '../index.html';
         return;
@@ -422,11 +336,11 @@ function loadFileViewer()
 
     // Add all the path segments to the path container
     // These are just directories
-    for (let i = 0; i < pathSegments.length; i++)
+    for ( let i = 0; i < pathSegments.length; i++ )
     {
         let pathElement = document.createElement('file-element');
         pathElement.setAttribute('name', pathSegments[i]);
-        if (i === 0)
+        if ( i === 0 )
             pathElement.setAttribute('nick-name', 'root')
         pathElement.setAttribute('path', path.join('/', ...pathSegments.slice(0, i)))
         pathElement.setAttribute('directory', '')
@@ -448,7 +362,11 @@ function loadFileViewer()
 
     // Load all files in the current directory
     loadFileElements();
-    loadFileHierarchy();
+    assembleFileHierarchy(
+        async (path) =>
+            await window.ssh.listFiles(path).then(res => res.split('\n')),
+        currentDir,
+        document.getElementById('file-hierarchy'));
 }
 
 /**
@@ -460,7 +378,7 @@ function loadFileViewer()
 function loadFileElements(path = currentDir, clearOld = true)
 {
     // Remove all old files from the file container (excluding path segments)
-    if (clearOld)
+    if ( clearOld )
         document.querySelectorAll('file-element:not(.path-separator)')
             .forEach(e => e.remove());
 
@@ -470,18 +388,19 @@ function loadFileElements(path = currentDir, clearOld = true)
 
 /**
  * Method for navigating to a different directory.
- * @param {string | SSHFile} target The directory to navigate to.
+ * @param {string | RemoteFile} target The directory to navigate to.
  */
 function navigateTo(target)
 {
-    if (target instanceof SSHFile) // Convert to viable path
+    if ( target instanceof RemoteFile ) // Convert to viable path
         target = target.path + (target.directory ? '/' + target.name : '')
     // If we're already on there, don't proceed.
-    if (target === currentDir)
+    if ( target === currentDir )
         return;
 
-    document.querySelector('.file-section').dataset.path = target;
-    document.getElementById('context-menu').style.display = 'none';
+    document.querySelector('.inner-content-container').dataset.path = target;
+    // Remove all pop-ups from the screen.
+    document.querySelectorAll('.popup').forEach(popup => popup.remove());
     document.querySelector('.file-information').setAttribute('hidden', '');
     console.log("Attempting to navigate to ", target);
 
@@ -489,10 +408,10 @@ function navigateTo(target)
         .listFiles(target) // Retrieve files from selected directory
         .then(result =>
         {
-            navigationHistory.push({from: currentDir, to: target});
+            navigationHistory.push({ from: currentDir, to: target });
             navigationHistoryIndex++
             storeFiles(result, target);
-            currentDir = target;
+            window.currentDir = target;
             loadFileViewer(); // reload the file viewer
             let pathSection = document.querySelector('.path-section');
             pathSection.scrollLeft = pathSection.scrollWidth;
@@ -501,13 +420,13 @@ function navigateTo(target)
         .catch(_ =>
         {   // If an error occurs whilst
             window.logger.log('Error occurred whilst attempting to navigate', _)
-            //window.location.href = '../index.html';
+            // TODO: Add error handling
         }));
 }
 
 /**
  * Method for creating a file element.
- * @param {SSHFile} file The file object to create an element for
+ * @param {RemoteFile} file The file object to create an element for
  * @returns {HTMLDivElement} The file element created
  */
 function createFileElement(file)
@@ -518,7 +437,7 @@ function createFileElement(file)
     fileElement.setAttribute('name', file.name);
     fileElement.setAttribute('path', file.path);
     fileElement.setAttribute('type', file.directory ? 'dir' : file.name.substring(file.name.lastIndexOf('.') + 1));
-    if (file.directory)
+    if ( file.directory )
         fileElement.setAttribute('directory', '')
 
     /** File interact functionality **/
@@ -547,7 +466,7 @@ function createFileElement(file)
 async function checkFsDifferences()
 {
     // Check if there's an active connection, if not, don't proceed.
-    if (window.ssh === undefined || currentDir === undefined || !(await window.ssh.connected()))
+    if ( window.ssh === undefined || currentDir === undefined || !(await window.ssh.connected()) )
         return;
 
     //
@@ -558,7 +477,7 @@ async function checkFsDifferences()
         {
             serverFiles = serverFiles.filter(f => f.length > 0);
             // Compare files, if there's any difference, update the file viewer
-            if (cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => !serverFiles.includes(file.name)))
+            if ( cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => !serverFiles.includes(file.name)) )
             {
                 window.logger.log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
                 storeFiles(serverFiles, currentDir, true);
@@ -579,7 +498,7 @@ async function checkFsDifferences()
  */
 function getSelectedFiles()
 {
-    return [...document.querySelectorAll('file-element[selected]:not(.path-separator)')]
+    return [ ...document.querySelectorAll('file-element[selected]:not(.path-separator)') ]
 }
 
 /**
@@ -588,7 +507,7 @@ function getSelectedFiles()
  */
 function getFileElements()
 {
-    return [...document.querySelectorAll('file-element:not(.path-separator)')];
+    return [ ...document.querySelectorAll('file-element:not(.path-separator)') ];
 }
 
 /**
@@ -602,19 +521,19 @@ window.events.on('process-status', (status) =>
 {
 
     // Check whether the provided argument has all the necessary properties.
-    if (status.hasOwnProperty('type') && typeof status.type === 'string' &&
+    if ( status.hasOwnProperty('type') && typeof status.type === 'string' &&
         status.hasOwnProperty('progress') && typeof status.progress === 'number' &&
-        status.hasOwnProperty('finished') && typeof status.finished === 'boolean')
+        status.hasOwnProperty('finished') && typeof status.finished === 'boolean' )
     {
         // Get the target element
         let target = document.getElementById(`pgb-${status.type}`);
 
         // If the process has finished, we remove the element (if it still exists?)
-        if (status.finished)
+        if ( status.finished )
             target?.remove();
         else
         {
-            if (target == null)
+            if ( target == null )
             {
                 target = document.createElement('div');
                 target.classList.add('progress-bar');
@@ -645,7 +564,7 @@ function reloadContent()
 function downloadSelected()
 {
     let selectedFiles = getSelectedFiles()
-    if (selectedFiles.length === 0)
+    if ( selectedFiles.length === 0 )
         return;
 
     busy(Promise.all(selectedFiles.map((element) =>
@@ -661,15 +580,15 @@ function deleteSelected()
     let selected = getSelectedFiles();
 
     // If there aren't any files selected, stop.
-    if (selected.length === 0)
+    if ( selected.length === 0 )
         return;
 
     // Cannot delete home or root directory.
-    if (selected.some(e =>
+    if ( selected.some(e =>
     {
         return e.getAttribute('path') + '/' + e.getAttribute('name') === homeDir
             || e.getAttribute('path') + '/' + e.getAttribute('name') === '/'
-    }))
+    }) )
         return;
 
     busy(Promise.all(selected.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
@@ -688,7 +607,7 @@ function createDirectory()
 {
     let files = getFiles(currentDir);
     let name = 'New Directory';
-    for (let i = 1; files.find(f => f.name === name); i++)
+    for ( let i = 1; files.find(f => f.name === name); i++ )
         name = `New Directory (${i})`;
     window.ssh.createDirectory(currentDir, name)
         .catch(_ => window.logger.log('Error occurred whilst attempting to create new directory', _));
@@ -703,7 +622,7 @@ function addFiles()
         .selectFiles()
         .then(files =>
         {
-            if (files.length < 1)
+            if ( files.length < 1 )
                 return;
             busy(window.ssh.uploadFiles(currentDir, files)) // TODO: Error handling
 
@@ -716,9 +635,10 @@ function addFiles()
 function cloneSelected()
 {
     getSelectedFiles()
-        .forEach(fileElement => {
+        .forEach(fileElement =>
+        {
             let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
-            if (file === null)
+            if ( file === null )
                 return;
 
         })
@@ -730,14 +650,14 @@ function cloneSelected()
 async function showFileInfo()
 {
     let selected = getSelectedFiles()
-    if (selected.length === 0)
+    if ( selected.length === 0 )
         return;
 
     let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
-    if (file === null)
+    if ( file === null )
         return;
 
-    if (!file.loaded)
+    if ( !file.loaded )
     {
         busy(await file.loadInfo());
     }
@@ -776,12 +696,12 @@ async function showFileInfo()
 
 /**
  * Function for ensuring the provided window stays within boundaries of the window.
- * @param {HTMLElement | string} frame The frame to ensure within the window. Can be a selector or a jQuery object.
+ * @param {HTMLElement } frame The frame to ensure within the window.
  * @param {number} nextLeft The next left position of the frame
  * @param {number} nextTop The next top position of the frame
  * @param {{left: number, top: number, right: number, bottom: number}} [margins = {left: 0, top: 0, right: 0, bottom: 0}] The margins to keep from the window edges
  */
-function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = {left: 0, top: 0, right: 0, bottom: 0})
+function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = { left: 0, top: 0, right: 0, bottom: 0 })
 {
     frame.style.left = Math.max(margins.left, Math.min(window.innerWidth - frame.offsetWidth - margins.right, nextLeft)) + 'px';
     frame.style.top = Math.max(margins.bottom, Math.min(window.innerHeight - frame.offsetHeight - margins.top, nextTop)) + 'px';
@@ -802,7 +722,7 @@ function manageFileFilteringInput(inputEvent = null)
     let resultsContainer = document.getElementById('file-filter-results-container');
     fileSearchResults.innerHTML = '';
 
-    if (input.length === 0)
+    if ( input.length === 0 )
     {
         resultsContainer.setAttribute('hidden', '');
         return;
@@ -814,53 +734,24 @@ function manageFileFilteringInput(inputEvent = null)
         .filter(e => e.getAttribute('name').toLowerCase().includes(input.toLowerCase()))
         .sort((a, b) => a.getAttribute('name').localeCompare(b.getAttribute('name')));
     filteredFiles
-        .forEach(result => {
+        .forEach(result =>
+        {
             let fileSearchResult = document.createElement('file-search-result');
             fileSearchResult.setAttribute('name', result.getAttribute('name'));
             fileSearchResult.setAttribute('path', result.getAttribute('path'));
             fileSearchResult.setAttribute('type', result.getAttribute('type'));
-            fileSearchResult.addEventListener('click', () => {
-                if (result.hasAttribute('directory'))
+            fileSearchResult.addEventListener('click', () =>
+            {
+                if ( result.hasAttribute('directory') )
                     navigateTo(
                         path.join(result.getAttribute('path'), result.getAttribute('name'))
                     );
-                else {
+                else
+                {
                     result.setAttribute('selected', '');
                     showFileInfo();
                 }
             });
             fileSearchResults.appendChild(fileSearchResult);
         })
-}
-
-/**
- * Function for loading the file hierarchy and adding
- * the elements to the file hierarchy container.
- */
-function loadFileHierarchy()
-{
-    let hierarchyContainer = document.getElementById('file-hierarchy');
-    hierarchyContainer.innerHTML = '';
-
-    // Add all the path segments to the hierarchy container
-    let segments = path.dissect(currentDir);
-
-    segments.forEach((segment, index) => {
-        let hierarchyElement = document.createElement('file-hierarchy-element');
-        hierarchyElement.setAttribute('name', segment);
-        hierarchyElement.setAttribute('path', segments.slice(0, index).join('/'));
-        hierarchyElement.setAttribute('type', 'dir');
-        hierarchyElement.setAttribute('nesting-level', index.toString());
-        hierarchyContainer.appendChild(hierarchyElement);
-    });
-
-    // Add all files in the current directory to the hierarchy container
-    getFiles(currentDir).forEach(file => {
-        let hierarchyElement = document.createElement('file-hierarchy-element');
-        hierarchyElement.setAttribute('name', file.name);
-        hierarchyElement.setAttribute('path', file.path);
-        hierarchyElement.setAttribute('type', file.directory ? 'dir' : file.name.substring(file.name.lastIndexOf('.') + 1));
-        hierarchyElement.setAttribute('nesting-level', segments.length.toString());
-        hierarchyContainer.appendChild(hierarchyElement);
-    });
 }

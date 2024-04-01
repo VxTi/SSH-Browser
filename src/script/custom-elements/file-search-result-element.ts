@@ -1,5 +1,9 @@
 import {resourceFromFileExtension} from "../general-functionality.js";
 
+/**
+ * Custom element for displaying a file search result,
+ * in the file search results list.
+ */
 export class FileSearchResultElement extends HTMLElement {
 
     constructor()
@@ -16,23 +20,7 @@ export class FileSearchResultElement extends HTMLElement {
             </div>
         `;
         console.log(this.innerHTML);
-        this.addEventListener('click', this._onClick.bind(this));
     }
-
-
-    _onClick()
-    {
-        let event = new CustomEvent('file-search-result-click', {
-            bubbles: true,
-            detail: {
-                path: this.getAttribute('path') + '/' + this.getAttribute('name'),
-                type: this.getAttribute('type'),
-                name: this.getAttribute('name')
-            }
-        });
-        this.dispatchEvent(event);
-    }
-
 }
 
 window.customElements.define('file-search-result', FileSearchResultElement);

@@ -28,14 +28,9 @@ hljs.addPlugin({
  */
 contextBridge.exposeInMainWorld('ssh',  {
     connected: async () => ipcRenderer.invoke('connection-status'),
-    /** @param {string} host
-     *  @param {string} username
-     *  @param {string} password
-     *  @param {number} port
-     *  @param {string} privateKey
-     *  @param {string} passphrase */
-    connect: async (host, username, password, port = 22, privateKey = null, passphrase = null) => {
-        return ipcRenderer.invoke('connect', host, username, password, port, privateKey, passphrase)
+    /** @param {ISSHSession} configuration The configuration to provide */
+    connect: async (configuration) => {
+        return ipcRenderer.invoke('connect', configuration)
     },
     /** @param {string} remoteDirectory
      *  @param {string[]} localFilePaths */
@@ -65,6 +60,7 @@ contextBridge.exposeInMainWorld('ssh',  {
      */
     grantPermissions: async (directory, file, permissions) => ipcRenderer.invoke('grant-permissions', directory, file, permissions),
 
+    /** @returns {Promise<string[]>} */
     selectFiles: async () => ipcRenderer.invoke('open-files'),
 
     startingDir: async () => ipcRenderer.invoke('starting-directory'),
@@ -91,6 +87,7 @@ contextBridge.exposeInMainWorld('ssh',  {
     getFileInfo: async (directory, file) => ipcRenderer.invoke('get-file-info', directory, file),
 
     sessions: {
+        /** @returns {Promise<ISSHSession[]>} */
         get: async () => ipcRenderer.invoke('retrieve-sessions'),
         currentSession: () => ipcRenderer.sendSync('current-session'),
         delete: async (host, username) => ipcRenderer.invoke('delete-session', host, username)
@@ -152,6 +149,11 @@ contextBridge.exposeInMainWorld('path', {
 
         return segments;
     }
+})
+
+contextBridge.exposeInMainWorld('auth', {
+    requestFingerprint: async (message) => ipcRenderer.invoke('request-touch-id-auth', message),
+    canRequestFingerprint: () => ipcRenderer.sendSync('can-prompt-touch-id'),
 })
 
 contextBridge.exposeInMainWorld('config', {

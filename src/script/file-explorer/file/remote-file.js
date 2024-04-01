@@ -2,9 +2,9 @@ import { FilePermissions } from './file-permissions.js';
 
 /**
  * Class for representing a file on the server.
- * @class SSHFile
+ * @class RemoteFile
  */
-export class SSHFile
+export default class RemoteFile
 {
     /** @type boolean */
     #loaded = false;            // Whether the file info has been loaded
