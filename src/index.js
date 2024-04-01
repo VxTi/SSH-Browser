@@ -734,7 +734,9 @@ ipcMain.handle('request-touch-id-auth', async (_, message) =>
         console.warn("Touch ID is not supported on this device.");
         return Promise.resolve();
     }
-    return systemPreferences.promptTouchID(message);
+    return systemPreferences.promptTouchID(message)
+        .then(_ => true)
+        .catch(_ => false)
 })
 
 ipcMain.on('current-session', (event) =>
@@ -746,7 +748,7 @@ ipcMain.on('current-session', (event) =>
     } : null;
 })
 
-ipcMain.handle('delete-session', (_, host, username) => deleteSession({ host: host, username: username }));
+ipcMain.handle('delete-session', (_, host, username, port) => deleteSession({ host: host, username: username, port: port}));
 
 ipcMain.on('log', (_, message, ...args) => log(message, ...args));
 

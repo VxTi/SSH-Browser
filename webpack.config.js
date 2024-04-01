@@ -14,21 +14,29 @@ module.exports = {
             './src/script/file-explorer/file-hierarchy-impl.ts',
             './src/script/file-explorer/handling-file-page.js',
         ],
-        "main-page": [
+        "main": [
             "./src/script/general-functionality.js",
-            "./src/script/handling-sessions-page.js"
+            "./src/script/custom-elements/session-element.ts",
+            "./src/script/handling-sessions-page.ts"
         ],
-        "login-page": [
+        "login": [
             "./src/script/general-functionality.js",
             "./src/script/handling-login-page.js"
         ],
-        "file-editor-page": [
+        /** File editor page **/
+        "file-editor": [
             "./src/script/general-functionality.js",
             "./src/script/handling-file-editor.js"
         ],
-        "terminal-page": [
+        /** Terminal page **/
+        "terminal": [
             "./src/script/general-functionality.js",
             "./src/script/handling-external-terminal.js",
+        ],
+        /** Introduction page **/
+        "intro": [
+            "./src/script/general-functionality.js",
+            "./src/script/handling-introduction.ts"
         ]
     },
     output: {

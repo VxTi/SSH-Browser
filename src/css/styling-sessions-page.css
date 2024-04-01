@@ -5,6 +5,13 @@
     --session-margin: 5px 5px;
     --session-rounding: 10px;
     --session-padding: 0 10px;
+
+    --min-session-container-width: 200px;
+
+    --max-session-container-width: 800px;
+    --max-session-element-width: 790px;
+    --session-container-width: 80vw;
+    --session-element-width: calc(var(--session-container-width) - 20px);
 }
 
 .session-container, .session-content, .session-element, .content, .spacing {
@@ -23,8 +30,8 @@
 .session-container {
     flex-flow: column nowrap;
     width: 80vw;
-    max-width: 800px;
-    min-width: 200px;
+    max-width: var(--max-session-container-width);
+    min-width: var(--min-session-container-width);
     max-height: 80vh;
 }
 
@@ -40,7 +47,7 @@
 
 .sessions-inner-container {
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: column nowrap;
     justify-content: flex-start;
     align-items: center;
     width: 100%;
@@ -56,7 +63,7 @@
     flex-flow: column wrap;
     cursor: pointer;
     user-select: none;
-    box-sizing: border-box;;
+    box-sizing: border-box;
 }
 
 .inner-icon {
@@ -162,7 +169,7 @@
     width: var(--session-width);
     flex-flow: row nowrap;
     justify-content: space-evenly;
-    transition: all 0.4s ease-in-out;
+    transition: all 0.4s ease-in-out, border-color 0s ease-in-out;
 }
 
 .session-element[invisible] {

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Introduction</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/styling-introduction.css">
+    <script src="../js/intro-packed.js"></script>
+</head>
+<body>
+<div class="navigator"></div>
+<div class="user-interact delete-button">Delete Session</div>
+<div class="content fade-in">
+    <div class="container session-container" id="main-container">
+        <div class="title-container border-bottom">
+            <div class="spacing">
+                <input type="text" class="session-element search-bar user-interact" id="search-sessions" placeholder="Search sessions..."> <!-- Search bar -->
+            </div>
+            <p class="session-title spacing">SSH Sessions</p>
+            <div class="spacing">
+                <div id="add-sessions" class="user-interact inner-icon session-element add-session" title="Add a new SSH Session"></div>
+            </div>
+        </div>
+        <div class="session-content">
+            <div class="session-element session-loading"></div>
+            <div class="session-element session-loading"></div>
+            <div class="session-element session-loading"></div>
+            <div class="sessions-inner-container scrollbar" id="sessions-inner-container"></div>
+        </div>
+    </div>
+    <div class="loading-container" id="connection-status">
+        <div class="loading-text">Joining session...</div>
+        <div class="loading"></div>
+    </div>
+</div>
+</body>
+</html>

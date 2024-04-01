@@ -90,7 +90,10 @@ contextBridge.exposeInMainWorld('ssh',  {
         /** @returns {Promise<ISSHSession[]>} */
         get: async () => ipcRenderer.invoke('retrieve-sessions'),
         currentSession: () => ipcRenderer.sendSync('current-session'),
-        delete: async (host, username) => ipcRenderer.invoke('delete-session', host, username)
+        /** @param {string} host
+         *  @param {string} username
+         *  @param {number} port */
+        delete: async (host, username, port) => ipcRenderer.invoke('delete-session', host, username, port)
     }
 })
 
