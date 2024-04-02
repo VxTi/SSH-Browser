@@ -6,6 +6,9 @@ import contextmenu from './context-menu';
 import { SessionElement } from "./custom-elements/session-element";
 import ISSHSession from "../core/utilities/ssh-session-interface";
 
+
+const changelogFileUrl = 'https://github.com/VxTi/SSH-FTP/blob/main/changelog.md';
+
 document.addEventListener('DOMContentLoaded', async () =>
 {
 
@@ -41,6 +44,12 @@ document.addEventListener('DOMContentLoaded', async () =>
     {
         let searchValue = (event.target as HTMLInputElement).value.toLowerCase();
         let sessionElements = targetContainer.querySelectorAll('session-element');
+
+        if (searchValue.length === 0)
+        {
+            sessionElements.forEach(element => element.setAttribute('invisible', 'false'));
+            return;
+        }
 
         // Check if any of the text contents contains the input text
         sessionElements.forEach(element =>
@@ -88,6 +97,20 @@ document.addEventListener('DOMContentLoaded', async () =>
     })
     // Event listener for when a session is connected.
     window.addEventListener('session-connected', _ => window.location.href = './pages/page-file-explorer.html');
+
+    // Acquire most recent application version
+    fetch(changelogFileUrl)
+        .then(response => response.text())
+        .then(text =>
+        {
+            let changelog = text.split('\n');
+            if ( changelog.length === 0)
+                return;
+
+            if ( window.localStorage['app-version'] !== changelog[0])
+                __showUpdatePage(changelog);
+        })
+        .catch(window['logger'].log);
 });
 
 /**
@@ -100,4 +123,25 @@ function __addSession(session: ISSHSession)
 
     let sessionElement = new SessionElement(session);
     sessionContainer.appendChild(sessionElement);
+}
+
+/**
+ * Function for showing a changelog page when the app starts up.
+ */
+function __showUpdatePage(changelog: string[])
+{
+    let targetContainer = document.getElementById('content');
+
+    // Main container
+    let changelogContainer = document.createElement('div');
+    changelogContainer.classList.add('changelog-container');
+
+    // App icon
+    let applicationIcon = document.createElement('span');
+    applicationIcon.classList.add('app-icon');
+
+    let changelogText =
+    changelogContainer.appendChild(applicationIcon);
+
+    targetContainer.appendChild(changelogContainer);
 }

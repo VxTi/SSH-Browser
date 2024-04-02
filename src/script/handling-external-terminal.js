@@ -21,14 +21,19 @@ document.addEventListener('DOMContentLoaded', _=> {
         .addEventListener('keydown', (e) => {
         e.stopImmediatePropagation();
 
+        if ( e.key.length === 1 )
+        {
+            window.terminal.execute(e.key);
+            e.target['value'] = '';
+            return;
+        }
+
         switch (e.key) {
             case 'Enter':
                 // Check whether there's actual input.
                 if (e.target.value.trim().length < 1)
                     return;
-                history.splice(historyIndex, 0, e.target.value);
-                historyIndex = history.length;
-                window.terminal.execute(e.target.value);
+                window.terminal.execute('\n');
                 e.target.value = '';
                 break;
             case 'ArrowUp':
@@ -37,17 +42,28 @@ document.addEventListener('DOMContentLoaded', _=> {
 
                 e.target.value = history[historyIndex] || '';
                 e.preventDefault();
-                break;
+                return;
             case 'ArrowDown':
                 if (historyIndex < history.length - 1)
                     historyIndex++;
 
                 e.target.value = history[historyIndex] || '';
                 e.preventDefault();
-                break;
+                return;
+                case 'Backspace':
+                    window.terminal.execute('\x1b[D');
+                    return;
             default:
-                if (e.ctrlKey) {
-                    window.terminal.execute(`\x1b${e.target.value}`)
+                if ( e.key === 'Enter' )
+                {
+                    window.terminal.execute('\n');
+                    e.preventDefault();
+
+                    return;
+                }
+                if ( e.key === 'Control' )
+                {
+                    window.terminal.execute(`\x1b`);
                     return;
                 }
                 break;

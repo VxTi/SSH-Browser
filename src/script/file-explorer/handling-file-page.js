@@ -12,7 +12,7 @@ import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element"
 import { assembleFileHierarchy } from "./file-hierarchy-impl";
 
 /**
- * @param {Promise<*>} promise The promise which has to be resolved before the loading animation is hidden.
+ * @param {Promise<* | void>} promise The promise which has to be resolved before the loading animation is hidden.
  */
 let busy = (promise) =>
 {
@@ -29,9 +29,6 @@ let currentUser = undefined
 
 /** @type HTMLElement */
 let fileContainer = null
-
-/** @type {RemoteFile | null} */
-let fileRenameTarget = null;
 
 /**
  * History of user navigation
@@ -174,7 +171,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     contextmenu.register('file-element', [
         { title: 'Edit File', type: 'normal', click: (target) => {
                 if ( target instanceof FileElement )
-                    window.extWindows.openFileEditor(target.getAttribute('path'), target.getAttribute('name'));
+                    window['extWindows'].openFileEditor(target.getAttribute('path'), target.getAttribute('name'));
             },
             visible: (target) => (target instanceof FileElement || target instanceof FileHierarchyElement)
                 && !target.hasAttribute('directory')
@@ -214,7 +211,7 @@ document.addEventListener('DOMContentLoaded', _ =>
 
     // 'Terminal' button functionality
     document.getElementById('action-terminal')
-        .addEventListener('click', _ => window.extWindows.openTerminal(currentDir));
+        .addEventListener('click', _ => window['extWindows'].openTerminal(currentDir));
 
     // 'Create Directory' button functionality
     document.getElementById('action-add-dir')
@@ -248,35 +245,34 @@ document.addEventListener('DOMContentLoaded', _ =>
     document.getElementById('action-home').addEventListener('click', () => navigateTo(homeDir));
 
     // Add drag and drop functionality
-    fileContainer.addEventListener('dragover', (e) =>
+    fileContainer.addEventListener('dragover', event =>
     {
+        event.preventDefault();
         fileContainer.setAttribute('dragging-over', '');
-        e.preventDefault();
-        e.stopImmediatePropagation();
     });
-    fileContainer.addEventListener('dragleave', (event) =>
+    fileContainer.addEventListener('dragleave', _ =>
     {
         fileContainer.removeAttribute('dragging-over');
     });
     fileContainer.addEventListener('drop', (event) =>
     {
-        event = event.originalEvent;
         event.preventDefault();
-        event.stopImmediatePropagation();
+        event.stopImmediatePropagation()
+        fileContainer.removeAttribute('dragging-over');
         // Check if there are any files to upload
-        if ( !event.dataTransfer.hasOwnProperty('files') || event.dataTransfer.files.length === 0 )
+        if ( !event.dataTransfer['files'] || event.dataTransfer.files.length === 0 )
             return;
 
-        /** @type {string[]} */
-        let pathArr = [];
-        for ( const f of event.dataTransfer.files )
-            pathArr.push(f.path);
+        /** @type string[] */
+        let paths = [...event.dataTransfer.files].map(f => f.path);
 
-        busy(window.ssh.uploadFiles(currentDir, pathArr)
+        window['logger'].log('Uploading files', paths);
+
+        busy(window.ssh.uploadFiles(currentDir, paths)
             .then(_ =>
             {
                 // Update the file cache with the new files
-                getFiles(currentDir).push(...pathArr.map(p =>
+                getFiles(currentDir).push(...paths.map(p =>
                     new RemoteFile(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements();
             }))
@@ -477,7 +473,7 @@ async function checkFsDifferences()
         {
             serverFiles = serverFiles.filter(f => f.length > 0);
             // Compare files, if there's any difference, update the file viewer
-            if ( cachedFiles.length !== serverFiles.length || cachedFiles.some((file, i) => !serverFiles.includes(file.name)) )
+            if ( cachedFiles.length !== serverFiles.length || cachedFiles.some(file => !serverFiles.includes(file.name)) )
             {
                 window.logger.log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
                 storeFiles(serverFiles, currentDir, true);
@@ -517,7 +513,7 @@ function getFileElements()
  * If the element does not exist, it will be created. If the process is finished, the element will be removed.
  * @param {{type: string, progress: number, finished: boolean}} status The status of the process
  */
-window.events.on('process-status', (status) =>
+window['events'].on('process-status', (status) =>
 {
 
     // Check whether the provided argument has all the necessary properties.
@@ -619,7 +615,7 @@ function createDirectory()
 function addFiles()
 {
     window.ssh
-        .selectFiles()
+        .selectFiles({ properties: [ 'openFile', 'openDirectory', 'multiSelections' ] })
         .then(files =>
         {
             if ( files.length < 1 )
@@ -635,11 +631,13 @@ function addFiles()
 function cloneSelected()
 {
     getSelectedFiles()
-        .forEach(fileElement =>
+        .forEach(selected =>
         {
-            let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
+            let file = getFile(selected.getAttribute('path'), selected.getAttribute('name'));
             if ( file === null )
                 return;
+
+            // TODO: Implement
 
         })
 }
@@ -675,7 +673,7 @@ async function showFileInfo()
     document.getElementById('file-info-perm-user').textContent =
         file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : '');
 
-    // File permissions for all users, can be (r)ead, (w)rite, and (x)ecute or none.
+    // File permissions for all users, can be read, write, and execute or none.
     document.getElementById('file-info-perm-group')
         .textContent = file.permissions.toString('group');
     document.getElementById('file-info-perm-other')
@@ -716,7 +714,7 @@ function manageFileFilteringInput(inputEvent = null)
 {
     let inputElement = inputEvent?.target || document.getElementById('file-filter');
 
-    let input = inputElement.value.trim();
+    let input = inputElement['value'].trim();
 
     let fileSearchResults = document.getElementById('file-search-results');
     let resultsContainer = document.getElementById('file-filter-results-container');

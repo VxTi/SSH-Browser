@@ -39,7 +39,7 @@
 
 /** Image for button for password visibility, hide password (image) **/
 .password-invisible { background-image: url('../resources/eye_closed.svg'); }
-.select-private-key { background-image: url('../resources/three_dots_icon.png'); }
+.select-private-key { background-image: url('../resources/file_icons/ext-folder.png'); }
 
 /** Remove the arrows on the port input box **/
 .ssh-port::-webkit-outer-spin-button, #ssh-port::-webkit-inner-spin-button {
@@ -59,17 +59,15 @@
     width: var(--input-box-min-width);
     height: var(--input-box-height);
     background-color: var(--theme-1);
-    border: 1px solid var(--border-2);
     box-sizing: border-box;
+    border: none;
     margin: var(--input-box-margin);
     padding: var(--input-box-padding);
     font-size: var(--input-box-font-size);
     color: var(--text-color);
-    outline: none;
 }
 
 .input-box:focus {
-    outline: none;
     background-color: var(--theme-2);
 }
 
@@ -101,41 +99,41 @@
     width: calc(var(--input-box-height));
     height: calc(var(--input-box-height));
     cursor: pointer;
-    background-size: 50%;
+    background-size: 40%;
     background-position: center;
     background-repeat: no-repeat;
     background-color: var(--theme-1);
-    border: 1px solid var(--border-2);
     border-left: none;
     box-sizing: border-box;
 }
 
 /** Login button **/
 .page-button {
-    width: var(--input-box-min-width);
+    width: calc(var(--input-box-min-width) - calc(0.6 * var(--input-box-height)));
     color: var(--text-color-2);
     margin: var(--input-box-margin);
     background-color: var(--theme-2);
     cursor: pointer;
     box-sizing: border-box;
+    border: none;
+    outline: none;
 }
 .page-button:hover {
     background-color: var(--theme-1);
 }
 /** Reduced height (login button, fingerprint auth */
 .reduced-height {
-    height: calc(0.8 * var(--input-box-height));
+    height: calc(0.6 * var(--input-box-height));
 }
 
 .fingerprint-auth {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: calc(0.6 * var(--input-box-height));
+    height: calc(0.6 * var(--input-box-height));
     mask-image: url('../resources/fingerprint.svg');
-    height: calc(0.8 * var(--input-box-height));
     mask-repeat: no-repeat;
     mask-position: center;
-    mask-size: cover;
+    mask-size: contain;
     z-index: 10;
 }
 
@@ -145,9 +143,12 @@
 
 .fingerprint-bg {
     display: none;
+    width: calc(0.6 * var(--input-box-height));
+    height: calc(0.6 * var(--input-box-height));
     background: linear-gradient(180deg, rgb(0,168,33), white);
     background-size: 100% 300%;
     background-position: 0% 100%;
+    box-sizing: border-box;;
 }
 
 .fingerprint-bg[enabled="true"] {

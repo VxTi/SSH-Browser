@@ -6,7 +6,7 @@
   "scripts": {
     "pack": "webpack",
     "build_linux": "webpack && electron-packager . --overwelrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",
-    "build_macos": "webpack && electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds",
+    "build_macos": "webpack && electron-packager . --overwrite --platform=darwin --arch=x64 --icon=src/resources/app_icon.icns --prune=true --out=release-builds && mv release-builds/ssh-ftp-darwin-x64/ssh-ftp.app ~/Desktop/ssh-ftp.app && rm -r release-builds",
     "build_win": "webpack && electron-packager . --overwrite --platform=win32 --arch=x64 --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
     "build_all": "webpack && electron-packager . --overwrite --platform=all --arch=all --icon=src/resources/app_icon.ico --prune=true --out=release-builds",
     "test": "echo \\\"Error: no test specified\\\" && exit 1",
@@ -21,6 +21,7 @@
     "highlight.js": "^11.9.0",
     "menu": "^0.2.5",
     "node-ssh": "^13.1.0",
+    "ssh2": "^1.15.0",
     "update-electron-app": "^3.0.0"
   },
   "devDependencies": {

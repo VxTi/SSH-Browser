@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', _ =>
         = [ 'ssh-host', 'ssh-username', 'ssh-password', 'ssh-port', 'ssh-private-key', 'ssh-passphrase' ]
         .map(id => document.getElementById(id));
 
-    let showPasswordElement = document.getElementById('ssh-show-password')
+    /** Functionality of toggling password visibility */
+    let showPasswordElement = document.getElementById('ssh-show-password');
+    showPasswordElement.setAttribute('shown', 'false');
     showPasswordElement.addEventListener('click', () =>
     {
         let passwordInput = document.getElementById('ssh-password');
@@ -20,23 +22,34 @@ document.addEventListener('DOMContentLoaded', _ =>
         showPasswordElement.setAttribute('shown', passwordInput.type === 'text' ? 'true' : 'false');
     });
 
+    /** Functionality of toggling fingerprint authentication */
     let fingerprintEnabled = FINGERPRINT_AUTHENTICATION;
 
     if (window.auth.canRequestFingerprint())
     {
         let targetElement = document.getElementById('ssh-fingerprint-auth');
         targetElement.setAttribute('active', '');
+        targetElement.setAttribute('enabled', fingerprintEnabled.toString());
         targetElement.addEventListener('click', event => {
             fingerprintEnabled = !fingerprintEnabled;
             targetElement.setAttribute('enabled',  fingerprintEnabled ? 'true' : 'false');
         });
     }
 
+    /** Functionality of selecting a private key from a file */
+    document.getElementById('ssh-select-private-key')
+        .addEventListener('click', _ => {
+            window.ssh.selectFiles({properties: [ 'openFile' ]})
+                .then(files => {
+                    window['logger'].log(files);
+                });
+        });
+
     // Add the back button functionality
     document.getElementById('ssh-back-button')
         .addEventListener('click', () => window.location.href = '../index.html');
 
-    // Add the login functionality
+    /** Functionality of logging in */
     document.getElementById('ssh-login').addEventListener('click', () =>
     {
         // Check if there's actually input in the fields

@@ -165,14 +165,11 @@
     box-sizing: border-box;
 }
 
-.session-element {
-    width: var(--session-width);
-    flex-flow: row nowrap;
-    justify-content: space-evenly;
+session-element {
     transition: all 0.4s ease-in-out, border-color 0s ease-in-out;
 }
 
-.session-element[invisible] {
+session-element[invisible="true"] {
     color: transparent;
     height: 0;
     opacity: 0;

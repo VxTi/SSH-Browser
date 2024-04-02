@@ -6,10 +6,10 @@
  */
 const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron')
 const fs = require('fs')
-const os = require('os')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
-const ansiHtml = require('ansi-to-html')
+const extTerm = require('./core/external-terminal-impl.js');
+const { createWindow, System } = require('./core/window-impl.js');
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -20,8 +20,6 @@ const FileNames = {
 const StaticFiles = [ 'FILE_ICONS' ]
 
 const RESOURCES_PATH = path.join(app.getPath('appData'), app.getName());
-
-let ansiConverter;
 
 /** List of open connections
  * @type {{ssh: NodeSSH, session: ISSHSession}[]}*/
@@ -41,57 +39,22 @@ function log(message, ...args)
         ...args);
 }
 
-// Which operating system is the app running on.
-const OS = {
-    isWindows: os.platform() === 'win32',
-    isMac: os.platform() === 'darwin',
-    isLinux: os.platform() === 'linux'
-}
-
-/**
- * Method for creating a window.
- * @param {string | null} pagePath The path to the page to load in the window.
- * @param {Electron.BrowserWindowConstructorOptions} createArgs The arguments to create the window with.
- * @returns {Electron.CrossProcessExports.BrowserWindow} The created window.
- */
-function createWindow(pagePath = null, createArgs = {})
-{
-    pagePath ||= path.join(__dirname, 'index.html');
-    let window = new BrowserWindow({
-        width: 900,
-        height: 700,
-        transparent: true,
-        titleText: 'SSH Client',
-        titleBarOverlay: false,
-        show: false,
-        icon: './resources/app_icon.png',
-        titleBarStyle: 'hiddenInset',
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: true,
-            preload: path.join(__dirname, "core", "preload.js")
-        },
-        ...createArgs
-    });
-
-    // Show the window buttons on macOS
-    if ( OS.isMac )
-        window.setWindowButtonVisibility(true);
-
-    window.webContents.on('did-finish-load', _ => window.show());
-    window.loadFile(pagePath).catch(console.error);
-
-    return window;
-}
-
 /**
  * When the app has successfully initialized, we can load some other things.
  * Example, creating the necessary files in the file system, if not present.
  */
 app.whenReady().then(() =>
 {
+    // Create directory for storing SSH client data
+    if ( !fs.existsSync(RESOURCES_PATH) )
+        fs.mkdirSync(RESOURCES_PATH)
+
+    // If the sessions page doesn't exist yet, create it, and show the user
+    // the 'welcome' screen.
+    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
+        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
+
     mainWindow = createWindow();
-    mainWindow.hide();
     mainWindow.setMinimumSize(600, 500);
 
     app.on('activate', _ =>
@@ -99,13 +62,6 @@ app.whenReady().then(() =>
         if ( BrowserWindow.getAllWindows().length === 0 )
             createWindow();
     })
-
-    // Create directory for storing SSH client data
-    if ( !fs.existsSync(RESOURCES_PATH) )
-        fs.mkdirSync(RESOURCES_PATH)
-
-    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
-        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
 })
 
 /**
@@ -133,7 +89,7 @@ function loadFile(path)
 }
 
 // Quits the application if all windows are closed (windows & linux)
-app.on('window-all-closed', () => OS.isMac || app.quit())
+app.on('window-all-closed', () => System.isMac || app.quit())
 
 /**
  * Handler for opening an external terminal window, with a provided directory.
@@ -141,81 +97,24 @@ app.on('window-all-closed', () => OS.isMac || app.quit())
  */
 ipcMain.on('open-terminal', async (_, directory) =>
 {
-    if ( terminalWindow && !terminalWindow.isDestroyed() )
+    if (!extTerm.focusTerminalWindow())
     {
-        terminalWindow.focus();
-        return;
-    }
-
-    // Create terminal window
-    terminalWindow = createWindow(path.join(__dirname, 'pages/page-external-terminal.html'), {
-        width: 600,
-        height: 480
-    });
-
-    terminalWindow.messageQueue = terminalWindow.messageQueue || [];
-    terminalWindow.canReceiveMessages = false;
-    terminalWindow.dispatchMessages = _ =>
-    {
-        terminalWindow.messageQueue
-            .forEach(message => terminalWindow.webContents.send('message-received', message));
-        terminalWindow.messageQueue = [];
-    }
-
-    // Send all messages that have been received before the window was ready
-    terminalWindow.on('ready-to-show', _ =>
-    {
-        terminalWindow.dispatchMessages();
-        terminalWindow.canReceiveMessages = true;
-    });
-
-    // Create a new shell connection
-    ssh()
-        .requestShell({ term: process.env.TERM || 'xterm-256color' })
-        .then((stream) =>
-        {
-            // Ensure the filter has been created
-            ansiConverter ||= new ansiHtml({ newline: true, escapeXML: false, stream: false });
-
-            stream.write('cd ' + directory + '\n');
-            stream.setWindow(80, 24, 480, 600);
-
-            // Add event handlers for every stream type
-            [ stream.stderr, stream.stdout ].forEach(stream =>
-                stream.on('data', data =>
-                    {
-                        // Check if we can receive messages
-                        if ( terminalWindow.isDestroyed() )
-                        {
-                            stream.end();
-                            return;
-                        }
-
-                        // If the terminal window is not ready to receive messages, add them to the message queue
-                        if ( !terminalWindow.canReceiveMessages )
-                            terminalWindow.messageQueue.push(ansiConverter.toHtml(data.toString()));
-                        else
-                        {
-                            if ( terminalWindow.messageQueue.length > 0 )
-                                terminalWindow.dispatchMessages();
-
-                            terminalWindow.webContents.send('message-received', ansiConverter.toHtml(data.toString()))
-                        }
-                    }
-                ));
-
-            ipcMain.removeHandler('cmd');
-            ipcMain.handle('cmd', async (_, command) =>
+        // Create a new shell connection
+        ssh()
+            .requestShell({ term: process.env.TERM || 'xterm-256color' })
+            .then((stream) =>
             {
-                stream
-                    .pause()
-                    .write(command + '\n', 'utf-8', _ => stream.resume());
-            })
+                extTerm.createTerminalWindow();
+                extTerm.attachShellStream(stream);
+                extTerm.setShellWindowSize(80, 24, 480, 600);
+                extTerm.write('cd ' + directory + '\n');
 
-            terminalWindow.on('close', _ => stream.end());
-        })
-        .catch(e => log("An error occurred whilst requesting shell", e));
+            })
+            .catch(e => log("An error occurred whilst requesting shell", e));
+    }
 });
+
+ipcMain.handle('external-terminal-send-command', (_, message) => extTerm.write(message));
 
 ipcMain.on('open-file-editor-remote', async (_, remoteDirectory, fileName) =>
 {
@@ -367,13 +266,13 @@ ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileNam
 /**
  * Event handler for the 'select files' dialog menu
  **/
-ipcMain.handle('open-files', async () =>
+ipcMain.handle('open-files', async (properties) =>
 {
     return new Promise((resolve, reject) =>
     {
         if ( isSSHConnected() )
         {
-            dialog.showOpenDialog({ properties: [ 'openFile', 'multiSelections' ] })
+            dialog.showOpenDialog(properties || { properties: [ 'openFile', 'multiSelections' ] })
                 .then(result => resolve(result.filePaths))
                 .catch(err => reject(err));
         }

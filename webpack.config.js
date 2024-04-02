@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        "file-explorer-page": [
+        "file-explorer": [
             './src/script/general-functionality.js',
             './src/script/context-menu.ts',
             './src/script/custom-elements/file-element.js',
@@ -32,11 +32,6 @@ module.exports = {
         "terminal": [
             "./src/script/general-functionality.js",
             "./src/script/handling-external-terminal.js",
-        ],
-        /** Introduction page **/
-        "intro": [
-            "./src/script/general-functionality.js",
-            "./src/script/handling-introduction.ts"
         ]
     },
     output: {

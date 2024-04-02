@@ -3,6 +3,9 @@ const hljs = require('highlight.js'); // Highlight.js
 
 const path = require('path');
 
+const APP_VERSION = require('../../package.json').version;
+const APP_NAME = require('../../package.json').name;
+
 hljs.addPlugin({
     "after:highlight": (params) => {
         const openTags = [];
@@ -61,7 +64,7 @@ contextBridge.exposeInMainWorld('ssh',  {
     grantPermissions: async (directory, file, permissions) => ipcRenderer.invoke('grant-permissions', directory, file, permissions),
 
     /** @returns {Promise<string[]>} */
-    selectFiles: async () => ipcRenderer.invoke('open-files'),
+    selectFiles: async (properties) => ipcRenderer.invoke('open-files', properties),
 
     startingDir: async () => ipcRenderer.invoke('starting-directory'),
 
@@ -102,7 +105,7 @@ contextBridge.exposeInMainWorld('events', {
 });
 
 contextBridge.exposeInMainWorld('terminal', {
-    execute: async (command) => ipcRenderer.invoke('cmd', command),
+    execute: async (command) => ipcRenderer.invoke('external-terminal-send-command', command),
 });
 
 contextBridge.exposeInMainWorld('extWindows', {
@@ -162,6 +165,11 @@ contextBridge.exposeInMainWorld('auth', {
 contextBridge.exposeInMainWorld('config', {
     /** @param {string} file */
     get: (file) => ipcRenderer.invoke('get-config', file),
+})
+
+contextBridge.exposeInMainWorld('app', {
+    version: APP_VERSION,
+    name: APP_NAME,
 })
 
 /**

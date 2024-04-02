@@ -21,40 +21,40 @@
         </div>
 
         <!-- Host and port -->
-        <div class="input-button-container">
-            <input type="url" name="host" class="input-box user-interact nested-input" id="ssh-host"
+        <div class="input-button-container border">
+            <input type="url" name="host" class="input-box nested-input" id="ssh-host"
                    title="The host or IP address of the server" placeholder="Host">
-            <input type="number" name="port" class="input-box user-interact nested-button ssh-port nested-button" id="ssh-port" data-default="22"
+            <input type="number" name="port" class="input-box nested-button ssh-port nested-button" id="ssh-port" data-default="22"
                    title="The port of the server. Default is 22" placeholder="Port">
         </div>
         <!-- Username -->
-        <input type="text" name="username" class="input-box user-interact" id="ssh-username"
+        <input type="text" name="username" class="input-box border" id="ssh-username"
                title="The username for the server" placeholder="Username">
 
         <!-- Container for password and show password button-->
-        <div class="input-button-container">
-            <input type="password" name="password" class="input-box user-interact nested-input" id="ssh-password"
+        <div class="input-button-container border">
+            <input type="password" name="password" class="input-box nested-input" id="ssh-password"
                    title="The password for the server" placeholder="Password">
             <input type="button" name="show-password" class="show-password nested-button" id="ssh-show-password"
                    title="Show or hide password visibility">
         </div>
 
         <!-- Container for private key and select private key button-->
-        <div class="input-button-container">
-            <input type="text" name="private-key" class="input-box user-interact nested-input" id="ssh-private-key"
+        <div class="input-button-container border">
+            <input type="text" name="private-key" class="input-box nested-input" id="ssh-private-key"
                    title="The private key for the server" placeholder="Private Key">
             <div class="select-private-key nested-button" title="Select a private key file" id="ssh-select-private-key"></div>
         </div>
 
         <!-- Passphrase -->
-        <input type="text" name="passphrase" class="input-box user-interact" id="ssh-passphrase"
+        <input type="text" name="passphrase" class="input-box border" id="ssh-passphrase"
                title="The passphrase for the private key" placeholder="Passphrase">
         <!-- Connect button -->
-        <div class="input-button-container">
-            <input type="button" class="page-button user-interact reduced-height" id="ssh-login" title="Connect to SSH session" value="Connect">
-            <span class="user-interact nested-button reduced-height fingerprint-bg" id="ssh-fingerprint-auth"
+        <div class="reduced-height input-button-container border">
+            <input type="button" class="reduced-height page-button" id="ssh-login" title="Connect to SSH session" value="Connect">
+            <span class="reduced-height nested-button fingerprint-bg" id="ssh-fingerprint-auth"
                   title="Use fingerprint authentication">
-                <span class="user-interact nested-button reduced-height fingerprint-auth"></span>
+                <span class="reduced-height nested-button fingerprint-auth"></span>
             </span>
         </div>
     </div>
