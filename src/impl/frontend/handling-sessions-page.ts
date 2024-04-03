@@ -4,10 +4,11 @@
 
 import contextmenu from './context-menu';
 import { SessionElement } from "./custom-elements/session-element";
-import ISSHSession from "../core/utilities/ssh-session-interface";
+import ISSHSession from "../utilities/ssh-session-interface";
+import toHtml from "../parsers/parsers";
 
 
-const changelogFileUrl = 'https://github.com/VxTi/SSH-FTP/blob/main/changelog.md';
+const changelogFileUrl = 'https://raw.githubusercontent.com/VxTi/SSH-FTP/main/changelog.md';
 
 document.addEventListener('DOMContentLoaded', async () =>
 {
@@ -67,13 +68,12 @@ document.addEventListener('DOMContentLoaded', async () =>
 
     /** Load in the session data and convert retrieved data to elements **/
     // @ts-ignore
-    window.ssh.sessions.get()
+    window['ssh'].sessions.get()
         .then((results: ISSHSession[]) =>
         {
             document.querySelectorAll('.session-loading')
                 .forEach(element => element.remove());
             results.forEach(session => __addSession(session));
-            console.timeEnd('Index Page Load Time');
             document.getElementById('add-sessions')
                 .addEventListener('click', () => window.location.href = './pages/page-login-ssh.html');
         })
@@ -99,18 +99,41 @@ document.addEventListener('DOMContentLoaded', async () =>
     window.addEventListener('session-connected', _ => window.location.href = './pages/page-file-explorer.html');
 
     // Acquire most recent application version
-    fetch(changelogFileUrl)
+    fetch(changelogFileUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'text/plain'
+        }
+    })
         .then(response => response.text())
         .then(text =>
         {
-            let changelog = text.split('\n');
-            if ( changelog.length === 0)
+            console.log(text);
+            if ( text.length === 0)
                 return;
 
-            if ( window.localStorage['app-version'] !== changelog[0])
-                __showUpdatePage(changelog);
+            // Check if there's a new version that came out
+            if ( window['app'].version.toString() !== text.substring(0, text.indexOf('\n')) &&
+                window.localStorage['shown-changelog'] !== text.substring(0, text.indexOf('\n')))
+            {
+                __showUpdatePage(text);
+            }
+            window.localStorage['shown-changelog'] = text.substring(0, text.indexOf('\n'));
         })
-        .catch(window['logger'].log);
+        .catch(_ => {
+            __showUpdatePage(`## v1.0.0
+
+---
+
+## Added
+
+- SSH file browsing
+- External shell window
+- Built-in file editing/uploading
+- Keybinds for quickly navigating through remote server
+- Fingerprint authentication for supported devices
+`);
+        });
 });
 
 /**
@@ -120,7 +143,7 @@ document.addEventListener('DOMContentLoaded', async () =>
 function __addSession(session: ISSHSession)
 {
     let sessionContainer = document.getElementById('sessions-inner-container');
-
+    console.log(session);
     let sessionElement = new SessionElement(session);
     sessionContainer.appendChild(sessionElement);
 }
@@ -128,20 +151,26 @@ function __addSession(session: ISSHSession)
 /**
  * Function for showing a changelog page when the app starts up.
  */
-function __showUpdatePage(changelog: string[])
+function __showUpdatePage(changelog: string)
 {
     let targetContainer = document.getElementById('content');
 
-    // Main container
-    let changelogContainer = document.createElement('div');
-    changelogContainer.classList.add('changelog-container');
+    let changelogHtml = toHtml('text/markdown', changelog);
 
-    // App icon
-    let applicationIcon = document.createElement('span');
-    applicationIcon.classList.add('app-icon');
+    let styles = document.createElement('style');
+    styles.setAttribute('rel', 'stylesheet');
+    styles.setAttribute('href',  '../css/code/markdown.css');
+    document.head.appendChild(styles);
 
-    let changelogText =
-    changelogContainer.appendChild(applicationIcon);
-
-    targetContainer.appendChild(changelogContainer);
+    targetContainer.innerHTML += `
+    <div class="changelog">
+        <div class="changelog-container container">
+            <span class="app-icon icon"></span>
+            <div class="changelog-text">
+                ${changelogHtml}
+            </div>
+            <div class="close-button">Close</div>
+        </div>
+    </div>
+    `;
 }

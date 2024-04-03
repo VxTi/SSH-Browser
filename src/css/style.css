@@ -488,3 +488,7 @@ body {
 
 .context-menu-item__normal:hover { background-color: var(--theme-5); }
 .context-menu-item__separator { border-top: 1px solid var(--theme-5); }
+
+.app-icon {
+    background-image: url('../resources/app_icon.ico');
+}

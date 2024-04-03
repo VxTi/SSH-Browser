@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     spinner.classList.add('spinner');
     document.querySelector('.process-loading').appendChild(spinner);
     document.getElementById('log-out')
-        .addEventListener('click', () => window.location.href = '../index.html');
+        .addEventListener('click', () => window.location.href = '../../../pages/index.html');
 
     fileContainer = document.getElementById('file-container');
 
@@ -319,7 +319,7 @@ function loadFileViewer()
     // If for whatever reason currentDir is not defined, return to home menu.
     if ( currentDir === undefined )
     {
-        window.location.href = '../index.html';
+        window.location.href = '../../../pages/index.html';
         return;
     }
 
@@ -483,7 +483,7 @@ async function checkFsDifferences()
         .catch(_ =>
         {
             // TODO: Add action menu for when connection fails
-            window.location.href = '../index.html'
+            window.location.href = '../../../pages/index.html'
         });
 }
 

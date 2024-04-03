@@ -1,4 +1,4 @@
-import ISSHSession from "../../core/utilities/ssh-session-interface";
+import ISSHSession from "../../utilities/ssh-session-interface";
 
 /**
  * @file session-element.ts
@@ -74,7 +74,7 @@ export class SessionElement extends HTMLElement {
                 background-size: calc(var(--session-height) - 10px);
                 background-position: center;
                 background-repeat: no-repeat;
-                background-image: url("./resources/fingerprint.png");
+                background-image: url("../resources/fingerprint.png");
             }
         `;
 

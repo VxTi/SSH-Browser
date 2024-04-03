@@ -2,7 +2,7 @@
   "name": "ssh-ftp",
   "version": "1.0.0",
   "description": "A Simple SSH File Browser",
-  "main": "src/index.js",
+  "main": "src/impl/index.js",
   "scripts": {
     "pack": "webpack",
     "build_linux": "webpack && electron-packager . --overwelrite --platform=linux --arch=x64 --icon=src/resources/app_icon.png --prune=true --out=release-builds",

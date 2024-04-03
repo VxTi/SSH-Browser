@@ -8,8 +8,8 @@ const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('elec
 const fs = require('fs')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
-const extTerm = require('./core/external-terminal-impl.js');
-const { createWindow, System } = require('./core/window-impl.js');
+const extTerm = require('./frontend/external-terminal-impl.js');
+const { createWindow, System } = require('./window-impl.js');
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',

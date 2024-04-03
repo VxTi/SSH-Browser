@@ -3,40 +3,40 @@ const path = require('path');
 module.exports = {
     entry: {
         "file-explorer": [
-            './src/script/general-functionality.js',
-            './src/script/context-menu.ts',
-            './src/script/custom-elements/file-element.js',
-            './src/script/custom-elements/file-hierarchy-element.ts',
-            './src/script/custom-elements/file-search-result-element.ts',
-            './src/script/file-explorer/file/file-caching.js',
-            './src/script/file-explorer/file/remote-file.js',
-            './src/script/file-explorer/file/file-permissions.js',
-            './src/script/file-explorer/file-hierarchy-impl.ts',
-            './src/script/file-explorer/handling-file-page.js',
+            './src/impl/frontend/general-functionality.js',
+            './src/impl/frontend/context-menu.ts',
+            './src/impl/frontend/custom-elements/file-element.js',
+            './src/impl/frontend/custom-elements/file-hierarchy-element.ts',
+            './src/impl/frontend/custom-elements/file-search-result-element.ts',
+            './src/impl/frontend/file-explorer/file/file-caching.js',
+            './src/impl/frontend/file-explorer/file/remote-file.js',
+            './src/impl/frontend/file-explorer/file/file-permissions.js',
+            './src/impl/frontend/file-explorer/file-hierarchy-impl.ts',
+            './src/impl/frontend/file-explorer/handling-file-page.js',
         ],
         "main": [
-            "./src/script/general-functionality.js",
-            "./src/script/custom-elements/session-element.ts",
-            "./src/script/handling-sessions-page.ts"
+            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/custom-elements/session-element.ts",
+            "./src/impl/frontend/handling-sessions-page.ts"
         ],
         "login": [
-            "./src/script/general-functionality.js",
-            "./src/script/handling-login-page.js"
+            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/handling-login-page.js"
         ],
         /** File editor page **/
         "file-editor": [
-            "./src/script/general-functionality.js",
-            "./src/script/handling-file-editor.js"
+            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/handling-file-editor.js"
         ],
         /** Terminal page **/
         "terminal": [
-            "./src/script/general-functionality.js",
-            "./src/script/handling-external-terminal.js",
+            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/handling-external-terminal.js",
         ]
     },
     output: {
-        filename: '[name]-packed.js',
-        path: path.resolve(__dirname, 'src', 'script', 'packed'),
+        filename: '[name]-bundle.js',
+        path: path.resolve(__dirname, 'src', 'bundles'),
     },
     target: 'web',
     node: {

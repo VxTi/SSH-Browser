@@ -9,7 +9,7 @@ let os = require('os');
  * @param createArgs
  * @returns {Electron.CrossProcessExports.BrowserWindow}
  */
-function createWindow(pagePath = path.join(__dirname, '..', 'index.html'), createArgs = {})
+function createWindow(pagePath = path.join(__dirname, '../pages', 'index.html'), createArgs = {})
 {
     let window = new BrowserWindow({
         width: 900,

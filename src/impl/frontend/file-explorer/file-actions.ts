@@ -1,5 +1,5 @@
 import RemoteFile from "./file/remote-file.js";
-import ISSHSession from "../../core/utilities/ssh-session-interface";
+import ISSHSession from "../../utilities/ssh-session-interface";
 
 /**
  * Function for deleting a file from the file explorer,
