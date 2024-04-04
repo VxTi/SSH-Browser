@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "target": "es6",
+        "target": "esnext",
         "module": "commonjs",
         "strict": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "lib": ["es2022", "dom"],
+        "lib": ["ESNext", "dom"],
     },
     "exclude": [
         "./webpack.config.js", "release-builds"]

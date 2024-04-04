@@ -9,8 +9,12 @@
  */
 type ContextPriority = number;
 
-export interface IAppContext {
+type AppContextEvent = 'load' | 'unload' | 'focus' | 'unfocus';
 
+type ContextEventCallbackArray = ((context: AppContext) => {})[];
+
+export class AppContext
+{
     /**
      * The current context ID. This is the same as the ID of the element.
      * Can later be used to keep track of which context is which.
@@ -21,57 +25,74 @@ export interface IAppContext {
      * The priority of this application context.
      * This can be used to determine which context has task priority,
      */
-    priority: ContextPriority;
+    priority: ContextPriority = 1;
 
     /**
      * The element that this context is associated with.
      */
-    contentElement: typeof Element;
+    contentElement: Element;
 
     /**
      * Whether this context is currently focussed.
+     * By default is set to true when the context is created.
      */
-    focussed: boolean;
+    focussed: boolean = true;
 
     /**
      * Whether to run background tasks.
      */
-    backgroundUpdates: boolean;
+    backgroundUpdates: boolean = false;
 
     /**
-     * Event handler for when the app context was loaded.
-     * This can be used for initializing variables, adding elements, e.t.c.
-     * @param event The 'load' event
-     * @param callback The function that is called whenever the context was loaded.
+     * Function for handling the 'load' event.
      */
-    on(event: 'load', callback: Function): void;
+    onload: ((context: AppContext) => {})[] = [];
 
     /**
-     * Event handler for when the app context was unloaded.
-     * This can be used for cleaning up memory, or updating variables, e.t.c.
-     * @param event The 'unload' event
-     * @param callback The function that is called when the 'unload' function was called.
+     * Function for handling the 'unload' event.
      */
-    on(event: 'unload', callback: Function): void;
+    onunload: ((context: AppContext) => {})[] = [];
 
     /**
-     * Event handler for when the app context focus was gained.
-     * This can be used for adding elements to the screen, or starting
-     * event handlers.
-     * @param event The 'focus' event
-     * @param callback The function that is called when the 'focus' function was called.
+     * Function for handling the 'focus' event.
      */
-    on(event: 'focus', callback: Function): void;
+    onfocus: ((context: AppContext) => {})[] = [];
 
     /**
-     * Event handler for when the app context focus was lost.
-     * This can be used for removing elements from the screen, or pausing
-     * event handlers.
-     * @param event The 'unfocus' event
-     * @param callback The function that is called when the 'unfocus' function was called.
+     * Function for handling the 'unfocus' event.
      */
-    on(event: 'unfocus', callback: Function): void;
+    onunfocus: ((context: AppContext) => {})[] = [];
 
+    /**
+     * Constructor for the AppContext class.
+     * @param referenceElement The element that this context is associated with.
+     * @private
+     */
+    private constructor(referenceElement: Element)
+    {
+        this.contentElement = referenceElement;
+    }
+
+    /**
+     * Create a new AppContext instance.
+     * @param referenceElement The element that this context is associated with.
+     */
+    static create(referenceElement: Element): AppContext
+    {
+        return new AppContext(referenceElement);
+    }
+
+    /**
+     * Function for registering an event handler.
+     * @param event The event to handle.
+     * @param callback The callback function to call when the event is triggered.
+     */
+    on(event: AppContextEvent, callback: ((context: AppContext) => {})[]): void
+    {
+        // Check if the event is a valid event.
+        // If it is, push the callback to the event handler.
+        this[ 'on' + event ]?.push(callback);
+    }
 }
 
 /**
@@ -80,21 +101,139 @@ export interface IAppContext {
  */
 export class AppState
 {
-    currentContext: IAppContext;
-    contextStack: IAppContext[];
+    /**
+     * The current context of the application.
+     */
+    private static _currentContext: AppContext;
 
-    private constructor(context: IAppContext) {
-        this.contextStack = [];
-        this.currentContext = context;
-        this.contextStack.push(context);
-    }
+    /**
+     * A stack of all the contexts that are currently active.
+     */
+    private static _contextStack: AppContext[] = [];
+
+    /**
+     * Constructor for the AppState class.
+     * This class is a singleton and should not be instantiated.
+     * @private
+     */
+    private constructor() {}
 
     /**
      * Function for changing the current context.
-     * @param context The context to change to.
+     * Whenever there's still a context active, it will be pushed to the stack
+     * and the new context will be set as current.
+     * @param context The context to add. This must be non-registered
+     * @param setAsCurrent Whether to set the context as the current context.
+     *                     If set to false, the context will only be pushed to the stack.
+     * @throws Error when the context is already registered.
      */
-    static useContext(context: IAppContext): AppState {
-        return new AppState(context);
+    static pushContext(context: AppContext, setAsCurrent: boolean = true): void
+    {
+        if ( this._contextStack.some(ctx => ctx.contextId === context.contextId) )
+            throw new Error(`The context with the ID '${context.contextId}' has already been registered.`);
+
+        // Call the 'onload' event handlers.
+        this._currentContext.onload
+            .forEach(callback => callback(this._currentContext));
+
+        if ( setAsCurrent )
+        {
+            this._currentContext = context;
+            this._currentContext.focussed = true;
+            // Call the 'onfocus' event handlers.
+            this._currentContext.onfocus
+                .forEach(callback => callback(this._currentContext));
+        }
+        else
+        {
+            this._contextStack.push(context);
+        }
+    }
+
+    /**
+     * Function for switching to a different context.
+     * This function can accept either an app context or a context ID.
+     * If the context ID isn't registered, nothing happens.
+     * When an app context instance is provided, the AppState will
+     * switch to the provided context and push the current context to the stack. (if available)
+     * @param context The ID or context to switch to.
+     * @throws Error when the context with the ID isn't registered.
+     */
+    static switchContext(context: string | AppContext): void
+    {
+        // If the context is a string, find the context with the same ID.
+        // otherwise, use the provided context instance;
+        let referenceId = context instanceof AppContext ? context.contextId : context;
+
+        // If the context is already the current context, return.
+        if ( this._currentContext != null && this._currentContext.contextId === referenceId )
+            return;
+
+        // Find the context with the same ID as referenceId.
+        for ( let ctx of this._contextStack )
+        {
+            if ( ctx.contextId === referenceId )
+            {
+                // If there's a current context, push it to the
+                // stack and set the new context as current.
+                if ( this._currentContext != null )
+                {
+                    this._contextStack.push(this._currentContext);
+                    this._currentContext.focussed = false;
+
+                    // Call the 'onunfocus' event handlers.
+                    this._currentContext.onunfocus
+                        .forEach(callback => callback(this._currentContext));
+                }
+
+                // Set the new context as the current context,
+                // and call the 'onfocus' event handlers.
+                this._currentContext = ctx;
+                this._currentContext.onfocus
+                    .forEach(callback => callback(this._currentContext));
+
+                return; // Exit the function.
+            }
+        }
+        throw new Error(`The context with the ID '${referenceId}' has not been registered.`);
+    }
+
+    /**
+     * Get the context stack of the application.
+     */
+    static get contextStack(): AppContext[]
+    {
+        return this._contextStack;
+    }
+
+    /**
+     * Clear the context stack.
+     * This will remove all contexts from the stack.
+     */
+    static clearContextStack(): void
+    {
+        this._contextStack = [];
+    }
+
+    /**
+     * Get the current context ( highest priority ) of the application.
+     */
+    static get currentContext(): AppContext
+    {
+        return this._currentContext;
+    }
+
+    /**
+     * Removes the current context from the stack and sets the
+     * previous context with the highest priority as the current context,
+     * or the last context if all contexts have the same priority.
+     */
+    static popContext(): void
+    {
+        this._currentContext.onunfocus
+            .forEach(callback => callback(this._currentContext));
+        this._currentContext.onunload
+            .forEach(callback => callback(this._currentContext));
     }
 
 }
