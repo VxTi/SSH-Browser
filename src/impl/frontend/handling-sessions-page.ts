@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () =>
         let searchValue = (event.target as HTMLInputElement).value.toLowerCase();
         let sessionElements = targetContainer.querySelectorAll('session-element');
 
+        // If the input box is empty, make all elements visible
         if (searchValue.length === 0)
         {
             sessionElements.forEach(element => element.setAttribute('invisible', 'false'));
@@ -57,12 +58,12 @@ document.addEventListener('DOMContentLoaded', async () =>
         {
             element.setAttribute(
                 'invisible',
-                [
+                (![
                     element.getAttribute('host'),
                     element.getAttribute('username'),
                     element.getAttribute('port')
                 ]
-                    .some(name => name.toLowerCase().includes(searchValue)).toString());
+                    .some(name => name.toLowerCase().includes(searchValue))).toString());
         });
     });
 
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () =>
                 .forEach(element => element.remove());
             results.forEach(session => __addSession(session));
             document.getElementById('add-sessions')
-                .addEventListener('click', () => window.location.href = './pages/page-login-ssh.html');
+                .addEventListener('click', () => window.location.href = './page-login-ssh.html');
         })
 
     // Event listener for when a session authentication is requested.
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () =>
         window.dispatchEvent(new CustomEvent('show-notification', { detail: event['detail'] || 'Authentication Failed' }));
     })
     // Event listener for when a session is connected.
-    window.addEventListener('session-connected', _ => window.location.href = './pages/page-file-explorer.html');
+    window.addEventListener('session-connected', _ => window.location.href = './page-file-explorer.html');
 
     // Acquire most recent application version
     fetch(changelogFileUrl, {

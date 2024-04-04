@@ -118,8 +118,12 @@ contextBridge.exposeInMainWorld('extWindows', {
 contextBridge.exposeInMainWorld('localFs', {
     /** @param {string} localAbsolutePath
      * @param {string} content*/
-    saveFile: async (localAbsolutePath, content) => ipcRenderer.invoke('save-local-file', localAbsolutePath, content),
-    renameFile: async (localDirectory, oldFileName, newFileName) => ipcRenderer.invoke('rename-local-file', localDirectory, oldFileName, newFileName),
+    saveFile: async (localAbsolutePath, content) =>
+        ipcRenderer.invoke('localFs:save-file', localAbsolutePath, content),
+    renameFile: async (localDirectory, oldFileName, newFileName) =>
+        ipcRenderer.invoke('localFs:rename-file', localDirectory, oldFileName, newFileName),
+    listFiles: async (directory) =>
+        ipcRenderer.invoke('localFs:list-files', directory),
 })
 
 

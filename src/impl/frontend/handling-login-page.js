@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', _ =>
 
     // Add the back button functionality
     document.getElementById('ssh-back-button')
-        .addEventListener('click', () => window.location.href = '../../pages/index.html');
+        .addEventListener('click', () => window.location.href = './index.html');
 
     /** Functionality of logging in */
     document.getElementById('ssh-login').addEventListener('click', () =>

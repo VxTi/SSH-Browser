@@ -31,7 +31,7 @@ function __initialize() {
      */
     function createTerminalWindow()
     {
-        associatedWindow = createWindow(path.join(__dirname, '../pages/page-external-terminal.html'), {
+        associatedWindow = createWindow(path.join(__dirname, './page-external-terminal.html'), {
             width: 600,
             height: 480
         });

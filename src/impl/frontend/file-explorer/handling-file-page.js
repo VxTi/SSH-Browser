@@ -24,6 +24,8 @@ let busy = (promise) =>
     });
 };
 
+let currentLocalDir = '/Users/';
+
 /** @type {string | undefined} */
 let currentUser = undefined
 
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     spinner.classList.add('spinner');
     document.querySelector('.process-loading').appendChild(spinner);
     document.getElementById('log-out')
-        .addEventListener('click', () => window.location.href = '../../../pages/index.html');
+        .addEventListener('click', () => window.location.href = './index.html');
 
     fileContainer = document.getElementById('file-container');
 
@@ -256,7 +258,6 @@ document.addEventListener('DOMContentLoaded', _ =>
     });
     fileContainer.addEventListener('drop', (event) =>
     {
-        event.preventDefault();
         event.stopImmediatePropagation()
         fileContainer.removeAttribute('dragging-over');
         // Check if there are any files to upload
@@ -319,7 +320,7 @@ function loadFileViewer()
     // If for whatever reason currentDir is not defined, return to home menu.
     if ( currentDir === undefined )
     {
-        window.location.href = '../../../pages/index.html';
+        window.location.href = './index.html';
         return;
     }
 
@@ -359,9 +360,8 @@ function loadFileViewer()
     // Load all files in the current directory
     loadFileElements();
     assembleFileHierarchy(
-        async (path) =>
-            await window.ssh.listFiles(path).then(res => res.split('\n')),
-        currentDir,
+        async (path) => await window['localFs'].listFiles(path),
+        currentLocalDir,
         document.getElementById('file-hierarchy'));
 }
 
@@ -483,7 +483,7 @@ async function checkFsDifferences()
         .catch(_ =>
         {
             // TODO: Add action menu for when connection fails
-            window.location.href = '../../../pages/index.html'
+            window.location.href = './index.html'
         });
 }
 

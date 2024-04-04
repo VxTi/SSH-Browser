@@ -4,12 +4,11 @@
         "target": "es6",
         "module": "commonjs",
         "strict": false,
-        "outDir": "js_compiled",
-        "rootDir": "src",
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "lib": ["es2022", "dom"],
     },
-    "exclude": ["webpack.config.js", "release-builds"]
+    "exclude": [
+        "./webpack.config.js", "release-builds"]
 }

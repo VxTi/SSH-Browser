@@ -77,7 +77,7 @@ function loadFile(path)
     {
 
         if ( !fs.existsSync(path) )
-            return reject("File does not exist.");
+            return reject("File does not exist: ", path);
 
         fs.readFile(path, 'utf-8', (err, data) =>
         {
@@ -197,7 +197,7 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
     else
     {
         // Create a new window
-        targetWindow = createWindow(path.join(__dirname, 'pages/page-external-file-editor.html'), {
+        targetWindow = createWindow(path.join(__dirname, '../pages/page-external-file-editor.html'), {
             width: 1000,
             height: 700
         });
@@ -228,7 +228,7 @@ function __openFileEditor(context, windowCloseCallback = undefined, webPageLoadC
 /**
  * Event handler for saving a file to the local file system
  */
-ipcMain.handle('save-local-file', async (_, absolutePath, content) =>
+ipcMain.handle('localFs:save-file', async (_, absolutePath, content) =>
 {
     return new Promise((resolve, reject) =>
     {
@@ -247,7 +247,7 @@ ipcMain.handle('save-local-file', async (_, absolutePath, content) =>
 /**
  * Event handler for renaming a file on the local file system.
  */
-ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileName) =>
+ipcMain.handle('localFs:rename-file', async (_, localPath, oldFileName, newFileName) =>
 {
     return new Promise((resolve, reject) =>
     {
@@ -259,6 +259,24 @@ ipcMain.handle('rename-local-file', async (_, localPath, oldFileName, newFileNam
                 reject(err);
             }
             else resolve();
+        })
+    });
+})
+
+/**
+ * Event handler for listing files in a directory on the local file system.
+ */
+ipcMain.handle('localFs:list-files', async (_, path) => {
+    return new Promise((resolve, reject) =>
+    {
+        fs.readdir(path, (err, files) =>
+        {
+            if ( err )
+            {
+                log('An error occurred whilst attempting to list files:', err);
+                reject(err);
+            }
+            else resolve(files);
         })
     });
 })
@@ -659,7 +677,7 @@ ipcMain.handle('get-config', (event, fileName) =>
 
     return loadFile(
         StaticFiles.includes(query) ?
-            path.join(__dirname, 'resources', 'static', FileNames[query]) :
+            path.join(__dirname, '../resources', 'static', FileNames[query]) :
             path.join(RESOURCES_PATH, FileNames[query]))
 });
 
