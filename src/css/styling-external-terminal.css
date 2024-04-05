@@ -1,47 +1,23 @@
 :root {
-    --terminal-input-height: 1.5rem;
+    --terminal-columns: 80;
+    --terminal-rows: 24;
+    --terminal-window-relative-width: 95vw;
+    --terminal-window-relative-height: 95vh;
 }
 
-html, body, .content, .terminal-content, .terminal-input, .navigator {
+html, body, .terminal-content {
     background-color: #111;
-}
-
-/* Styling for a line of text in the terminal */
-.terminal-output {
-    font-family: monospace;
-    color: var(--text-color);
-    font-size: 0.65rem;
-    flex-wrap: wrap;
-    line-height: 1.5;
-    white-space: pre;
 }
 
 /* The container for output */
 .terminal-content {
-    height: calc(100vh - var(--terminal-input-height));
-    width: 95vw;
-    margin: 10px;
+    height: var(--terminal-window-relative-height);
+    width: var(--terminal-window-relative-width);
+    margin: 15px;
     display: flex;
     flex-flow: column nowrap;
     color: var(--text-color);
     font-family: Inconsolata, monospace;
-    overflow-y: scroll;
-}
-
-.terminal-input {
-    margin: 0;
-    font-size: 1rem;
-    width: calc(100vw - 20px);
-    border-color: transparent;
-    padding: 10px;
-    font-family: Inconsolata, monospace;
-    color: var(--text-color);
-}
-
-.terminal-input:focus {
-    outline: none;
-}
-
-.terminal-input:focus {
-    background-color: var(--theme-1);
+    overflow-y: hidden;
+    box-sizing: border-box;
 }

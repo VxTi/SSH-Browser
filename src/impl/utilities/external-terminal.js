@@ -31,13 +31,15 @@ function __initialize() {
      */
     function createTerminalWindow()
     {
-        associatedWindow = createWindow(path.join(__dirname, './page-external-terminal.html'), {
+        associatedWindow = createWindow(path.join(__dirname, '../../pages/page-external-terminal.html'), {
             width: 600,
             height: 480
         });
         associatedWindow.webContents.on('did-finish-load', () => {
             windowLoaded = true;
             __flushMessageQueue();
+
+            associatedWindow.webContents.send('terminal:window-dimensions', 80, 24);
         });
         // If the window is closed, end the shell stream.
         associatedWindow.on('closed', () => {
@@ -113,7 +115,7 @@ function __initialize() {
                 shellStream.end();
                 return;
             }
-            associatedWindow.webContents.send('message-received', message);
+            associatedWindow.webContents.send('terminal:message-received', message);
             inputHandlers.forEach(handler => handler(message));
         }
         else
@@ -156,7 +158,10 @@ function __initialize() {
     function setShellWindowSize(rows, columns, width, height)
     {
         if ( shellStream )
+        {
             shellStream.setWindow(rows, columns, height, width);
+            associatedWindow.webContents.send('terminal:window-dimensions', columns, rows);
+        }
         else throw new Error('No shell stream attached.');
     }
 

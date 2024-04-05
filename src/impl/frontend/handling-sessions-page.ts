@@ -122,7 +122,8 @@ document.addEventListener( 'DOMContentLoaded', async () =>
                 __showUpdatePage( text );
             }
             window.localStorage[ 'shown-changelog' ] = versionName;
-        } );
+        } )
+        .catch(_ => window['logger'].log('Failed to fetch changelog.'));
 } );
 
 /**
