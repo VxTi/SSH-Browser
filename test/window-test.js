@@ -1,5 +1,5 @@
 let { app } = require('electron');
-let { createWindow } = require('../src/impl/window-impl')
+let { createWindow } = require('../src/impl/utilities/window')
 let path = require('path');
 
 

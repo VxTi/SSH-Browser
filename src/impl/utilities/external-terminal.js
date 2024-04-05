@@ -4,7 +4,7 @@
 
 let { ClientChannel } = require('ssh2');
 let { BrowserWindow } = require('electron');
-let { createWindow } = require("../window-impl.js");
+let { createWindow } = require("./window.js");
 let path = require('path');
 
 /**

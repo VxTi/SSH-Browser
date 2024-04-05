@@ -8,8 +8,9 @@ const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('elec
 const fs = require('fs')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
-const extTerm = require('./frontend/external-terminal-impl.js');
-const { createWindow, System } = require('./window-impl.js');
+const extTerm = require('./utilities/external-terminal.js');
+const { pushSession, getSessions, popSession } = require('./utilities/sessions');
+const { createWindow, System } = require('./utilities/window.js');
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
@@ -28,7 +29,6 @@ let currentConnection = 0;
 
 // Window variables
 let mainWindow = null;
-let /* TEMPORARY */ terminalWindow = null;
 let fileEditorWindows = [];
 
 function log(message, ...args)
@@ -386,7 +386,7 @@ ipcMain.handle('delete-file', async (_, directory, fileName) =>
 });
 
 /** Event handler for retrieving the successful sessions in sessions.json **/
-ipcMain.handle('retrieve-sessions', retrieveSessions);
+ipcMain.handle('retrieve-sessions', getSessions);
 
 /** Event handler for retrieving the status of the current SSH connection **/
 ipcMain.handle('connection-status', isSSHConnected)
@@ -433,7 +433,7 @@ ipcMain.handle('connect', async (_, properties) =>
         })
             .then(ssh =>
             {
-                storeSession(properties); // store the session in sessions.json
+                pushSession(properties); // store the session in sessions.json
 
                 log('Connected to ' + properties.host + ' with username ' + properties.username + ' on port ' + properties.port);
 
@@ -665,7 +665,7 @@ ipcMain.on('current-session', (event) =>
     } : null;
 })
 
-ipcMain.handle('delete-session', (_, host, username, port) => deleteSession({ host: host, username: username, port: port}));
+ipcMain.handle('delete-session', (_, host, username, port) => popSession({ host: host, username: username, port: port}));
 
 ipcMain.on('log', (_, message, ...args) => log(message, ...args));
 
@@ -708,98 +708,6 @@ function ssh()
     return getCurrentSession()?.ssh;
 }
 
-/**
- * Method for retrieving the successful sessions in sessions.json.
- * @returns {Promise<Object | Error>} A promise that resolves to the content of the sessions file.
- */
-async function retrieveSessions()
-{
-    return new Promise((resolve, reject) =>
-    {
-        fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (err, data) =>
-        {
-            if ( err ) return reject(err);
-
-            let content = {};
-            try {
-                content = JSON.parse(data.toString());
-            } catch (e) {
-                return reject(e)
-            }
-
-            resolve(content);
-        });
-    });
-}
-
-/**
- * Method for updating the sessions file with a new successful connection.
- * @param {ISSHSession} session
- * The connection object to update the sessions file with.
- */
-function storeSession(session)
-{
-
-    // Get previous data
-    fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
-    {
-        if ( error )
-        {
-            console.error(error);
-            throw error;
-        }
-        // Parse previous data
-        let sessions = JSON.parse(data.toString());
-
-        // Check if the connection is already in the sessions file, if not, add it.
-        if ( !sessions.some(ses => ses.host === session.host && ses.username === session.username && ses.port === session.port) )
-        {
-            // Add new data
-            sessions.push(session);
-
-            // TODO: Encrypt the data before writing it to the file.
-
-            // Write back to file
-            fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
-            {
-                if ( err )
-                {
-                    console.error("An error occurred whilst attempting to write file:", err);
-                    throw err;
-                }
-            })
-        }
-    })
-}
-
-/**
- * Method for deleting a session from the sessions file.
- * @param {ISSHSession} session The session to delete.
- */
-function deleteSession(session)
-{
-    fs.readFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), (error, data) =>
-    {
-        if ( error )
-            throw error;
-
-        /** @type {ISSHSession[]} */
-        let sessions = JSON.parse(data.toString());
-        let index = sessions.findIndex(compare => {
-            return compare.host === session.host &&
-                compare.username === session.username &&
-                (compare?.port || 22) === (session?.port || 22);
-        });
-        if ( index !== -1 )
-        {
-            sessions.splice(index, 1);
-            fs.writeFile(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify(sessions), (err) =>
-            {
-                if ( err ) throw err;
-            })
-        }
-    })
-}
 
 /**
  * Method for formatting paths for the remote server.
