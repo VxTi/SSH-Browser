@@ -95,7 +95,7 @@ function __initialize() {
     {
         shellStream = stream;
         shellStream.on('data',
-            data => __handleReceivedMessage(ansiConverter.toHtml(data.toString())));
+            data => __handleReceivedMessage(data.toString()));
         return this;
     }
 

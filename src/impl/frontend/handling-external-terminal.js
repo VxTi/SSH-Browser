@@ -6,13 +6,13 @@
  * The buffer containing the terminal's output data.
  * @type string[]
  */
-let contentBuffer;
+let contentBuffer = [];
 
 /**
  * The limit as to how many rows the terminal can hold.
  * @type {number}
  */
-const maxRows = 1024;
+const maxRows = 4096;
 
 /**
  * The element which holds the terminal text.
@@ -24,13 +24,6 @@ let terminalContentElement;
  * The position of the cursor in the terminal.
  */
 let cursorPosition = { x: 0, y: 0, verticalOffset: 0 };
-
-/**
- * By how much the content buffer is offset. The content buffer
- * can hold many more rows than the maximum configured terminal rows.
- * @type {number}
- */
-let cursorOffset = 0;
 
 /**
  * The dimensions of the terminal (characters)
@@ -69,11 +62,11 @@ let SpecialCharMap = {
             if ( (cursorPosition.x === 0 && index === 0) || index < 0 || index > contentBuffer.length )
                 return;
 
-            contentBuffer[index] = contentBuffer.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
             moveCursor(-1, 0);
+            putString('', index, cursorPosition.x, false);
         }
     },
-    'Enter': { sends: '\n' },
+    'Enter': { sends: '\n', executes: () => moveCursor(0, 1, true)},
     'Control': { sends: '\x1b' },
     'Tab': { sends: '\t' },
     'Escape': { sends: '\x1b' }
@@ -85,17 +78,25 @@ document.addEventListener('DOMContentLoaded', _ =>
 
     terminalContentElement = document.querySelector('.terminal-content');
 
-    document.addEventListener('wheel', event => {
-        cursorPosition.verticalOffset += Math.floor(event.deltaY / 16);
-    })
     // Add all rows
     for ( let i = 0; i < dimensions.rows; i++ )
     {
         let rowElement = document.createElement('span');
         rowElement.classList.add('terminal-row');
-        rowElement.setAttribute('columns', dimensions.columns.toString())
         terminalContentElement.appendChild(rowElement);
     }
+
+    /*
+     * Event listener for handling the wheel event.
+     * This event is used to scroll the terminal content.
+     */
+    document.addEventListener('wheel', event => {
+        let previousOffset = cursorPosition.verticalOffset;
+        // Ensure verticalOffset is between 0 and the content buffer length
+        cursorPosition.verticalOffset = Math.min(Math.max(0, cursorPosition.verticalOffset + Math.sign(event.deltaY)), contentBuffer.length - 1);
+        if ( previousOffset !== cursorPosition.verticalOffset)
+            updateContent();
+    })
 
     window.setTitle('Terminal');
 
@@ -142,6 +143,7 @@ document.addEventListener('DOMContentLoaded', _ =>
  */
 function putString(content, rowIdx, colIdx, replace = true)
 {
+    console.log(`Inserting ${content} at row ${rowIdx} and column ${colIdx}`);
     // When the index is below 0, add empty elements until normal index 0
     if ( rowIdx < 0 )
     {
@@ -155,12 +157,14 @@ function putString(content, rowIdx, colIdx, replace = true)
     // If none of the other cases are true, regularly insert the text
     else
     {
+        if ( contentBuffer[rowIdx] === undefined )
+            contentBuffer[rowIdx] = '';
         contentBuffer[rowIdx] = contentBuffer[rowIdx].slice(0, colIdx) + content + contentBuffer[rowIdx].slice(colIdx + (replace ? 0 : content.length));
     }
 
     // Ensure the size of the content buffer is below maxRows.
     if ( contentBuffer.length > maxRows )
-        contentBuffer = contentBuffer.splice(0, contentBuffer.length - maxRows);
+        contentBuffer.splice(0, contentBuffer.length - maxRows);
 
     updateContent();
 }
@@ -172,14 +176,20 @@ function putString(content, rowIdx, colIdx, replace = true)
 function updateContent()
 {
     let currentRowElements = terminalContentElement.querySelectorAll('.terminal-row');
-    for ( let rowIdx = 0, rowAbsIdx; rowIdx < dimensions.rows; rowIdx++ )
+    for ( let rowIdx = 0, rowAbsIdx; rowIdx < currentRowElements.length; rowIdx++ )
     {
         rowAbsIdx = rowIdx + cursorPosition.verticalOffset;
         // Prevent out of bounds errors
         if ( rowAbsIdx >= contentBuffer.length || rowAbsIdx < 0 )
             break;
-        currentRowElements[rowIdx].innerText = contentBuffer[rowAbsIdx];
+        currentRowElements[rowIdx].innerHTML = contentBuffer[rowAbsIdx];
     }
+
+    // Update the cursor position
+    let cursorElement = document.querySelector('.terminal-cursor');
+    cursorElement.style.left = `${cursorPosition.x * 8}px`;
+    cursorElement.style.top = `${(cursorPosition.y - cursorPosition.verticalOffset) * 16}px`;
+    console.log(`Cursor position: ${cursorPosition.x}, ${cursorPosition.y - cursorPosition.verticalOffset}`);
 }
 
 /**
@@ -191,9 +201,9 @@ function updateContent()
 function translateY(rows, absolute = false)
 {
     if ( absolute )
-        cursorOffset = rows;
+        cursorPosition.verticalOffset = rows;
     else
-        cursorOffset += rows;
+        cursorPosition.verticalOffset += rows;
 }
 
 /**
@@ -210,7 +220,6 @@ function __updateDimensions(rows, columns)
     // Update the dimensions variable and the inner content.
     Object.assign(dimensions, { columns, rows });
     let currentRowElements = terminalContentElement.querySelectorAll('.terminal-row');
-    currentRowElements.forEach(row => row.setAttribute('columns', columns.toString()));
 
     // Add rows
     if ( currentRowElements.length < rows )
@@ -219,7 +228,6 @@ function __updateDimensions(rows, columns)
         {
             let rowElement = document.createElement('span');
             rowElement.classList.add('terminal-row');
-            rowElement.setAttribute('columns', columns.toString())
             terminalContentElement.appendChild(rowElement);
         }
     } // Remove rows
@@ -228,6 +236,8 @@ function __updateDimensions(rows, columns)
         for ( let i = currentRowElements.length; i > rows; i-- )
             terminalContentElement.removeChild(currentRowElements[i]);
     }
+    if ( contentBuffer.length < rows )
+        contentBuffer.push(...Array(rows - contentBuffer.length).fill('\0'));
 }
 
 /**
@@ -241,12 +251,16 @@ function moveCursor(x, y, absolute = false)
     // If the absolute flag is set, move the cursor to the provided location.
     if ( absolute )
     {
+        x = Math.max(0, Math.min(x, dimensions.columns));
+        y = Math.max(0, Math.min(y, dimensions.rows));
         Object.assign(cursorPosition, { x, y });
     }
     else // Otherwise, move the cursor relative to its current position.
     {
         cursorPosition.x += x;
         cursorPosition.y += y;
+        cursorPosition.x = Math.max(0, Math.min(cursorPosition.x, dimensions.columns));
+        cursorPosition.y = Math.max(0, Math.min(cursorPosition.y, dimensions.rows));
     }
 }
 
@@ -255,17 +269,28 @@ function moveCursor(x, y, absolute = false)
  */
 window['events'].on('terminal:message-received', message =>
 {
-    let rows = message.split('\n');
+    let rows = message.split('\n').map(row => {
+        return row
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+    })
+
     // If it's a single message, add it to the screen and move the cursor horizontally
-    if ( rows.length === 1 )
+    try
     {
-        putString(rows[0], cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-        moveCursor(rows[0].length, 0);
+        if ( rows.length === 1 )
+        {
+            putString(rows[0], cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
+            moveCursor(rows[0].length, cursorPosition.y + cursorPosition.verticalOffset, true);
+        }
+        else for ( let subMessage of rows )
+        {
+            putString(subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
+            moveCursor(0, 1);
+        }
     }
-    else for ( let subMessage of rows )
-    {
-        putString(subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-        moveCursor(0, 1);
+    catch (error) {
+        console.error("Error occurred whilst attempting to insert messages", error);
     }
 });
 
@@ -273,4 +298,4 @@ window['events'].on('terminal:message-received', message =>
  * Event handler for receiving changes in window dimensions ( cols, rows )
  * This can then be used to resize the font size of the terminal.
  */
-window['events'].on('terminal:window-dimensions', __updateDimensions);
+window['events'].on('terminal:window-dimensions', (columns, rows) => __updateDimensions(columns, rows));
