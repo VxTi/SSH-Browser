@@ -6,7 +6,7 @@
 import RemoteFile from "./file/remote-file.js";
 import { getFile, getFiles, storeFiles } from "./file/file-caching.js";
 import { FileElement } from "../custom-elements/file-element.js";
-import { registerKeybindMapping, resourceFromFileExtension } from "../general-functionality.js";
+import { registerKeybindMapping, resourceFromFileExtension } from "../core-functionality.ts";
 import contextmenu from "../context-menu";
 import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
 import { assembleFileHierarchy } from "./file-hierarchy-impl";
@@ -136,8 +136,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     // When the user clicks on the screen outside a file element, hide the context menu.
     document.addEventListener('click', event =>
     {
-        console.log(event.target)
-        if ( event.target instanceof Element && (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu'))
+        if ( event.target instanceof Element && (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu') )
             contextmenu.destroy();
     });
 
@@ -158,21 +157,33 @@ document.addEventListener('DOMContentLoaded', _ =>
      * right-clicking on a file-element, or a file-hierarchy-element.
      */
     contextmenu.register('file-element', [
-        { title: 'Edit File', type: 'normal', click: (target) => {
+        {
+            title: 'Edit File', type: 'normal', click: (target) =>
+            {
                 if ( target instanceof FileElement )
                     window['extWindows'].openFileEditor(target.getAttribute('path'), target.getAttribute('name'));
             },
             visible: (target) => (target instanceof FileElement || target instanceof FileHierarchyElement)
                 && !target.hasAttribute('directory')
         },
-        { title: 'Show Information', type: 'normal', click: showFileInfo },
-        { title: 'New Folder', type: 'normal', click: createDirectory, visible: (target) => target.hasAttribute('directory') },
+        { title: 'Show Information', type: 'normal', click: (target) => showFileInfo(target) },
+        {
+            title: 'New Folder',
+            type: 'normal',
+            click: createDirectory,
+            visible: (target) => target.hasAttribute('directory')
+        },
         { title: 'Download', type: 'normal', click: downloadSelected },
         { type: 'separator' },
-        { title: 'Rename', type: 'normal', click: () => {} },
+        {
+            title: 'Rename', type: 'normal', click: () =>
+            {
+            }
+        },
         { title: 'Clone', type: 'normal', click: cloneSelected },
         { type: 'separator' },
-        { title: 'Copy Path', type: 'normal', click: (target) =>
+        {
+            title: 'Copy Path', type: 'normal', click: (target) =>
             {
                 if ( target && target instanceof Element && target.hasAttribute('path') && target.hasAttribute('name') )
                     navigator.clipboard
@@ -191,9 +202,6 @@ document.addEventListener('DOMContentLoaded', _ =>
         event.preventDefault();
         event.stopImmediatePropagation();
 
-
-        console.log(event.target);
-
         if ( event.target instanceof FileElement || event.target instanceof FileHierarchyElement )
             contextmenu.show('file-element', event.clientX, event.clientY, event.target);
     });
@@ -210,8 +218,8 @@ document.addEventListener('DOMContentLoaded', _ =>
      * File filtering functionality implementation
      */
     let fileFilter = document.getElementById('file-filter');
-    fileFilter.addEventListener('input', manageFileFilteringInput);
-    fileFilter.addEventListener('focus', _ => manageFileFilteringInput());
+    fileFilter.addEventListener('input', handleFileFilterInput);
+    fileFilter.addEventListener('focus', _ => handleFileFilterInput());
     document.addEventListener('click', _ =>
     {
         document.getElementById('file-search-results').innerHTML = '';
@@ -252,7 +260,7 @@ document.addEventListener('DOMContentLoaded', _ =>
             return;
 
         /** @type string[] */
-        let paths = [...event.dataTransfer.files].map(f => f.path);
+        let paths = [ ...event.dataTransfer.files ].map(f => f.path);
 
         window['logger'].log('Uploading files', paths);
 
@@ -631,14 +639,12 @@ function cloneSelected()
 
 /**
  * Function for showing the file information of the currently selected file.
+ * @param {HTMLElement} fileElement The file element to show the information of.
  */
-async function showFileInfo()
+async function showFileInfo(fileElement)
 {
-    let selected = getSelectedFiles()
-    if ( selected.length === 0 )
-        return;
 
-    let file = getFile(selected[0].getAttribute('path'), selected[0].getAttribute('name'));
+    let file = getFile(fileElement.getAttribute('path'), fileElement.getAttribute('name'));
     if ( file === null )
         return;
 
@@ -648,7 +654,7 @@ async function showFileInfo()
     }
 
     let fileInfo = document.querySelector('.file-information');
-    let clientRect = selected[0].getBoundingClientRect();
+    let clientRect = fileElement.getBoundingClientRect();
     fileInfo.removeAttribute('hidden');
 
     ensureFrameWithinWindow(fileInfo,
@@ -656,27 +662,18 @@ async function showFileInfo()
         clientRect.top + clientRect.height + 10);
 
     // Copy selected element onto file info page
-    document.querySelector('.file-info-preview').style.backgroundImage = `url(${resourceFromFileExtension(selected[0].getAttribute('type'))}`;
-    document.getElementById('file-info-perm-user').textContent =
-        file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : '');
+    document.querySelector('.file-info-preview').style.backgroundImage = `url(${resourceFromFileExtension(fileElement.getAttribute('type'))}`;
 
-    // File permissions for all users, can be read, write, and execute or none.
-    document.getElementById('file-info-perm-group')
-        .textContent = file.permissions.toString('group');
-    document.getElementById('file-info-perm-other')
-        .textContent = file.permissions.toString('other');
-
-    document.getElementById('file-info-title')
-        .textContent = file.name;
-
-    document.getElementById('file-info-size')
-        .textContent = file.fileSizeString;
-
-    document.getElementById('file-info-owner')
-        .textContent = file?.owner || 'Unknown';
-
-    document.getElementById('file-info-modified')
-        .textContent = file.lastModified || 'Unknown';
+    [
+        [ 'file-info-perm-user', file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : '') ],
+        [ 'file-info-perm-group', file.permissions.toString('group') ],
+        [ 'file-info-perm-other', file.permissions.toString('other') ],
+        [ 'file-info-title', file.name ],
+        [ 'file-info-size', file.fileSizeString ],
+        [ 'file-info-owner', file.owner || 'Unknown' ],
+        [ 'file-info-modified', file.lastModified || 'Unknown' ]
+    ]
+        .forEach(([ id, value ]) => document.getElementById(id).textContent = value);
 }
 
 /**
@@ -697,7 +694,7 @@ function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = { left: 0, 
  * and adding them to the file filter results in the search box.
  * @param {Event} [inputEvent] The input event that triggered this function
  */
-function manageFileFilteringInput(inputEvent = null)
+function handleFileFilterInput(inputEvent = null)
 {
     let inputElement = inputEvent?.target || document.getElementById('file-filter');
 
@@ -734,7 +731,7 @@ function manageFileFilteringInput(inputEvent = null)
                 else
                 {
                     result.setAttribute('selected', '');
-                    showFileInfo();
+                    showFileInfo(result);
                 }
             });
             fileSearchResults.appendChild(fileSearchResult);

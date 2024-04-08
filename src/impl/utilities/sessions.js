@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('node:path');
 
-const SESSION_FILE_PATH = path.join(__dirname, '../..', 'resources', 'static', 'sessions.json');
+const SESSION_FILE_NAME = 'sessions.json';
+
+let SESSION_FILE_PATH = null;
 
 /**
  * Method for retrieving the successful sessions in sessions.json.
@@ -11,6 +13,8 @@ async function getSessions()
 {
     return new Promise((resolve, reject) =>
     {
+        if ( !SESSION_FILE_PATH )
+            return reject(new Error('The path to the sessions file is not set.'));
         fs.readFile(SESSION_FILE_PATH, (err, data) =>
         {
             if ( err )
@@ -37,7 +41,9 @@ async function getSessions()
  */
 function pushSession(session)
 {
-
+    // Ensure that the session and the path to the sessions file are valid.
+    if ( !session || !SESSION_FILE_PATH )
+        return;
     // Get previous data
     fs.readFile(SESSION_FILE_PATH, (error, data) =>
     {
@@ -76,6 +82,9 @@ function pushSession(session)
  */
 function popSession(session)
 {
+    // Ensure that the session and the path to the sessions file are valid.
+    if ( !session || !SESSION_FILE_PATH )
+        return;
     fs.readFile(SESSION_FILE_PATH, (error, data) =>
     {
         if ( error )
@@ -100,4 +109,14 @@ function popSession(session)
     })
 }
 
-module.exports = { getSessions, pushSession, popSession };
+/**
+ * Method for ensuring the existence of the sessions file.
+ */
+function ensureSessionFileExistence(resourcePath)
+{
+    SESSION_FILE_PATH = path.join(resourcePath, SESSION_FILE_NAME);
+    if ( !fs.existsSync(SESSION_FILE_PATH) )
+        fs.writeFileSync(SESSION_FILE_PATH, '[]');
+}
+
+module.exports = { getSessions, pushSession, popSession, ensureSessionFileExistence };

@@ -1,4 +1,4 @@
-import {resourceFromFileExtension} from "../general-functionality.js";
+import {resourceFromFileExtension} from "../core-functionality";
 
 /**
  * Custom element for displaying a file search result,
@@ -19,7 +19,6 @@ export class FileSearchResultElement extends HTMLElement {
                 <span class="element-title">${this.getAttribute('name')}</span>
             </div>
         `;
-        console.log(this.innerHTML);
     }
 }
 

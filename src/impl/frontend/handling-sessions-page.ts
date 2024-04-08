@@ -109,7 +109,6 @@ document.addEventListener( 'DOMContentLoaded', async () =>
         .then( response => response.text() )
         .then( text =>
         {
-            console.log( text );
             if ( text.length === 0 )
                 return;
 

@@ -1,14 +1,7 @@
-/** @type {Object<boolean>} */
-let __keyStates = {};
 
-/** @type {Object} */
-let __keybinds = null;
-
-/** @type {Array<Object<function>>} */
-let __keybindMappings = [];
-
-/** @type {Object} */
-let __languages;
+let __keyStates: Object = {};
+let __keybinds: Object = null;
+let __keybindMappings: Object[] = [];
 
 /**
  *  Once the page has successfully been loaded, we'll have
@@ -20,17 +13,26 @@ let __languages;
 document.addEventListener('DOMContentLoaded', async () =>
 {
 
-    if ( !document.querySelector('.navigator.navigator-title') )
+    document.body.classList.add(window['app'].os.platform);
+
+    // Navigator bars are only used on macOS, since only
+    // macOS can have borderless windows (electronJS)
+    if ( window['app'].os.isMac )
     {
+        let navigator = document.createElement('div');
+        navigator.classList.add('navigator');
+        document.body.prepend(navigator);
         let navigatorTitle = document.createElement('span');
         navigatorTitle.classList.add('navigator-title');
         navigatorTitle.innerText = 'SSH FTP';
-        document.querySelector('.navigator')?.appendChild(navigatorTitle);
+        navigator.appendChild(navigatorTitle);
     }
 
-    window.setTitle = function (title)
+    window['setTitle'] = function (title: string)
     {
-        document.querySelector('.navigator-title').innerText = title;
+        if ( window['app'].os.isMac )
+            (document.querySelector('.navigator-title') as HTMLElement).innerText = title;
+        else document.title = title;
     }
 
     // Set the theme to the user's preference
@@ -40,27 +42,28 @@ document.addEventListener('DOMContentLoaded', async () =>
 
     // If the file icon map hasn't been loaded yet and the html
     // element has the load-icons attribute, load the file_icons.json file
-    if ( typeof window.iconMap === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons') )
+    if ( typeof window['iconMap'] === 'undefined' && document.documentElement.dataset.hasOwnProperty('loadIcons') )
     {
-        window['iconMap'] = await window.config.get('file_icons').then(res => JSON.parse(res));
+        window['iconMap'] = await window['app'].config.get('file_icons')
+            .then(res => JSON.parse(res));
     }
 
     if ( !localStorage['keybinds'] && !forceLoad )
-        localStorage['keybinds'] = await window.config.get('keybinds');
+        localStorage['keybinds'] = await window['app'].config.get('keybinds');
 
     __keybinds = JSON.parse(localStorage['keybinds']);
 })
 
 /**
  * Function for getting the icon of a file based on its extension
- * @param {string} extension The extension of the file
- * @returns {string} The path to the icon
+ * @param extension The extension of the file
+ * @returns The path to the icon
  */
-export function resourceFromFileExtension(extension)
+export function resourceFromFileExtension(extension: string): string
 {
     // There is a possibility that the iconMap isn't loaded yet when this
     // function is called. In that case, return an empty string
-    if ( !window.iconMap )
+    if ( !window['iconMap'] )
         return '';
     extension = extension.toLowerCase().replace(/(\s+)/g, '')
     let icon = findIconMapEntry(extension) || findIconMapEntry('unknown')
@@ -72,14 +75,14 @@ export function resourceFromFileExtension(extension)
 
 /**
  * Function for finding the icon map entry based on an identifier (id or extension)
- * @param {string} identifier The identifier to search for
- * @returns {*}
+ * @param identifier The identifier to search for
+ * @returns The icon map entry
  */
-export function findIconMapEntry(identifier)
+export function findIconMapEntry(identifier: string): string | null
 {
-    if ( !window.iconMap )
+    if ( !window['iconMap'] )
         return null
-    return window.iconMap.find(icon => icon.id === identifier || icon.extensions.includes(identifier))
+    return window['iconMap'].find(icon => icon.id === identifier || icon.extensions.includes(identifier))
 }
 
 /** Upon keyup, reset all the key states. This prevents any keys from staying in the 'pressed' state */
@@ -104,7 +107,7 @@ window.addEventListener('keydown', (event) =>
  * @param {KeyboardEvent} event The fired press event
  * @private
  */
-function __checkKeybindEntry(keybindIdentifier, event)
+function __checkKeybindEntry(keybindIdentifier: string, event: KeyboardEvent)
 {
     if ( !__keybinds[keybindIdentifier] )
         return
@@ -143,7 +146,7 @@ function __checkKeybindEntry(keybindIdentifier, event)
  * @param {string} keybind The keybind map entry to fire the event for
  * @private
  */
-function __fireKeybindEvent(keybind)
+function __fireKeybindEvent(keybind: string)
 {
     for ( let keybindMapping of __keybindMappings )
         if ( keybindMapping[keybind] && typeof keybindMapping[keybind] === 'function' )
@@ -157,22 +160,22 @@ function __fireKeybindEvent(keybind)
  * are pressed. The keys in the provided object must match the one in the keybinds file.
  * @param {Object<Function>} keybinds
  */
-export function registerKeybindMapping(keybinds)
+export function registerKeybindMapping(keybinds: Object)
 {
     __keybindMappings.push(keybinds)
 }
 
 /**
  * Function for checking if a key is pressed
- * @param {string} key The key to check
- * @returns {boolean} Whether the key is pressed
+ * @param key The key to check
+ * @returns Whether the key is pressed
  */
-export function isKeyPressed(key)
+export function isKeyPressed(key: string)
 {
     return __keyStates[key.toLowerCase()] || false
 }
 
-window.events.on('context-menu-interact', (event) =>
+window['events'].on('context-menu-interact', (event: CustomEvent) =>
 {
     console.log("Context menu interacted with", event)
 })

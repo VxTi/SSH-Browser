@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
     entry: {
         "file-explorer": [
-            './src/impl/frontend/general-functionality.js',
+            './src/impl/frontend/core-functionality.ts',
             './src/impl/frontend/context-menu.ts',
             './src/impl/frontend/custom-elements/circular-loading-element.ts',
             './src/impl/frontend/custom-elements/file-element.js',
@@ -16,22 +16,22 @@ module.exports = {
             './src/impl/frontend/file-explorer/handling-file-page.js',
         ],
         "main": [
-            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/core-functionality.ts",
             "./src/impl/frontend/custom-elements/session-element.ts",
             "./src/impl/frontend/handling-sessions-page.ts"
         ],
         "login": [
-            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/core-functionality.ts",
             "./src/impl/frontend/handling-login-page.js"
         ],
         /** File editor page **/
         "file-editor": [
-            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/core-functionality.ts",
             "./src/impl/frontend/handling-file-editor.js"
         ],
         /** Terminal page **/
         "terminal": [
-            "./src/impl/frontend/general-functionality.js",
+            "./src/impl/frontend/core-functionality.ts",
             "./src/impl/frontend/handling-external-terminal.js",
         ]
     },

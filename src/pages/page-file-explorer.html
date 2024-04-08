@@ -5,12 +5,10 @@
     <title>SSH Browser</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/file-explorer/styling-file-explorer.css">
-    <link rel="stylesheet" href="../css/file-explorer/loading_spinner.css">
+    <link rel="stylesheet" href="../css/styling-file-explorer.css">
     <script src="../bundles/file-explorer-bundle.js"></script>
 </head>
 <body>
-    <div class="navigator"></div>
     <div class="content">
         <!-- File viewer action container -->
         <div class="action-container border-bottom">
@@ -63,7 +61,7 @@
                         <div class="file-info">Date modified</div>
                         <span class="file-info" id="file-info-modified"></span>
                         <div class="file-info">Created by</div>
-                        <span class="file-info"></span>
+                        <span class="file-info" id="file-info-owner"></span>
                         <div class="file-info">Size</div>
                         <span class="file-info" id="file-info-size"></span>
                     </div>

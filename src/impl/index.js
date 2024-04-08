@@ -9,12 +9,11 @@ const fs = require('fs')
 const path = require('node:path')
 const { NodeSSH } = require('node-ssh')
 const extTerm = require('./utilities/external-terminal.js');
-const { pushSession, getSessions, popSession } = require('./utilities/sessions');
+const sessions = require('./utilities/sessions');
 const { createWindow, System } = require('./utilities/window.js');
 
 const FileNames = {
     KEYBINDS: 'keybinds.json',
-    SESSIONS: 'sessions.json',
     FILE_ICONS: 'file_icons.json'
 }
 
@@ -49,10 +48,7 @@ app.whenReady().then(() =>
     if ( !fs.existsSync(RESOURCES_PATH) )
         fs.mkdirSync(RESOURCES_PATH)
 
-    // If the sessions page doesn't exist yet, create it, and show the user
-    // the 'welcome' screen.
-    if ( !fs.existsSync(path.join(RESOURCES_PATH, FileNames.SESSIONS)) )
-        fs.writeFileSync(path.join(RESOURCES_PATH, FileNames.SESSIONS), JSON.stringify([]));
+    sessions.ensureSessionFileExistence(RESOURCES_PATH);
 
     mainWindow = createWindow();
     mainWindow.setMinimumSize(600, 500);
@@ -386,7 +382,7 @@ ipcMain.handle('delete-file', async (_, directory, fileName) =>
 });
 
 /** Event handler for retrieving the successful sessions in sessions.json **/
-ipcMain.handle('retrieve-sessions', getSessions);
+ipcMain.handle('retrieve-sessions', sessions.getSessions);
 
 /** Event handler for retrieving the status of the current SSH connection **/
 ipcMain.handle('connection-status', isSSHConnected)
@@ -433,7 +429,7 @@ ipcMain.handle('connect', async (_, properties) =>
         })
             .then(ssh =>
             {
-                pushSession(properties); // store the session in sessions.json
+                sessions.pushSession(properties); // store the session in sessions.json
 
                 log('Connected to ' + properties.host + ' with username ' + properties.username + ' on port ' + properties.port);
 
@@ -665,7 +661,7 @@ ipcMain.on('current-session', (event) =>
     } : null;
 })
 
-ipcMain.handle('delete-session', (_, host, username, port) => popSession({ host: host, username: username, port: port}));
+ipcMain.handle('delete-session', (_, host, username, port) => sessions.popSession({ host: host, username: username, port: port}));
 
 ipcMain.on('log', (_, message, ...args) => log(message, ...args));
 

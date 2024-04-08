@@ -1,4 +1,4 @@
-import { findIconMapEntry, resourceFromFileExtension } from '../general-functionality.js';
+import { findIconMapEntry, resourceFromFileExtension } from '../core-functionality.ts';
 /**
  * Implementation of the file-element custom element.
  *
@@ -126,7 +126,6 @@ export class FileElement extends HTMLElement
     {
         this.shadowRoot.querySelector('.file-icon')
             .style.backgroundImage = `url(${resourceFromFileExtension(extension)})`;
-        console.log("Setting thumbnail for", extension, "to", resourceFromFileExtension(extension));
     }
 
     /**

@@ -1,4 +1,4 @@
-import { resourceFromFileExtension } from "../general-functionality";
+import { resourceFromFileExtension } from "../core-functionality";
 
 /**
  * A custom element that represents a file in the file hierarchy.

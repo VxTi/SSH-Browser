@@ -3,8 +3,9 @@ const hljs = require('highlight.js'); // Highlight.js
 
 const path = require('path');
 
-const APP_VERSION = require('../../package.json').version;
-const APP_NAME = require('../../package.json').name;
+
+const { version, name } = require('../../package.json');
+
 
 hljs.addPlugin({
     "after:highlight": (params) => {
@@ -166,14 +167,19 @@ contextBridge.exposeInMainWorld('auth', {
     canRequestFingerprint: () => ipcRenderer.sendSync('can-prompt-touch-id'),
 })
 
-contextBridge.exposeInMainWorld('config', {
-    /** @param {string} file */
-    get: (file) => ipcRenderer.invoke('get-config', file),
-})
-
 contextBridge.exposeInMainWorld('app', {
-    version: APP_VERSION,
-    name: APP_NAME,
+    version: version,
+    name: name,
+    os: {
+        platform: process.platform,
+        isMac: process.platform === 'darwin',
+        isWindows: process.platform === 'win32',
+        isLinux: process.platform === 'linux',
+    },
+    config: {
+        /** @param {string} file */
+        get: (file) => ipcRenderer.invoke('get-config', file),
+    }
 })
 
 /**
