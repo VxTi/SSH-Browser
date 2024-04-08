@@ -66,7 +66,7 @@ let SpecialCharMap = {
             putString('', index, cursorPosition.x, false);
         }
     },
-    'Enter': { sends: '\n', executes: () => moveCursor(0, 1, true)},
+    'Enter': { sends: '\n', executes: () => moveCursor(0, 1)},
     'Control': { sends: '\x1b' },
     'Tab': { sends: '\t' },
     'Escape': { sends: '\x1b' }
@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', _ =>
                 }
             }
         })
+    updateContent();
 })
 
 /**
@@ -143,7 +144,6 @@ document.addEventListener('DOMContentLoaded', _ =>
  */
 function putString(content, rowIdx, colIdx, replace = true)
 {
-    console.log(`Inserting ${content} at row ${rowIdx} and column ${colIdx}`);
     // When the index is below 0, add empty elements until normal index 0
     if ( rowIdx < 0 )
     {
@@ -165,8 +165,6 @@ function putString(content, rowIdx, colIdx, replace = true)
     // Ensure the size of the content buffer is below maxRows.
     if ( contentBuffer.length > maxRows )
         contentBuffer.splice(0, contentBuffer.length - maxRows);
-
-    updateContent();
 }
 
 /**
@@ -175,6 +173,7 @@ function putString(content, rowIdx, colIdx, replace = true)
  */
 function updateContent()
 {
+    console.log(cursorPosition, contentBuffer)
     let currentRowElements = terminalContentElement.querySelectorAll('.terminal-row');
     for ( let rowIdx = 0, rowAbsIdx; rowIdx < currentRowElements.length; rowIdx++ )
     {
@@ -184,26 +183,10 @@ function updateContent()
             break;
         currentRowElements[rowIdx].innerHTML = contentBuffer[rowAbsIdx];
     }
-
     // Update the cursor position
     let cursorElement = document.querySelector('.terminal-cursor');
     cursorElement.style.left = `${cursorPosition.x * 8}px`;
     cursorElement.style.top = `${(cursorPosition.y - cursorPosition.verticalOffset) * 16}px`;
-    console.log(`Cursor position: ${cursorPosition.x}, ${cursorPosition.y - cursorPosition.verticalOffset}`);
-}
-
-/**
- * Function for translating the content buffer onto the screen.
- * @param rows
- * @param {number} rows By how many columns to translate the
- * @param {boolean} absolute Whether to translate the screen with absolute indices or not.
- */
-function translateY(rows, absolute = false)
-{
-    if ( absolute )
-        cursorPosition.verticalOffset = rows;
-    else
-        cursorPosition.verticalOffset += rows;
 }
 
 /**
@@ -262,6 +245,7 @@ function moveCursor(x, y, absolute = false)
         cursorPosition.x = Math.max(0, Math.min(cursorPosition.x, dimensions.columns));
         cursorPosition.y = Math.max(0, Math.min(cursorPosition.y, dimensions.rows));
     }
+
 }
 
 /**
@@ -281,13 +265,18 @@ window['events'].on('terminal:message-received', message =>
         if ( rows.length === 1 )
         {
             putString(rows[0], cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-            moveCursor(rows[0].length, cursorPosition.y + cursorPosition.verticalOffset, true);
+            moveCursor(rows[0].length, 0);
         }
-        else for ( let subMessage of rows )
+        else
         {
-            putString(subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-            moveCursor(0, 1);
+            for ( let subMessage of rows )
+            {
+                putString(subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
+                moveCursor(0, cursorPosition.y + cursorPosition.verticalOffset + 1, true);
+            }
+            moveCursor(rows[rows.length - 1].length, 0);
         }
+        updateContent();
     }
     catch (error) {
         console.error("Error occurred whilst attempting to insert messages", error);

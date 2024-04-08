@@ -369,3 +369,28 @@ file-element[selected] { background-color: var(--theme-5); }
         justify-content: flex-start;
     }
 }
+
+circular-loader[hidden] { display: none; }
+
+.circular-loader-container {
+    width: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.circular-loader-rotor {
+    position: absolute;
+    width: calc(var(--file-navigator-height) / 5);
+    height: calc(var(--file-navigator-height) / 16);
+    border-radius: 40%;
+    background-color: var(--theme-5);
+    animation: spin 1s linear infinite;
+    opacity: 0;
+}
+
+@keyframes spin {
+    0% { opacity: 0.2; }
+    100% { opacity: 0.7; }
+}

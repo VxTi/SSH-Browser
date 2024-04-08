@@ -5,6 +5,7 @@ module.exports = {
         "file-explorer": [
             './src/impl/frontend/general-functionality.js',
             './src/impl/frontend/context-menu.ts',
+            './src/impl/frontend/custom-elements/circular-loading-element.ts',
             './src/impl/frontend/custom-elements/file-element.js',
             './src/impl/frontend/custom-elements/file-hierarchy-element.ts',
             './src/impl/frontend/custom-elements/file-search-result-element.ts',

@@ -18,7 +18,7 @@ html, body, .terminal-content, .navigator {
 .terminal-content {
     height: var(--terminal-window-relative-height);
     width: var(--terminal-window-relative-width);
-    margin: 15px;
+    padding: 15px;
     display: flex;
     flex-flow: column nowrap;
     color: var(--text-color);
@@ -53,7 +53,7 @@ html, body, .terminal-content, .navigator {
 }
 
 .terminal-cursor-container {
-    position: absolute; top: 0; left: 0;
+    position: relative; top: 0; left: 0;
 }
 
 .terminal-cursor {

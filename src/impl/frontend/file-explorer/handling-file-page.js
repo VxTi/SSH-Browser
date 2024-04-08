@@ -16,12 +16,10 @@ import { assembleFileHierarchy } from "./file-hierarchy-impl";
  */
 let busy = (promise) =>
 {
-    let loadingElement = document.querySelector('.process-loading');
-    loadingElement.style.visibility = 'visible';
+    let loadingElement = document.getElementById('activity-status');
+    loadingElement.removeAttribute('hidden');
     Promise.resolve(promise).then(_ =>
-    {
-        loadingElement.style.visibility = 'hidden';
-    });
+        loadingElement.setAttribute('hidden', ''));
 };
 
 let currentLocalDir = '/Users/';
@@ -106,17 +104,6 @@ registerKeybindMapping({
 
 document.addEventListener('DOMContentLoaded', _ =>
 {
-    // Add loading animation (bottom right)
-    const bladeCount = 8;
-    let spinner = document.createElement('div');
-    for ( let i = 0; i < bladeCount; i++ )
-    {
-        let loadingSpinner = document.createElement('div');
-        loadingSpinner.classList.add('blade');
-        spinner.appendChild(loadingSpinner);
-    }
-    spinner.classList.add('spinner');
-    document.querySelector('.process-loading').appendChild(spinner);
     document.getElementById('log-out')
         .addEventListener('click', () => window.location.href = './index.html');
 
