@@ -117,10 +117,10 @@ export class SessionElement extends HTMLElement {
     private async onClick()
     {
         window.dispatchEvent(new CustomEvent('session-authentication'));
-        if ( this.getAttribute('fingerprint-auth') === 'true' && window['auth'].canRequestFingerprint() )
+        if ( this.getAttribute('fingerprint-auth') === 'true' && window['app']['auth'].canRequestFingerprint() )
         {
             // Request fingerprint authentication.
-            if (!(await window['auth'].requestFingerprint('SSH Authentication')))
+            if (!(await window['app']['auth'].requestFingerprint('SSH Authentication')))
             {
                 window.dispatchEvent(new CustomEvent('session-auth-failed', { detail: 'Fingerprint authentication failed.' }));
                 return;

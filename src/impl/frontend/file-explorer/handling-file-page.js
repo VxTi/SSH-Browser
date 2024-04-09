@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', _ =>
         .catch(error =>
         {   // If an error occurs whilst attempting to list files, it's likely due to a connection error.
             // If this happens, we'll redirect the user to the main menu.
-            window.logger.log(error);
-            window.logger.log(error.stack)
+            window['app']['logger'].log(error);
+            window['app']['logger'].log(error.stack)
             console.error(error)
             //window.location.href = '../index.html'
         }));
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', _ =>
                 if ( target && target instanceof Element && target.hasAttribute('path') && target.hasAttribute('name') )
                     navigator.clipboard
                         .writeText(target.getAttribute('path') + '/' + target.getAttribute('name'))
-                        .catch(_ => window.logger.log('Error occurred whilst attempting to copy path', _))
+                        .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to copy path', _))
             }
         },
         { title: 'Delete', type: 'normal', click: deleteSelected },
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', _ =>
         /** @type string[] */
         let paths = [ ...event.dataTransfer.files ].map(f => f.path);
 
-        window['logger'].log('Uploading files', paths);
+        window['app']['logger'].log('Uploading files', paths);
 
         busy(window.ssh.uploadFiles(currentDir, paths)
             .then(_ =>
@@ -410,7 +410,7 @@ function navigateTo(target)
         })
         .catch(_ =>
         {   // If an error occurs whilst
-            window.logger.log('Error occurred whilst attempting to navigate', _)
+            window['app']['logger'].log('Error occurred whilst attempting to navigate', _)
             // TODO: Add error handling
         }));
 }
@@ -470,7 +470,7 @@ async function checkFsDifferences()
             // Compare files, if there's any difference, update the file viewer
             if ( cachedFiles.length !== serverFiles.length || cachedFiles.some(file => !serverFiles.includes(file.name)) )
             {
-                window.logger.log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
+                window['app']['logger'].log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
                 storeFiles(serverFiles, currentDir, true);
                 loadFileViewer();
             }
@@ -560,7 +560,7 @@ function downloadSelected()
 
     busy(Promise.all(selectedFiles.map((element) =>
         window.ssh.downloadFile(element.getAttribute('path'), element.getAttribute('name'))))
-        .catch(e => window.logger.error('Error occurred whilst attempting to download file', e)));
+        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to download file', e)));
 }
 
 /**
@@ -588,7 +588,7 @@ function deleteSelected()
             fileCache.set(currentDir, getFiles(currentDir).filter(f => !selected.some(e => e.getAttribute('name') === f.name)));
             selected.forEach(e => e.remove());
         })
-        .catch(e => window.logger.error('Error occurred whilst attempting to delete file', e)));
+        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to delete file', e)));
 }
 
 /**
@@ -601,7 +601,7 @@ function createDirectory()
     for ( let i = 1; files.find(f => f.name === name); i++ )
         name = `New Directory (${i})`;
     window.ssh.createDirectory(currentDir, name)
-        .catch(_ => window.logger.log('Error occurred whilst attempting to create new directory', _));
+        .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to create new directory', _));
 }
 
 /**

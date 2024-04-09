@@ -31,13 +31,6 @@ let cursorPosition = { x: 0, y: 0, verticalOffset: 0 };
 let dimensions = { columns: 80, rows: 24 };
 
 /**
- * Empty function representing no operation
- */
-const NO_OP = () =>
-{
-};
-
-/**
  * A map containing special characters and their corresponding ANSI codes.
  * These are the names for the key events that are fired, which are not
  * regular characters.
@@ -98,7 +91,7 @@ document.addEventListener('DOMContentLoaded', _ =>
             updateContent();
     })
 
-    window.setTitle('Terminal');
+    window['setTitle']('Terminal');
 
     document
         .addEventListener('keydown', (e) =>
@@ -108,7 +101,7 @@ document.addEventListener('DOMContentLoaded', _ =>
             // If it's a single character, just send it...
             if ( e.key.length === 1 )
             {
-                window.terminal.execute(e.key);
+                window['terminal'].execute(e.key);
             }
             else
             {
@@ -120,7 +113,7 @@ document.addEventListener('DOMContentLoaded', _ =>
                     {
                         // Sends the provided special character as an ansi code
                         // and executes the 'executes' function, if provided.
-                        window.terminal.execute(SpecialCharMap[key].sends);
+                        window['terminal'].execute(SpecialCharMap[key].sends);
                         if ( SpecialCharMap[key].executes )
                             SpecialCharMap[key].executes();
                         e.preventDefault();
@@ -135,14 +128,14 @@ document.addEventListener('DOMContentLoaded', _ =>
  * Function for inserting text into the content buffer and updating the content on
  * the screen. This function inserts the provided content into absolute row and column indices.
  * If out of bounds values are provided, the content array size will grow.
- * @param {string} content The content to insert
- * @param {number} rowIdx The array index of the content buffer. This is an absolute index,
+ * @param content The content to insert
+ * @param rowIdx The array index of the content buffer. This is an absolute index,
  * not one relative to the screen size. If one wants to place characters at absolute coordinates,
  * one must calculate these values beforehand.
- * @param {number} colIdx The index of the content at the given row. Same as above, this is an absolute index.
- * @param {boolean} replace Whether to replace the text at the provided position or just insert it.
+ * @param colIdx The index of the content at the given row. Same as above, this is an absolute index.
+ * @param replace Whether to replace the text at the provided position or just insert it.
  */
-function putString(content, rowIdx, colIdx, replace = true)
+function putString(content: string, rowIdx: number, colIdx: number, replace: boolean = true)
 {
     // When the index is below 0, add empty elements until normal index 0
     if ( rowIdx < 0 )
@@ -184,7 +177,7 @@ function updateContent()
         currentRowElements[rowIdx].innerHTML = contentBuffer[rowAbsIdx];
     }
     // Update the cursor position
-    let cursorElement = document.querySelector('.terminal-cursor');
+    let cursorElement = document.querySelector('.terminal-cursor') as HTMLElement;
     cursorElement.style.left = `${cursorPosition.x * 8}px`;
     cursorElement.style.top = `${(cursorPosition.y - cursorPosition.verticalOffset) * 16}px`;
 }
@@ -194,11 +187,11 @@ function updateContent()
  * This doesn't directly change the size of the window, rather
  * the size of the characters; how many characters can be displayed
  * horizontally and vertically.
- * @param {number} rows The number of rows to display.
- * @param {number} columns The number of columns to display.
+ * @param rows The number of rows to display.
+ * @param columns The number of columns to display.
  * @private
  */
-function __updateDimensions(rows, columns)
+function __updateDimensions(rows: number, columns: number)
 {
     // Update the dimensions variable and the inner content.
     Object.assign(dimensions, { columns, rows });
@@ -225,11 +218,11 @@ function __updateDimensions(rows, columns)
 
 /**
  * Function for moving the cursor position relative to its current position.
- * @param {number} y By how much to move the cursor on the y-axis. Can be relative or absolute.
- * @param {number} x By how much to move the cursor on the x-axis. Can be relative or absolute.
+ * @param y By how much to move the cursor on the y-axis. Can be relative or absolute.
+ * @param x By how much to move the cursor on the x-axis. Can be relative or absolute.
  * @param absolute Whether to move the cursor position to an absolute location or not
  */
-function moveCursor(x, y, absolute = false)
+function moveCursor(x: number, y: number, absolute: boolean = false)
 {
     // If the absolute flag is set, move the cursor to the provided location.
     if ( absolute )
@@ -251,7 +244,7 @@ function moveCursor(x, y, absolute = false)
 /**
  * Event handler for receiving messages from the shell stream
  */
-window['events'].on('terminal:message-received', message =>
+window['events'].on('terminal:message-received', (message: string) =>
 {
     let rows = message.split('\n').map(row => {
         return row
@@ -287,4 +280,4 @@ window['events'].on('terminal:message-received', message =>
  * Event handler for receiving changes in window dimensions ( cols, rows )
  * This can then be used to resize the font size of the terminal.
  */
-window['events'].on('terminal:window-dimensions', (columns, rows) => __updateDimensions(columns, rows));
+window['events'].on('terminal:window-dimensions', (columns: number, rows: number) => __updateDimensions(columns, rows));

@@ -32,7 +32,7 @@ module.exports = {
         /** Terminal page **/
         "terminal": [
             "./src/impl/frontend/core-functionality.ts",
-            "./src/impl/frontend/handling-external-terminal.js",
+            "./src/impl/frontend/terminal/handling-external-terminal.ts",
         ]
     },
     output: {

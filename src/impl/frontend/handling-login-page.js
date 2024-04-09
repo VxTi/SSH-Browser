@@ -25,12 +25,12 @@ document.addEventListener('DOMContentLoaded', _ =>
     /** Functionality of toggling fingerprint authentication */
     let fingerprintEnabled = FINGERPRINT_AUTHENTICATION;
 
-    if (window.auth.canRequestFingerprint())
+    if (window['app']['auth'].canRequestFingerprint())
     {
         let targetElement = document.getElementById('ssh-fingerprint-auth');
         targetElement.setAttribute('active', '');
         targetElement.setAttribute('enabled', fingerprintEnabled.toString());
-        targetElement.addEventListener('click', event => {
+        targetElement.addEventListener('click', _ => {
             fingerprintEnabled = !fingerprintEnabled;
             targetElement.setAttribute('enabled',  fingerprintEnabled ? 'true' : 'false');
         });
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', _ =>
             requiresFingerprintAuth: fingerprintEnabled
         })
             .then(_ => window.location.href = './page-file-explorer.html')     // Redirect to the file viewer page.
-            .catch(err =>
+            .catch(_ =>
             {
                 document.getElementById('connection-status').style.visibility = 'hidden';
                 document.querySelector('.login-container')

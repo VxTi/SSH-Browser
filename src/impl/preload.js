@@ -7,6 +7,34 @@ const path = require('path');
 const { version, name } = require('../../package.json');
 
 
+/**
+ * Object containing all the definitions that are exposed to the renderer process.
+ */
+const __app_defs = {
+    version: version,
+    name: name,
+    os: {
+        platform: process.platform,
+        isMac: process.platform === 'darwin',
+        isWindows: process.platform === 'win32',
+        isLinux: process.platform === 'linux',
+    },
+    config: {
+        /** @param {string} file */
+        get: (file) => ipcRenderer.invoke('get-config', file),
+    },
+    auth: {
+        canRequestFingerprint: () => __app_defs.os.isMac && ipcRenderer.sendSync('can-prompt-touch-id'),
+        requestFingerprint: async (message) => ipcRenderer.invoke('request-touch-id-auth', message),
+    },
+    logger: {
+        log: (message, ...args) => {
+            ipcRenderer.send('log', message, ...args);
+        }
+    }
+};
+
+
 hljs.addPlugin({
     "after:highlight": (params) => {
         const openTags = [];
@@ -162,25 +190,8 @@ contextBridge.exposeInMainWorld('path', {
     }
 })
 
-contextBridge.exposeInMainWorld('auth', {
-    requestFingerprint: async (message) => ipcRenderer.invoke('request-touch-id-auth', message),
-    canRequestFingerprint: () => ipcRenderer.sendSync('can-prompt-touch-id'),
-})
 
-contextBridge.exposeInMainWorld('app', {
-    version: version,
-    name: name,
-    os: {
-        platform: process.platform,
-        isMac: process.platform === 'darwin',
-        isWindows: process.platform === 'win32',
-        isLinux: process.platform === 'linux',
-    },
-    config: {
-        /** @param {string} file */
-        get: (file) => ipcRenderer.invoke('get-config', file),
-    }
-})
+contextBridge.exposeInMainWorld('app', __app_defs);
 
 /**
  * Expose the code highlighting function(s) to the rendering process with ID 1024 (0x400)
