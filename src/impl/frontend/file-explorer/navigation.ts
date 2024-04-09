@@ -29,8 +29,6 @@ export let navigationBackwardHistory: string[] = [];
  */
 export function navigateTo(path: string): void
 {
-    // Set the current path to the new path.
-    currentPath = path;
 
     window[ 'ssh' ]
         .listFiles( path ) // Retrieve files from selected directory

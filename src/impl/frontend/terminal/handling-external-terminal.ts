@@ -37,15 +37,15 @@ let dimensions = { columns: 80, rows: 24 };
  */
 let SpecialCharMap = {
     'ArrowUp': {
-        sends: '\x1b[A', executes: () => moveCursor(0, -1)
+        sends: '\x1b[A', executes: () => moveCursor( 0, -1 )
     },
     'ArrowDown': {
-        sends: '\x1b[B', executes: () => moveCursor(0, 1)
+        sends: '\x1b[B', executes: () => moveCursor( 0, 1 )
     },
     'ArrowLeft': {
-        sends: '\x1b[D', executes: () => moveCursor(-1, 0)
+        sends: '\x1b[D', executes: () => moveCursor( -1, 0 )
     },
-    'ArrowRight': { sends: '\x1b[C', executes: () => moveCursor(1, 0) },
+    'ArrowRight': { sends: '\x1b[C', executes: () => moveCursor( 1, 0 ) },
     'Backspace': {
         sends: '\x1b[D\0', executes: () =>
         {
@@ -55,74 +55,75 @@ let SpecialCharMap = {
             if ( (cursorPosition.x === 0 && index === 0) || index < 0 || index > contentBuffer.length )
                 return;
 
-            moveCursor(-1, 0);
-            putString('', index, cursorPosition.x, false);
+            moveCursor( -1, 0 );
+            putString( '', index, cursorPosition.x, false );
         }
     },
-    'Enter': { sends: '\n', executes: () => moveCursor(0, 1)},
+    'Enter': { sends: '\n', executes: () => moveCursor( 0, 1 ) },
     'Control': { sends: '\x1b' },
     'Tab': { sends: '\t' },
     'Escape': { sends: '\x1b' }
 };
 
 
-document.addEventListener('DOMContentLoaded', _ =>
+document.addEventListener( 'DOMContentLoaded', _ =>
 {
 
-    terminalContentElement = document.querySelector('.terminal-content');
+    terminalContentElement = document.querySelector( '.terminal-content' );
 
     // Add all rows
     for ( let i = 0; i < dimensions.rows; i++ )
     {
-        let rowElement = document.createElement('span');
-        rowElement.classList.add('terminal-row');
-        terminalContentElement.appendChild(rowElement);
+        let rowElement = document.createElement( 'span' );
+        rowElement.classList.add( 'terminal-row' );
+        terminalContentElement.appendChild( rowElement );
     }
 
     /*
      * Event listener for handling the wheel event.
      * This event is used to scroll the terminal content.
      */
-    document.addEventListener('wheel', event => {
+    document.addEventListener( 'wheel', event =>
+    {
         let previousOffset = cursorPosition.verticalOffset;
         // Ensure verticalOffset is between 0 and the content buffer length
-        cursorPosition.verticalOffset = Math.min(Math.max(0, cursorPosition.verticalOffset + Math.sign(event.deltaY)), contentBuffer.length - 1);
-        if ( previousOffset !== cursorPosition.verticalOffset)
+        cursorPosition.verticalOffset = Math.min( Math.max( 0, cursorPosition.verticalOffset + Math.sign( event.deltaY ) ), contentBuffer.length - 1 );
+        if ( previousOffset !== cursorPosition.verticalOffset )
             updateContent();
-    })
+    } )
 
-    window['setTitle']('Terminal');
+    window[ 'setTitle' ]( 'Terminal' );
 
     document
-        .addEventListener('keydown', (e) =>
+        .addEventListener( 'keydown', (e) =>
         {
             e.stopImmediatePropagation();
 
             // If it's a single character, just send it...
             if ( e.key.length === 1 )
             {
-                window['terminal'].execute(e.key);
+                window[ 'app' ][ 'terminal' ].execute( e.key );
             }
             else
             {
                 // Check if the pressed key is a special character
                 // If so, send its corresponding ANSI code to the shell.
-                for ( let key of Object.keys(SpecialCharMap) )
+                for ( let key of Object.keys( SpecialCharMap ) )
                 {
                     if ( key === e.key )
                     {
                         // Sends the provided special character as an ansi code
                         // and executes the 'executes' function, if provided.
-                        window['terminal'].execute(SpecialCharMap[key].sends);
-                        if ( SpecialCharMap[key].executes )
-                            SpecialCharMap[key].executes();
+                        window[ 'app' ][ 'terminal' ].execute( SpecialCharMap[ key ].sends );
+                        if ( SpecialCharMap[ key ].executes )
+                            SpecialCharMap[ key ].executes();
                         e.preventDefault();
                     }
                 }
             }
-        })
+        } )
     updateContent();
-})
+} )
 
 /**
  * Function for inserting text into the content buffer and updating the content on
@@ -140,24 +141,24 @@ function putString(content: string, rowIdx: number, colIdx: number, replace: boo
     // When the index is below 0, add empty elements until normal index 0
     if ( rowIdx < 0 )
     {
-        contentBuffer.splice(0, 0, content, ...Array(Math.abs(rowIdx) - 1).fill('\0'))
+        contentBuffer.splice( 0, 0, content, ...Array( Math.abs( rowIdx ) - 1 ).fill( '\0' ) )
     }
     // If index is higher than the buffer length, fill the between with empty elements
     else if ( rowIdx > contentBuffer.length )
     {
-        contentBuffer.push(...Array(rowIdx - contentBuffer.length - 1).fill('\0'));
+        contentBuffer.push( ...Array( rowIdx - contentBuffer.length - 1 ).fill( '\0' ) );
     }
     // If none of the other cases are true, regularly insert the text
     else
     {
-        if ( contentBuffer[rowIdx] === undefined )
-            contentBuffer[rowIdx] = '';
-        contentBuffer[rowIdx] = contentBuffer[rowIdx].slice(0, colIdx) + content + contentBuffer[rowIdx].slice(colIdx + (replace ? 0 : content.length));
+        if ( contentBuffer[ rowIdx ] === undefined )
+            contentBuffer[ rowIdx ] = '';
+        contentBuffer[ rowIdx ] = contentBuffer[ rowIdx ].slice( 0, colIdx ) + content + contentBuffer[ rowIdx ].slice( colIdx + (replace ? 0 : content.length) );
     }
 
     // Ensure the size of the content buffer is below maxRows.
     if ( contentBuffer.length > maxRows )
-        contentBuffer.splice(0, contentBuffer.length - maxRows);
+        contentBuffer.splice( 0, contentBuffer.length - maxRows );
 }
 
 /**
@@ -166,20 +167,20 @@ function putString(content: string, rowIdx: number, colIdx: number, replace: boo
  */
 function updateContent()
 {
-    console.log(cursorPosition, contentBuffer)
-    let currentRowElements = terminalContentElement.querySelectorAll('.terminal-row');
+    console.log( cursorPosition, contentBuffer )
+    let currentRowElements = terminalContentElement.querySelectorAll( '.terminal-row' );
     for ( let rowIdx = 0, rowAbsIdx; rowIdx < currentRowElements.length; rowIdx++ )
     {
         rowAbsIdx = rowIdx + cursorPosition.verticalOffset;
         // Prevent out of bounds errors
         if ( rowAbsIdx >= contentBuffer.length || rowAbsIdx < 0 )
             break;
-        currentRowElements[rowIdx].innerHTML = contentBuffer[rowAbsIdx];
+        currentRowElements[ rowIdx ].innerHTML = contentBuffer[ rowAbsIdx ];
     }
     // Update the cursor position
-    let cursorElement = document.querySelector('.terminal-cursor') as HTMLElement;
-    cursorElement.style.left = `${cursorPosition.x * 8}px`;
-    cursorElement.style.top = `${(cursorPosition.y - cursorPosition.verticalOffset) * 16}px`;
+    let cursorElement = document.querySelector( '.terminal-cursor' ) as HTMLElement;
+    cursorElement.style.left = `${ cursorPosition.x * 8 }px`;
+    cursorElement.style.top = `${ (cursorPosition.y - cursorPosition.verticalOffset) * 16 }px`;
 }
 
 /**
@@ -194,26 +195,26 @@ function updateContent()
 function __updateDimensions(rows: number, columns: number)
 {
     // Update the dimensions variable and the inner content.
-    Object.assign(dimensions, { columns, rows });
-    let currentRowElements = terminalContentElement.querySelectorAll('.terminal-row');
+    Object.assign( dimensions, { columns, rows } );
+    let currentRowElements = terminalContentElement.querySelectorAll( '.terminal-row' );
 
     // Add rows
     if ( currentRowElements.length < rows )
     {
         for ( let i = currentRowElements.length; i < rows; i++ )
         {
-            let rowElement = document.createElement('span');
-            rowElement.classList.add('terminal-row');
-            terminalContentElement.appendChild(rowElement);
+            let rowElement = document.createElement( 'span' );
+            rowElement.classList.add( 'terminal-row' );
+            terminalContentElement.appendChild( rowElement );
         }
     } // Remove rows
     else if ( currentRowElements.length > rows )
     {
         for ( let i = currentRowElements.length; i > rows; i-- )
-            terminalContentElement.removeChild(currentRowElements[i]);
+            terminalContentElement.removeChild( currentRowElements[ i ] );
     }
     if ( contentBuffer.length < rows )
-        contentBuffer.push(...Array(rows - contentBuffer.length).fill('\0'));
+        contentBuffer.push( ...Array( rows - contentBuffer.length ).fill( '\0' ) );
 }
 
 /**
@@ -227,16 +228,16 @@ function moveCursor(x: number, y: number, absolute: boolean = false)
     // If the absolute flag is set, move the cursor to the provided location.
     if ( absolute )
     {
-        x = Math.max(0, Math.min(x, dimensions.columns));
-        y = Math.max(0, Math.min(y, dimensions.rows));
-        Object.assign(cursorPosition, { x, y });
+        x = Math.max( 0, Math.min( x, dimensions.columns ) );
+        y = Math.max( 0, Math.min( y, dimensions.rows ) );
+        Object.assign( cursorPosition, { x, y } );
     }
     else // Otherwise, move the cursor relative to its current position.
     {
         cursorPosition.x += x;
         cursorPosition.y += y;
-        cursorPosition.x = Math.max(0, Math.min(cursorPosition.x, dimensions.columns));
-        cursorPosition.y = Math.max(0, Math.min(cursorPosition.y, dimensions.rows));
+        cursorPosition.x = Math.max( 0, Math.min( cursorPosition.x, dimensions.columns ) );
+        cursorPosition.y = Math.max( 0, Math.min( cursorPosition.y, dimensions.rows ) );
     }
 
 }
@@ -244,40 +245,41 @@ function moveCursor(x: number, y: number, absolute: boolean = false)
 /**
  * Event handler for receiving messages from the shell stream
  */
-window['events'].on('terminal:message-received', (message: string) =>
+window[ 'events' ].on( 'terminal:message-received', (message: string) =>
 {
-    let rows = message.split('\n').map(row => {
+    let rows = message.split( '\n' ).map( row =>
+    {
         return row
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-    })
+            .replaceAll( '<', '&lt;' )
+            .replaceAll( '>', '&gt;' )
+    } )
 
     // If it's a single message, add it to the screen and move the cursor horizontally
     try
     {
         if ( rows.length === 1 )
         {
-            putString(rows[0], cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-            moveCursor(rows[0].length, 0);
+            putString( rows[ 0 ], cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x );
+            moveCursor( rows[ 0 ].length, 0 );
         }
         else
         {
             for ( let subMessage of rows )
             {
-                putString(subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x);
-                moveCursor(0, cursorPosition.y + cursorPosition.verticalOffset + 1, true);
+                putString( subMessage, cursorPosition.y + cursorPosition.verticalOffset, cursorPosition.x );
+                moveCursor( 0, cursorPosition.y + cursorPosition.verticalOffset + 1, true );
             }
-            moveCursor(rows[rows.length - 1].length, 0);
+            moveCursor( rows[ rows.length - 1 ].length, 0 );
         }
         updateContent();
+    } catch (error)
+    {
+        console.error( "Error occurred whilst attempting to insert messages", error );
     }
-    catch (error) {
-        console.error("Error occurred whilst attempting to insert messages", error);
-    }
-});
+} );
 
 /**
  * Event handler for receiving changes in window dimensions ( cols, rows )
  * This can then be used to resize the font size of the terminal.
  */
-window['events'].on('terminal:window-dimensions', (columns: number, rows: number) => __updateDimensions(columns, rows));
+window[ 'events' ].on( 'terminal:window-dimensions', (columns: number, rows: number) => __updateDimensions( columns, rows ) );

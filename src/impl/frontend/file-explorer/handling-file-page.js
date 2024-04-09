@@ -5,12 +5,13 @@
 
 import RemoteFile from "./file/remote-file.js";
 import { getFile, getFiles, storeFiles } from "./file/file-caching.js";
-import { FileElement } from "../custom-elements/file-element.js";
-import { registerKeybindMapping, resourceFromFileExtension } from "../core-functionality.ts";
+import { FileElement } from "../custom-elements/file-explorer/file-element.js";
+import { clearPopups, registerKeybindMapping, resourceFromFileExtension } from "../core-functionality.ts";
 import contextmenu from "../context-menu";
-import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
+import { FileHierarchyElement } from "../custom-elements/file-explorer/file-hierarchy-element";
 import { assembleFileHierarchy } from "./file-hierarchy-impl";
 import * as nav from "./navigation";
+import { showFileInfo } from "./file-info";
 
 /**
  * @param {Promise<* | void>} promise The promise which has to be resolved before the loading animation is hidden.
@@ -118,8 +119,12 @@ document.addEventListener('DOMContentLoaded', _ =>
     // When the user clicks on the screen outside a file element, hide the context menu.
     document.addEventListener('click', event =>
     {
-        if ( event.target instanceof Element && (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu') )
+        if ( event.target instanceof Element &&
+            (event.target.id !== 'context-menu' || event.target.parentElement.id !== 'context-menu') )
             contextmenu.destroy();
+
+        // Remove all popups from the screen if the user clicks outside of them.
+        clearPopups();
     });
 
     // When a user double-clicks on the document, we deselect all files and hide the file information.
@@ -128,8 +133,8 @@ document.addEventListener('DOMContentLoaded', _ =>
         document.querySelectorAll('file-element[selected]')
             .forEach((e) =>
             {
-                e.removeAttribute('selected')
-                document.querySelector('.file-information').setAttribute('hidden', '')
+                e.removeAttribute('selected');
+                clearPopups();
             })
     })
 
@@ -251,6 +256,7 @@ document.addEventListener('DOMContentLoaded', _ =>
     fileContainer.addEventListener('drop', (event) =>
     {
         event.stopImmediatePropagation()
+        event.preventDefault(); // Prevents the browser from opening the file
         fileContainer.removeAttribute('dragging-over');
         // Check if there are any files to upload
         if ( !event.dataTransfer['files'] || event.dataTransfer.files.length === 0 )
@@ -402,7 +408,7 @@ function createFileElement(file)
 window.addEventListener('file-explorer:navigate', event => {
     // Remove all file elements and popups
     document.querySelectorAll('file-element').forEach(e => e.remove());
-    document.querySelectorAll('.popup').forEach(e => e.remove());
+    clearPopups();
 
     loadFileViewer();
 })
@@ -597,57 +603,6 @@ function cloneSelected()
         })
 }
 
-/**
- * Function for showing the file information of the currently selected file.
- * @param {HTMLElement} fileElement The file element to show the information of.
- */
-async function showFileInfo(fileElement)
-{
-
-    let file = getFile(fileElement.getAttribute('path'), fileElement.getAttribute('name'));
-    if ( file === null )
-        return;
-
-    if ( !file.loaded )
-    {
-        busy(await file.loadInfo());
-    }
-
-    let fileInfo = document.querySelector('.file-information');
-    let clientRect = fileElement.getBoundingClientRect();
-    fileInfo.removeAttribute('hidden');
-
-    ensureFrameWithinWindow(fileInfo,
-        clientRect.left + clientRect.width / 2 - fileInfo.width / 2,
-        clientRect.top + clientRect.height + 10);
-
-    // Copy selected element onto file info page
-    document.querySelector('.file-info-preview').style.backgroundImage = `url(${resourceFromFileExtension(fileElement.getAttribute('type'))}`;
-
-    [
-        [ 'file-info-perm-user', file.permissions.toString('user') + (currentUser === file.owner ? ' (You)' : '') ],
-        [ 'file-info-perm-group', file.permissions.toString('group') ],
-        [ 'file-info-perm-other', file.permissions.toString('other') ],
-        [ 'file-info-title', file.name ],
-        [ 'file-info-size', file.fileSizeString ],
-        [ 'file-info-owner', file.owner || 'Unknown' ],
-        [ 'file-info-modified', file.lastModified || 'Unknown' ]
-    ]
-        .forEach(([ id, value ]) => document.getElementById(id).textContent = value);
-}
-
-/**
- * Function for ensuring the provided window stays within boundaries of the window.
- * @param {HTMLElement } frame The frame to ensure within the window.
- * @param {number} nextLeft The next left position of the frame
- * @param {number} nextTop The next top position of the frame
- * @param {{left: number, top: number, right: number, bottom: number}} [margins = {left: 0, top: 0, right: 0, bottom: 0}] The margins to keep from the window edges
- */
-function ensureFrameWithinWindow(frame, nextLeft, nextTop, margins = { left: 0, top: 0, right: 0, bottom: 0 })
-{
-    frame.style.left = Math.max(margins.left, Math.min(window.innerWidth - frame.offsetWidth - margins.right, nextLeft)) + 'px';
-    frame.style.top = Math.max(margins.bottom, Math.min(window.innerHeight - frame.offsetHeight - margins.top, nextTop)) + 'px';
-}
 
 /**
  * Function for filtering files from the current working directory,

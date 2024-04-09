@@ -1,4 +1,4 @@
-import { resourceFromFileExtension } from "../core-functionality";
+import { resourceFromFileExtension } from "../../core-functionality";
 
 /**
  * A custom element that represents a file in the file hierarchy.
@@ -41,9 +41,9 @@ export class FileHierarchyElement extends HTMLElement
                 width: 100%; display: flex; flex-flow: row nowrap; justify-content: flex-start; align-items: center; }
                 .text { color: var(--text-color); font-family: var(--font); font-size: 0.8rem; margin-right: 10px; margin-left: 10px; }
                 .icon { background-size: contain; background-repeat: no-repeat; background-position: center;                 margin-left: 10px;
-    width: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
-    height: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin)); }
-                .nest { height: var(--file-hierarchy-element-size); width: var(--nesting-width, 10px); }
+                    width: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin));
+                    height: calc(var(--file-hierarchy-element-size) - 2 * var(--file-hierarchy-element-margin)); }
+                .nest { height: var(--file-hierarchy-element-size); width: 15px; }
             `;
 
         shadow.appendChild(styles);

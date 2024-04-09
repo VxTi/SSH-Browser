@@ -30,7 +30,13 @@ const __app_defs = {
     logger: {
         log: (message, ...args) => {
             ipcRenderer.send('log', message, ...args);
+        },
+        error: (message, ...args) => {
+            ipcRenderer.send('log', `\x1b[38;2;200;0;0m${message}\x1b[0m`, args);
         }
+    },
+    terminal: {
+        execute: async (command) => ipcRenderer.invoke('external-terminal-send-command', command),
     }
 };
 
@@ -133,10 +139,6 @@ contextBridge.exposeInMainWorld('events', {
     on: (event, callback) => ipcRenderer.on(event, (e, ...args) => callback(...args))
 });
 
-contextBridge.exposeInMainWorld('terminal', {
-    execute: async (command) => ipcRenderer.invoke('external-terminal-send-command', command),
-});
-
 contextBridge.exposeInMainWorld('extWindows', {
     openTerminal: (directory) =>
         ipcRenderer.send('open-terminal', directory),
@@ -153,18 +155,6 @@ contextBridge.exposeInMainWorld('localFs', {
         ipcRenderer.invoke('localFs:rename-file', localDirectory, oldFileName, newFileName),
     listFiles: async (directory) =>
         ipcRenderer.invoke('localFs:list-files', directory),
-})
-
-
-contextBridge.exposeInMainWorld('logger', {
-    /** @param {string} message
-     *  @param {...any} args */
-    log: (message, ...args) => {
-        ipcRenderer.send('log', message, ...args);
-    },
-    error: (message, ...args) => {
-        ipcRenderer.send('log', `\x1b[38;2;200;0;0m${message}\x1b[0m`, args);
-    }
 })
 
 contextBridge.exposeInMainWorld('path', {

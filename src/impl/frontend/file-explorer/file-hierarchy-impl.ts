@@ -1,4 +1,5 @@
-import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
+import { FileHierarchyElement } from "../custom-elements/file-explorer/file-hierarchy-element";
+import { createContainer } from "./file-hierarchy-container";
 
 
 /**
@@ -13,44 +14,8 @@ export function assembleFileHierarchy(fileRetrievalFunction: (arg0: string) => P
 
     if ( typeof fileRetrievalFunction !== 'function' )
     {
-        console.error(`The file retrieval function must be a function. (${typeof fileRetrievalFunction} given)`);
+        console.error( `The file retrieval function must be a function. (${ typeof fileRetrievalFunction } given)` );
         return;
     }
-
-    // Clear the container.
-    dstContainer.innerHTML = '';
-
-    // @ts-ignore
-    let segments: string[] = window.path.dissect(path);
-
-    segments.forEach((segment, index) =>
-    {
-        let element = new FileHierarchyElement();
-        element.setAttribute('name', segment);
-        element.setAttribute('type', 'dir');
-        element.setAttribute('path', segments.slice(0, index).join('/'));
-        element.setAttribute('nesting-level', index.toString());
-        element.addEventListener('click', () =>
-        {
-            assembleFileHierarchy(fileRetrievalFunction, element.getAttribute('path') || '', dstContainer);
-        })
-        dstContainer.appendChild(element);
-    });
-
-    (async () =>
-    {
-        (await fileRetrievalFunction(path) || []).forEach(fileName =>
-        {
-            let element = new FileHierarchyElement();
-            element.setAttribute('name', fileName);
-            element.setAttribute('type', fileName.split('.').pop() || 'dir');
-            element.setAttribute('path', path);
-            element.setAttribute('nesting-level', segments.length.toString());
-            element.addEventListener('click', () =>
-            {
-                window[ 'app' ][ 'file-explorer' ].navigateToFile({ name: fileName, path: path, directory: false });
-            });
-            dstContainer.appendChild(element);
-        });
-    })();
+    // TODO -- Implement
 }

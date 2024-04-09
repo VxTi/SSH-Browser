@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', async () =>
         else document.title = title;
     }
 
-    // Set the theme to the user's preference
-    document.documentElement.dataset['theme'] = localStorage.theme || 'dark'
-
     const forceLoad = (Boolean(localStorage['forceLoad'] || !1));
 
     // If the file icon map hasn't been loaded yet and the html
@@ -52,7 +49,19 @@ document.addEventListener('DOMContentLoaded', async () =>
         localStorage['keybinds'] = await window['app'].config.get('keybinds');
 
     __keybinds = JSON.parse(localStorage['keybinds']);
+
+    // Remove all popups from the screen once the window resizes.
+    document.addEventListener('resize', _ =>
+        document.querySelectorAll('.popup').forEach(popup => popup.remove()));
 })
+
+/**
+ * Function for removing all popups from the screen
+ */
+export function clearPopups()
+{
+    document.querySelectorAll('.popup').forEach(popup => popup.remove());
+}
 
 /**
  * Function for getting the icon of a file based on its extension

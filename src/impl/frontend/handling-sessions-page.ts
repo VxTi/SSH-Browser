@@ -100,7 +100,8 @@ document.addEventListener( 'DOMContentLoaded', async () =>
     } )
     // Event listener for when a session is connected.
     window.addEventListener( 'session-connected', _ => window.location.href = './page-file-explorer.html' );
-
+    // FIXME: Temporary.
+    /*
     // Acquire most recent application version
     fetch( changelogFileUrl, {
         method: 'GET',
@@ -122,7 +123,7 @@ document.addEventListener( 'DOMContentLoaded', async () =>
             }
             window.localStorage[ 'shown-changelog' ] = versionName;
         } )
-        .catch(_ => window['logger'].log('Failed to fetch changelog.'));
+        .catch(_ => window['logger'].log('Failed to fetch changelog.'));*/
 } );
 
 /**

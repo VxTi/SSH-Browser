@@ -13,6 +13,16 @@ interface IContextMenuItem
     submenu?: IContextMenuItem[];
 }
 
+/**
+ * The width of a context menu item.
+ */
+export const contextMenuItemWidth = 190;
+
+/**
+ * The height of a context menu item.
+ */
+export const contextMenuItemHeight = 25;
+
 // Object that holds the context menu configurations.
 const contextMenuConfigurations: Record<string, IContextMenuItem[]> = {};
 
@@ -56,19 +66,27 @@ export function showContextMenu(name: string, mouseX: number, mouseY: number, pa
     const menu = document.createElement('div');
     menu.classList.add('context-menu', 'popup');
     menu.id = 'context-menu';
-    menu.style.setProperty('--x', `${mouseX}px`);
-    menu.style.setProperty('--y', `${mouseY}px`);
+
+    // Ensure the menu is within the bounds of the window.
+    let [ posX, posY ] = [
+        Math.min(mouseX, window.innerWidth - contextMenuItemWidth - 10),
+        Math.min(mouseY, window.innerHeight - contextMenuItemHeight * items.length - 10)
+    ]
+
+    menu.style.setProperty('--x', `${posX}px`);
+    menu.style.setProperty('--y', `${posY}px`);
 
     // Generate menu items.
     for ( let item of items )
     {
-
         // If the item has a visibility function and it returns false, skip the item.
         if ( item.visible && !item.visible(parameters) )
             continue;
 
         const menuItem = document.createElement('div');
         menuItem.classList.add('context-menu-item', `context-menu-item__${item.type}`);
+        menuItem.style.setProperty('--width', `${contextMenuItemWidth}px`);
+        menuItem.style.setProperty('--height', `${contextMenuItemHeight}px`);
 
         if ( item.type !== 'separator' )
         {

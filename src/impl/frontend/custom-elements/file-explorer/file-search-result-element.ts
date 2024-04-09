@@ -1,4 +1,4 @@
-import {resourceFromFileExtension} from "../core-functionality";
+import {resourceFromFileExtension} from "../../core-functionality";
 
 /**
  * Custom element for displaying a file search result,
@@ -15,7 +15,7 @@ export class FileSearchResultElement extends HTMLElement {
     {
         this.innerHTML = `
             <div class="file-search-result">
-                <span class="element-icon" style="background-image: url(${resourceFromFileExtension(this.getAttribute('type'))});"></span>
+                <span class="file-search-result-icon icon" style="background-image: url(${resourceFromFileExtension(this.getAttribute('type'))});"></span>
                 <span class="element-title">${this.getAttribute('name')}</span>
             </div>
         `;

@@ -1,4 +1,4 @@
-import RemoteFile from "./file/remote-file.js";
+import RemoteFile from "./file/remote-file";
 import ISSHSession from "../../utilities/ssh-session-interface";
 
 /**
@@ -13,7 +13,7 @@ export function deleteFiles(session: ISSHSession, files: RemoteFile[] | string[]
     {
         if ( files.length === 0 )
             return reject('No files provided');
-        return Promise.all(files.map(file =>
+        return Promise.all(files.map((file: RemoteFile | string) =>
         {
             let path = file instanceof RemoteFile ? file.path : file;
             // @ts-ignore

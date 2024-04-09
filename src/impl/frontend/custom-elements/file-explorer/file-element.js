@@ -1,4 +1,4 @@
-import { findIconMapEntry, resourceFromFileExtension } from '../core-functionality.ts';
+import { findIconMapEntry, resourceFromFileExtension } from '../../core-functionality.ts';
 /**
  * Implementation of the file-element custom element.
  *
@@ -206,7 +206,7 @@ export class FileElement extends HTMLElement
             let sourceName = sourceDragTarget.getAttribute('name');
             let sourcePath = sourceDragTarget.getAttribute('path');
             let targetPath = this.getAttribute('path') + '/' + this.getAttribute('name');
-            window.logger.log('Moving file from', sourcePath, 'to', targetPath)
+            window['app']['logger'].log('Moving file from', sourcePath, 'to', targetPath)
             window.ssh.moveFile(sourceName, sourcePath, targetPath)
                 .then(() => sourceDragTarget.remove()) // Remove the source element
                 .catch(console.error);
