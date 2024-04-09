@@ -8,22 +8,22 @@ you can also build the application yourself.
 
 To do this, you will need to have Node.js and git installed.
 
-
 Installation of Node.js can be found on the following page: 
 > https://nodejs.org/en/download/
 
-Installation of Git can be found on the following page:
+Installation of Git can be found on the following page ( If you're not running a Debian based system ):
 > https://git-scm.com/downloads
 
-Or if you're running a Debian based system, you can install it using the following command:
+Or if you're running a Debian based system, you can install NPM and Node.js using the following command:
 
 ```bash
 sudo apt install nodejs
+sudo apt install npm
 ```
 
 ---
 
-After installation, you'll have to clone this repository in a desired location
+Once you have the required software installed, you'll have to clone this repository in a desired location
 using the following command:
 ```bash
 cd /path/to/your/desired/location
@@ -48,23 +48,9 @@ If you don't want to build it and just simply run it in development mode, you ca
 npm run start
 ```
 
-## How to use the software 
+## How to use the software (With examples)
 
-Once successfully built or downloaded, you'll find yourself on the homepage.
-Here you can add a session you'd like to connect to. 
-If you haven't added any yet, you can press the '+' button to add one and go to the login page.
-
-Once on the login page, you can fill in the required credentials for the host you'd like to connect to.
-
-This can be the host, username, specific port, private key or passphrase.
-These values depend on the server you're trying to connect to. If you don't know
-all the required values, you might have to contact the server administrator(s).
-
-Once you've successfully connected to the host, you can browse your files remotely, add them, delete them or view them.
-
-An example of how the pages look like can be found below.
-
-## Example of the Sessions page
+### The main page (Sessions)
 
 This is the page where the user can add, join, or delete sessions.
 These sessions can be made using the '+' button.
@@ -73,7 +59,7 @@ An example of the login page can be found below.
 
 <img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/main-page.png" width="500"/>
 
-## Example of the login page
+### The login page
 
 The login page is where the user can fill in the required credentials to connect to the server.
 These credentials can be the host, username, port, private key, and passphrase.
@@ -82,7 +68,7 @@ This is a security feature that allows the user to verify the server's fingerpri
 
 <img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/login-page.png" width="500"/>
 
-## Example of the file viewing page
+### The file explorer
 
 This is the page where the user can view the files on the server,
 add, delete, or edit files. One can also choose to open the terminal
@@ -90,7 +76,7 @@ to execute commands on the server.
 
 <img alt="Login page" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/file-explorer.png" width="500"/>
 
-## Example of the file editing window
+### The built-in file editor
 
 This is the window where the user can edit the files on the server.
 This is a simple text editor that allows the user to edit the files.
@@ -100,12 +86,13 @@ The user can also save the file, or cancel the editing.
 
 <img alt="File editing" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/file-editor.png" width="500"/>
 
-## Example of the SSH Terminal window
+### The terminal window
 
 This is the window where the user can execute commands on the server.
 Currently still in development; there might still be bugs present.
 
 <img alt="SSH Terminal" src="https://github.com/VxTi/SSH-FTP/blob/main/docs/terminal.png" width="500"/>
+
 ---
 
 ### Future functions and compatibility

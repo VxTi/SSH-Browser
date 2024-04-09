@@ -10,6 +10,7 @@ import { registerKeybindMapping, resourceFromFileExtension } from "../core-funct
 import contextmenu from "../context-menu";
 import { FileHierarchyElement } from "../custom-elements/file-hierarchy-element";
 import { assembleFileHierarchy } from "./file-hierarchy-impl";
+import * as nav from "./navigation";
 
 /**
  * @param {Promise<* | void>} promise The promise which has to be resolved before the loading animation is hidden.
@@ -30,48 +31,29 @@ let currentUser = undefined
 /** @type HTMLElement */
 let fileContainer = null
 
-/**
- * History of user navigation
- * @type {Array<{from: string, to: string}>}
- */
-let navigationHistory = [];
-let navigationHistoryIndex = 0;
 
 // Register all keybind mappings for the file viewer
 registerKeybindMapping({
     'create_directory': createDirectory,
-    'download_file': downloadSelected,
-    'delete_file': deleteSelected,
+    'download_file': _ => downloadFiles(getSelectedFiles()),
+    'delete_file': _ => deleteFiles(getSelectedFiles()),
     'reload_page': reloadContent,
-    'file_info': showFileInfo,
+    'file_info': _ =>  showFileInfo(getSelectedFiles()[0]),
     'open_file': addFiles,
-    'navigate_home': () => navigateTo(homeDir),
+    'navigate_home': () => nav.navigateTo(homeDir),
     'select_all_files': () => getFileElements().forEach(e => e.setAttribute('selected', '')),
     'deselect_all_files': () => getFileElements().forEach(e => e.removeAttribute('selected')),
-    'navigate_back': () =>
-    {
-        if ( navigationHistoryIndex > 0 )
-        {
-            navigationHistoryIndex--;
-            navigateTo(navigationHistory[navigationHistoryIndex].from);
-        }
-    },
-    'navigate_forward': () =>
-    {
-        if ( navigationHistoryIndex < navigationHistory.length - 1 )
-        {
-            navigationHistoryIndex++;
-            navigateTo(navigationHistory[navigationHistoryIndex].to);
-        }
-    },
+    'navigate_back': nav.navigateBackward,
+    'navigate_forward': nav.navigateForward,
     'navigate_directory': () =>
     {
         let selected = getSelectedFiles()
         if ( selected.length === 1 )
-            navigateTo(
-                path.join(
+            nav.navigateTo(
+                window['path'].join(
                     selected[0].getAttribute('path'),
-                    selected[0].getAttribute('name')))
+                    selected[0].getAttribute('name'))
+            )
     },
     'select_next_file': () =>
     {
@@ -115,7 +97,7 @@ document.addEventListener('DOMContentLoaded', _ =>
         .then(res =>
         {
             /** Current dir is defined in file-caching **/
-            window.currentDir = res.path;
+            nav.currentPath = res.path;
             window.homeDir = res.path;
             document.querySelector('.inner-content-container').dataset.path = res.path;
             storeFiles(res.files, res.path);
@@ -173,11 +155,18 @@ document.addEventListener('DOMContentLoaded', _ =>
             click: createDirectory,
             visible: (target) => target.hasAttribute('directory')
         },
-        { title: 'Download', type: 'normal', click: downloadSelected },
+        {
+            title: 'Download', type: 'normal', click: (target) =>
+            {
+                if ( target instanceof FileElement )
+                    downloadFiles([ target ]);
+            }
+        },
         { type: 'separator' },
         {
             title: 'Rename', type: 'normal', click: () =>
             {
+                // TODO: Implement
             }
         },
         { title: 'Clone', type: 'normal', click: cloneSelected },
@@ -191,24 +180,32 @@ document.addEventListener('DOMContentLoaded', _ =>
                         .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to copy path', _))
             }
         },
-        { title: 'Delete', type: 'normal', click: deleteSelected },
+        { title: 'Delete', type: 'normal', click: deleteFiles },
     ]);
 
+    /**
+     * Context-menu event listener
+     * This event listener is used to show the context menu when right-clicking on a file element.
+     * The context-menu functionality is dependent on the registered context-menu
+     * actions. These actions can be called with 'contextmenu.show'.
+     */
     document.addEventListener('contextmenu', event =>
     {
+        // If the document doesn't have focus, don't show the context menu.
         if ( !document.hasFocus() )
             return;
 
         event.preventDefault();
         event.stopImmediatePropagation();
 
+        // Show the context menu at the location of the right-click
         if ( event.target instanceof FileElement || event.target instanceof FileHierarchyElement )
             contextmenu.show('file-element', event.clientX, event.clientY, event.target);
     });
 
     // 'Terminal' button functionality
     document.getElementById('action-terminal')
-        .addEventListener('click', _ => window['extWindows'].openTerminal(currentDir));
+        .addEventListener('click', _ => window['extWindows'].openTerminal(nav.currentPath));
 
     // 'Create Directory' button functionality
     document.getElementById('action-add-dir')
@@ -236,10 +233,10 @@ document.addEventListener('DOMContentLoaded', _ =>
     document.getElementById('action-add-file').addEventListener('click', addFiles);
 
     /** Functionality for the 'delete file' button in the action bar */
-    document.getElementById('action-delete-file').addEventListener('click', deleteSelected);
+    document.getElementById('action-delete-file').addEventListener('click', deleteFiles);
 
     /** Functionality for the 'home' button */
-    document.getElementById('action-home').addEventListener('click', () => navigateTo(homeDir));
+    document.getElementById('action-home').addEventListener('click', () => nav.navigateTo(homeDir));
 
     // Add drag and drop functionality
     fileContainer.addEventListener('dragover', event =>
@@ -264,11 +261,11 @@ document.addEventListener('DOMContentLoaded', _ =>
 
         window['app']['logger'].log('Uploading files', paths);
 
-        busy(window.ssh.uploadFiles(currentDir, paths)
+        busy(window.ssh.uploadFiles(nav.currentPath, paths)
             .then(_ =>
             {
                 // Update the file cache with the new files
-                getFiles(currentDir).push(...paths.map(p =>
+                getFiles(nav.currentPath).push(...paths.map(p =>
                     new RemoteFile(p.substring(p.lastIndexOf('/') + 1), p.substring(0, p.lastIndexOf('/')))));
                 loadFileElements();
             }))
@@ -276,25 +273,11 @@ document.addEventListener('DOMContentLoaded', _ =>
 
     /** Navigate Backward Arrow**/
     document.getElementById('navigate-back')
-        .addEventListener('click', () =>
-        {
-            if ( navigationHistoryIndex > 0 )
-            {
-                navigationHistoryIndex--;
-                navigateTo(navigationHistory[navigationHistoryIndex].from);
-            }
-        })
+        .addEventListener('click', nav.navigateBackward);
 
     /** Navigate Forward Arrow **/
     document.getElementById('navigate-forward')
-        .addEventListener('click', () =>
-        {
-            if ( navigationHistoryIndex < navigationHistory.length - 1 )
-            {
-                navigationHistoryIndex++;
-                navigateTo(navigationHistory[navigationHistoryIndex].to);
-            }
-        })
+        .addEventListener('click', nav.navigateForward);
 });
 
 /**
@@ -312,8 +295,8 @@ function loadFileViewer()
         window.setTitle(`SSH Session - ${currentSession.username}@${currentSession.host}:${currentSession.port || 22}`);
     }
 
-    // If for whatever reason currentDir is not defined, return to home menu.
-    if ( currentDir === undefined )
+    // If for whatever reason nav.currentPath is not defined, return to home menu.
+    if ( nav.currentPath === undefined )
     {
         window.location.href = './index.html';
         return;
@@ -324,7 +307,7 @@ function loadFileViewer()
 
     let pathContainer = document.querySelector('.path-section');
 
-    let pathSegments = path.dissect(currentDir);
+    let pathSegments = path.dissect(nav.currentPath);
 
     // Add all the path segments to the path container
     // These are just directories
@@ -341,8 +324,8 @@ function loadFileViewer()
         pathElement.classList.add('path-separator');
 
         pathElement.addEventListener('click', () =>
-            navigateTo(
-                path.join(pathElement.getAttribute('path'), pathElement.getAttribute('name'))
+            nav.navigateTo(
+                window['path'].join(pathElement.getAttribute('path'), pathElement.getAttribute('name'))
             ))
 
         /** Directory separator arrow **/
@@ -362,11 +345,11 @@ function loadFileViewer()
 
 /**
  * Method for loading all files in the currently selected directory.
- * This method converts the files in 'fileCache[currentDir]' into elements.
+ * This method converts the files in 'fileCache[nav.currentPath]' into elements.
  * @param {string} path The path in which the files are located at. Default is the current directory.
  * @param {boolean} clearOld Whether to remove all previously shown files or not. Default is true.
  */
-function loadFileElements(path = currentDir, clearOld = true)
+function loadFileElements(path = nav.currentPath, clearOld = true)
 {
     // Remove all old files from the file container (excluding path segments)
     if ( clearOld )
@@ -375,44 +358,6 @@ function loadFileElements(path = currentDir, clearOld = true)
 
     // Add all files to the file container
     getFiles(path).forEach(file => fileContainer.appendChild(createFileElement(file)));
-}
-
-/**
- * Method for navigating to a different directory.
- * @param {string | RemoteFile} target The directory to navigate to.
- */
-function navigateTo(target)
-{
-    if ( target instanceof RemoteFile ) // Convert to viable path
-        target = target.path + (target.directory ? '/' + target.name : '')
-    // If we're already on there, don't proceed.
-    if ( target === currentDir )
-        return;
-
-    document.querySelector('.inner-content-container').dataset.path = target;
-    // Remove all pop-ups from the screen.
-    document.querySelectorAll('.popup').forEach(popup => popup.remove());
-    document.querySelector('.file-information').setAttribute('hidden', '');
-    console.log("Attempting to navigate to ", target);
-
-    busy(window.ssh
-        .listFiles(target) // Retrieve files from selected directory
-        .then(result =>
-        {
-            navigationHistory.push({ from: currentDir, to: target });
-            navigationHistoryIndex++
-            storeFiles(result, target);
-            window.currentDir = target;
-            loadFileViewer(); // reload the file viewer
-            let pathSection = document.querySelector('.path-section');
-            pathSection.scrollLeft = pathSection.scrollWidth;
-
-        })
-        .catch(_ =>
-        {   // If an error occurs whilst
-            window['app']['logger'].log('Error occurred whilst attempting to navigate', _)
-            // TODO: Add error handling
-        }));
 }
 
 /**
@@ -433,7 +378,7 @@ function createFileElement(file)
 
     /** File interact functionality **/
     // When one double-clicks on a file, we open it.
-    fileElement.addEventListener('dblclick', _ => navigateTo(file));
+    fileElement.addEventListener('dblclick', _ => nav.navigateToFile(file));
 
     // When one clicks on a file, we select it.
     fileElement.addEventListener('click', (event) =>
@@ -451,18 +396,30 @@ function createFileElement(file)
 }
 
 /**
+ * Event handler for when the 'file-explorer:navigate' event was fired.
+ * This reloads the content of the file page and clears all popup windows.
+ */
+window.addEventListener('file-explorer:navigate', event => {
+    // Remove all file elements and popups
+    document.querySelectorAll('file-element').forEach(e => e.remove());
+    document.querySelectorAll('.popup').forEach(e => e.remove());
+
+    loadFileViewer();
+})
+
+/**
  * Periodically checks the differences between the local and remote file system.
  * If there's any changes, the file viewer will be updated accordingly.
  */
 async function checkFsDifferences()
 {
     // Check if there's an active connection, if not, don't proceed.
-    if ( window.ssh === undefined || currentDir === undefined || !(await window.ssh.connected()) )
+    if ( nav.currentPath === undefined || !(await window.ssh.connected()) )
         return;
 
     //
-    let cachedFiles = getFiles(currentDir);
-    window.ssh.listFiles(currentDir)
+    let cachedFiles = getFiles(nav.currentPath);
+    window.ssh.listFiles(nav.currentPath)
         .then(result => result.split('\n'))
         .then(serverFiles =>
         {
@@ -470,8 +427,8 @@ async function checkFsDifferences()
             // Compare files, if there's any difference, update the file viewer
             if ( cachedFiles.length !== serverFiles.length || cachedFiles.some(file => !serverFiles.includes(file.name)) )
             {
-                window['app']['logger'].log(`Handling incoming file changes in '${currentDir}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
-                storeFiles(serverFiles, currentDir, true);
+                window['app']['logger'].log(`Handling incoming file changes in '${nav.currentPath}' for user '${currentUser}', ${cachedFiles.length} -> ${serverFiles.length}`)
+                storeFiles(serverFiles, nav.currentPath, true);
                 loadFileViewer();
             }
         })
@@ -485,7 +442,7 @@ async function checkFsDifferences()
 /**
  * Function for getting all the selected files in the file viewer.
  * Excludes path separators.
- * @returns {HTMLElement[]}
+ * @returns {FileElement[]}
  */
 function getSelectedFiles()
 {
@@ -541,52 +498,55 @@ window['events'].on('process-status', (status) =>
  */
 function reloadContent()
 {
-    busy(window.ssh.listFiles(currentDir)
+    busy(window.ssh.listFiles(nav.currentPath)
         .then(result =>
         {
-            storeFiles(result, currentDir, true);
+            storeFiles(result, nav.currentPath, true);
             loadFileViewer();
         }));
 }
 
 /**
  * Function for downloading the currently selected files.
+ * @param {HTMLElement[]} fileElements The file element to download
  */
-function downloadSelected()
+function downloadFiles(fileElements)
 {
-    let selectedFiles = getSelectedFiles()
-    if ( selectedFiles.length === 0 )
+    if ( fileElements.length === 0 || !(fileElements[0] instanceof FileElement) || !Array.isArray(fileElements) )
         return;
 
-    busy(Promise.all(selectedFiles.map((element) =>
+    busy(Promise.all(fileElements.map((element) =>
         window.ssh.downloadFile(element.getAttribute('path'), element.getAttribute('name'))))
         .catch(e => window['app']['logger'].error('Error occurred whilst attempting to download file', e)));
 }
 
 /**
  * Function for deleting the currently selected files.
+ * @param {FileElement[]} fileElements The file elements to delete
  */
-function deleteSelected()
+function deleteFiles(fileElements)
 {
-    let selected = getSelectedFiles();
-
     // If there aren't any files selected, stop.
-    if ( selected.length === 0 )
+    if ( fileElements.length === 0 )
         return;
 
     // Cannot delete home or root directory.
-    if ( selected.some(e =>
+    if ( fileElements.some(e =>
     {
         return e.getAttribute('path') + '/' + e.getAttribute('name') === homeDir
             || e.getAttribute('path') + '/' + e.getAttribute('name') === '/'
     }) )
         return;
 
-    busy(Promise.all(selected.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
+    // Delete all selected files from cache
+    // and remove the elements from the file viewer.
+    busy(Promise.all(fileElements.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
         .then(_ =>
         {
-            fileCache.set(currentDir, getFiles(currentDir).filter(f => !selected.some(e => e.getAttribute('name') === f.name)));
-            selected.forEach(e => e.remove());
+            fileCache
+                .set(nav.currentPath, getFiles(nav.currentPath)
+                .filter(f => !fileElements.some(e => e.getAttribute('name') === f.name)));
+            fileElements.forEach(e => e.remove());
         })
         .catch(e => window['app']['logger'].error('Error occurred whilst attempting to delete file', e)));
 }
@@ -596,11 +556,11 @@ function deleteSelected()
  */
 function createDirectory()
 {
-    let files = getFiles(currentDir);
+    let files = getFiles(nav.currentPath);
     let name = 'New Directory';
     for ( let i = 1; files.find(f => f.name === name); i++ )
         name = `New Directory (${i})`;
-    window.ssh.createDirectory(currentDir, name)
+    window.ssh.createDirectory(nav.currentPath, name)
         .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to create new directory', _));
 }
 
@@ -615,7 +575,7 @@ function addFiles()
         {
             if ( files.length < 1 )
                 return;
-            busy(window.ssh.uploadFiles(currentDir, files)) // TODO: Error handling
+            busy(window.ssh.uploadFiles(nav.currentPath, files)) // TODO: Error handling
 
         })
 }
@@ -725,7 +685,7 @@ function handleFileFilterInput(inputEvent = null)
             fileSearchResult.addEventListener('click', () =>
             {
                 if ( result.hasAttribute('directory') )
-                    navigateTo(
+                    nav.navigateTo(
                         path.join(result.getAttribute('path'), result.getAttribute('name'))
                     );
                 else

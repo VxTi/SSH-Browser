@@ -10,6 +10,7 @@ module.exports = {
             './src/impl/frontend/custom-elements/file-hierarchy-element.ts',
             './src/impl/frontend/custom-elements/file-search-result-element.ts',
             './src/impl/frontend/file-explorer/file/file-caching.js',
+            './src/impl/frontend/file-explorer/navigation.ts',
             './src/impl/frontend/file-explorer/file/remote-file.js',
             './src/impl/frontend/file-explorer/file/file-permissions.js',
             './src/impl/frontend/file-explorer/file-hierarchy-impl.ts',

@@ -30,6 +30,10 @@ export function assembleFileHierarchy(fileRetrievalFunction: (arg0: string) => P
         element.setAttribute('type', 'dir');
         element.setAttribute('path', segments.slice(0, index).join('/'));
         element.setAttribute('nesting-level', index.toString());
+        element.addEventListener('click', () =>
+        {
+            assembleFileHierarchy(fileRetrievalFunction, element.getAttribute('path') || '', dstContainer);
+        })
         dstContainer.appendChild(element);
     });
 
@@ -39,9 +43,13 @@ export function assembleFileHierarchy(fileRetrievalFunction: (arg0: string) => P
         {
             let element = new FileHierarchyElement();
             element.setAttribute('name', fileName);
-            element.setAttribute('type', fileName.split('.').pop() || 'unknown');
+            element.setAttribute('type', fileName.split('.').pop() || 'dir');
             element.setAttribute('path', path);
             element.setAttribute('nesting-level', segments.length.toString());
+            element.addEventListener('click', () =>
+            {
+                window[ 'app' ][ 'file-explorer' ].navigateToFile({ name: fileName, path: path, directory: false });
+            });
             dstContainer.appendChild(element);
         });
     })();
