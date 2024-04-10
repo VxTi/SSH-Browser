@@ -15,6 +15,8 @@ document.addEventListener( 'DOMContentLoaded', _ =>
 
     terminalContentElement = document.querySelector( '.terminal-content' );
 
+    window[ 'setTitle' ]( `Terminal ${term.dimensions.columns}x${term.dimensions.rows}` );
+
     // Add all rows
     for ( let i = 0; i < term.dimensions.rows; i++ )
     {
@@ -37,8 +39,6 @@ document.addEventListener( 'DOMContentLoaded', _ =>
         if ( previousOffset !== term.cursorPosition.vOffset )
             updateContent();
     } )
-
-    window[ 'setTitle' ]( 'Terminal' );
 
     document
         .addEventListener( 'keydown', (e) =>
@@ -76,6 +76,7 @@ document.addEventListener( 'DOMContentLoaded', _ =>
  */
 function updateContent()
 {
+    console.log(term.contentBuffer)
     let currentRowElements = terminalContentElement.querySelectorAll( '.terminal-row' );
 
     // Set the number of visible rows to the amount
@@ -106,8 +107,10 @@ function updateContent()
         rowAbsIdx = rowIdx + term.cursorPosition.vOffset;
         // Prevent out of bounds errors
         if ( rowAbsIdx >= term.contentBuffer.length || rowAbsIdx < 0 )
-            break;
-        currentRowElements[ rowIdx ].innerHTML = term.contentBuffer[ rowAbsIdx ];
+        {
+            currentRowElements[ rowIdx ].innerHTML = '';
+        }
+        else currentRowElements[ rowIdx ].innerHTML = term.contentBuffer[ rowAbsIdx ];
     }
     // Update the cursor position
     let cursorElement = document.querySelector( '.terminal-cursor' ) as HTMLElement;
@@ -135,12 +138,14 @@ window[ 'events' ].on( 'terminal:message-received', (message: string) =>
     }
 } );
 
-/**
- * Event handler for receiving changes in window dimensions ( cols, rows )
- * This can then be used to resize the font size of the terminal.
- */
-window[ 'events' ].on( 'terminal:window-dimensions', (columns: number, rows: number) => {
-    term.dimensions.columns = columns;
-    term.dimensions.rows = rows;
-    updateContent();
-} );
+window[ 'events' ].on('window:onresize', (width: number, height: number) => {
+    let [ cols, rows ] = [
+        term.columnWidth * Math.floor(width / term.columnWidth),
+        term.rowHeight * Math.floor(height / term.rowHeight)
+    ]
+    term.dimensions.columns = cols / term.columnWidth;
+    term.dimensions.rows = rows / term.rowHeight;
+    console.log(cols, rows, term.dimensions.columns, term.dimensions.rows)
+    window[ 'app' ][ 'window' ].resize(cols, rows);
+    window[ 'setTitle' ]( `Terminal ${term.dimensions.columns}x${term.dimensions.rows}` );
+});

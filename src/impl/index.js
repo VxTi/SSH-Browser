@@ -661,6 +661,8 @@ ipcMain.on('current-session', (event) =>
     } : null;
 })
 
+ipcMain.handle('window:resize', (_, width, height) => mainWindow.setSize(width, height));
+
 ipcMain.handle('delete-session', (_, host, username, port) => sessions.popSession({ host: host, username: username, port: port}));
 
 ipcMain.on('log', (_, message, ...args) => log(message, ...args));

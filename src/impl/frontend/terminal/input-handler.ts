@@ -32,12 +32,14 @@ export const maxBufferLength = 1 << 16;
 export let dimensions = { rows: 24, columns: 80 };
 
 /**
- * The dimensions of the terminal window in pixels.
- * These dimensions do not accommodate for retina displays. If one
- * wants to obtain the absolute dimensions, one must multiply these
- * dimensions by the device pixel ratio.
+ * The width of a column in the terminal, in pixels.
  */
-export let windowDimensions = { width: 0, height: 0 };
+export const columnWidth = 8;
+
+/**
+ * The height of a row in the terminal, in pixels.
+ */
+export const rowHeight = 16;
 
 /**
  * Function for handling the incoming messages of the terminal.
@@ -69,6 +71,9 @@ export function handleOutgoing(message: string)
  */
 export function putString(content: string)
 {
+    // If the content is of invalid type, return.
+    if ( !content || typeof content !== 'string')
+        return;
     // If the function argument is longer than one character,
     // call the function with each character in the string.
     if ( content.length > 1 )
@@ -78,22 +83,20 @@ export function putString(content: string)
         return;
     }
 
-    let currentLine = contentBuffer[ cursorPosition.y ];
-
-    // If the current line has no content,
-    // append the provided parameter and stop.
-    if ( !currentLine )
+    if ( content.charCodeAt( 0 ) > 126 )
     {
-        contentBuffer[ cursorPosition.y ] = content;
-        cursorPosition.x++;
         return;
     }
+
+    let currentLine = contentBuffer[ cursorPosition.y ];
 
     // If the function parameter is a newline character,
     // move to the next line.
     if ( content === '\n' )
     {
         cursorPosition.y++;
+        if ( cursorPosition.y >= contentBuffer.length)
+            contentBuffer.push( ...Array( cursorPosition.y - contentBuffer.length + 1 ).fill( '' ));
         return;
     }
 
@@ -102,6 +105,15 @@ export function putString(content: string)
     if ( content === '\r' )
     {
         cursorPosition.x = 0;
+        return;
+    }
+
+    // If the current line has no content,
+    // append the provided parameter and stop.
+    if ( !currentLine )
+    {
+        contentBuffer[ cursorPosition.y ] = content;
+        cursorPosition.x++;
         return;
     }
 
@@ -126,10 +138,10 @@ export function putString(content: string)
         {
             // If the horizontal cursor position is outside the current line,
             // add spaces to the line until the cursor position is reached.
-            if ( cursorPosition.x - currentLine.length > 0)
+            if ( cursorPosition.x - currentLine.length > 0 )
             {
                 contentBuffer[ cursorPosition.y ] = currentLine + ' '.repeat( cursorPosition.x - currentLine.length ) + content;
-                cursorPosition.x += cursorPosition.x - currentLine.length + 1;
+                cursorPosition.x += cursorPosition.x - currentLine.length;
             }
             else
             {
@@ -229,7 +241,7 @@ export const specialKeys = {
     },
     Enter: {
         sends: '\r\n',
-        executes: _ => translateCursorPosition( 0, 1 )
+        executes: _ => setCursorPosition( 0, cursorPosition.y + 1 )
     },
     Tab: {
         sends: '\t',

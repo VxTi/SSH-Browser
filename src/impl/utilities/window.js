@@ -31,7 +31,13 @@ function createWindow(pagePath = path.join(__dirname, '../../pages', 'index.html
     if ( os.platform() === 'darwin' )
         window.setWindowButtonVisibility(true);
 
-    window.webContents.on('did-finish-load', _ => window.show());
+    window.webContents.on('did-finish-load', _ => {
+        window.show();
+        window.on('resized', _ => {
+            console.log("Window resized!", window.getSize());
+            window.webContents.send('window:onresize', ...window.getSize())
+        });
+    });
     window.loadFile(pagePath).catch(console.error);
 
     return window;

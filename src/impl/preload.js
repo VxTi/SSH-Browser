@@ -37,6 +37,9 @@ const __app_defs = {
     },
     terminal: {
         execute: async (command) => ipcRenderer.invoke('external-terminal-send-command', command),
+    },
+    window: {
+        resize: (width, height) => ipcRenderer.send('resize-window', width, height),
     }
 };
 
