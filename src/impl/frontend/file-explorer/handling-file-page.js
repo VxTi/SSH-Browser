@@ -13,16 +13,32 @@ import { assembleFileHierarchy } from "./file-hierarchy-impl";
 import * as nav from "./navigation";
 import { showFileInfo } from "./file-info";
 
+const activeTasks = [];
+
 /**
  * @param {Promise<* | void>} promise The promise which has to be resolved before the loading animation is hidden.
+ * @param {string | null} [title] The title of the task.
  */
-let busy = (promise) =>
+function performTask(promise, title = null)
 {
     let loadingElement = document.getElementById('activity-status');
     loadingElement.removeAttribute('hidden');
+    activeTasks.push({
+        title: title || 'Background Task ' + activeTasks.length,
+        promise: promise
+    });
+    let taskElement = document.createElement('div');
+    taskElement.classList.add('task');
+    taskElement.textContent = title;
+    document.getElementById('processes').appendChild(taskElement);
     Promise.resolve(promise).then(_ =>
-        loadingElement.setAttribute('hidden', ''));
-};
+    {
+        activeTasks.splice(activeTasks.findIndex(task => task.promise === promise), 1);
+        taskElement.remove();
+        if ( activeTasks.length === 0 )
+            loadingElement.setAttribute('hidden', '');
+    });
+}
 
 let currentLocalDir = '/Users/';
 
@@ -94,7 +110,7 @@ document.addEventListener('DOMContentLoaded', _ =>
 
     // Load in the files from the current directory
     // If this fails, we redirect the user to the main menu.
-    busy(window.ssh.startingDir()
+    performTask(window.ssh.startingDir()
         .then(res =>
         {
             /** Current dir is defined in file-caching **/
@@ -267,7 +283,7 @@ document.addEventListener('DOMContentLoaded', _ =>
 
         window['app']['logger'].log('Uploading files', paths);
 
-        busy(window.ssh.uploadFiles(nav.currentPath, paths)
+        performTask(window.ssh.uploadFiles(nav.currentPath, paths)
             .then(_ =>
             {
                 // Update the file cache with the new files
@@ -425,7 +441,7 @@ async function checkFsDifferences()
 
     //
     let cachedFiles = getFiles(nav.currentPath);
-    window.ssh.listFiles(nav.currentPath)
+    performTask(window.ssh.listFiles(nav.currentPath)
         .then(result => result.split('\n'))
         .then(serverFiles =>
         {
@@ -442,7 +458,7 @@ async function checkFsDifferences()
         {
             // TODO: Add action menu for when connection fails
             window.location.href = './index.html'
-        });
+        }), 'File System Analysis')
 }
 
 /**
@@ -492,7 +508,7 @@ window['events'].on('process-status', (status) =>
                 target = document.createElement('div');
                 target.classList.add('progress-bar');
                 target.id = `pgb-${status.type}`;
-                document.querySelector('.progress-bars').appendChild(target);
+                document.getElementById('processes').appendChild(target);
             }
             target.style.setProperty('--progress', status.progress);
         }
@@ -504,12 +520,12 @@ window['events'].on('process-status', (status) =>
  */
 function reloadContent()
 {
-    busy(window.ssh.listFiles(nav.currentPath)
+    performTask(window.ssh.listFiles(nav.currentPath)
         .then(result =>
         {
             storeFiles(result, nav.currentPath, true);
             loadFileViewer();
-        }));
+        }), 'Reloading Content');
 }
 
 /**
@@ -521,9 +537,9 @@ function downloadFiles(fileElements)
     if ( fileElements.length === 0 || !(fileElements[0] instanceof FileElement) || !Array.isArray(fileElements) )
         return;
 
-    busy(Promise.all(fileElements.map((element) =>
+    performTask(Promise.all(fileElements.map((element) =>
         window.ssh.downloadFile(element.getAttribute('path'), element.getAttribute('name'))))
-        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to download file', e)));
+        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to download file', e)), 'Downloading Files');
 }
 
 /**
@@ -546,7 +562,7 @@ function deleteFiles(fileElements)
 
     // Delete all selected files from cache
     // and remove the elements from the file viewer.
-    busy(Promise.all(fileElements.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
+    performTask(Promise.all(fileElements.map(e => window.ssh.deleteFile(e.getAttribute('path'), e.getAttribute('name'))))
         .then(_ =>
         {
             fileCache
@@ -554,7 +570,7 @@ function deleteFiles(fileElements)
                 .filter(f => !fileElements.some(e => e.getAttribute('name') === f.name)));
             fileElements.forEach(e => e.remove());
         })
-        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to delete file', e)));
+        .catch(e => window['app']['logger'].error('Error occurred whilst attempting to delete file', e)), 'Deleting Files');
 }
 
 /**
@@ -566,8 +582,8 @@ function createDirectory()
     let name = 'New Directory';
     for ( let i = 1; files.find(f => f.name === name); i++ )
         name = `New Directory (${i})`;
-    window.ssh.createDirectory(nav.currentPath, name)
-        .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to create new directory', _));
+    performTask(window.ssh.createDirectory(nav.currentPath, name)
+        .catch(_ => window['app']['logger'].log('Error occurred whilst attempting to create new directory', _)), 'Creating Directory');
 }
 
 /**
@@ -581,7 +597,7 @@ function addFiles()
         {
             if ( files.length < 1 )
                 return;
-            busy(window.ssh.uploadFiles(nav.currentPath, files)) // TODO: Error handling
+            performTask(window.ssh.uploadFiles(nav.currentPath, files)) // TODO: Error handling
 
         })
 }

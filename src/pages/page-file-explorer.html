@@ -34,9 +34,9 @@
             <div class="action-sub-container flex f-row f-d-center">
                 <div class="action action-terminal" id="action-terminal" title="Open a terminal in the current directory"></div>
                 <div class="action action-home"     id="action-home" title="Navigate to the home directory"></div>
-                <div class="action action-add-dir"  id="action-add-dir" title="Create new directory"></div>
-                <div class="action action-refresh"  id="action-refresh" title="Reload remote changes"></div>
                 <div class="action action-delete"   id="action-delete-file" title="Delete selected file(s)"></div>
+                <div class="action action-refresh"  id="action-refresh" title="Reload remote changes"></div>
+                <div class="action action-add-dir"  id="action-add-dir" title="Create new directory"></div>
                 <div class="action action-add"      id="action-add-file" title="Upload file(s)"></div>
             </div>
         </div>
@@ -57,8 +57,11 @@
         <div class="path-container">
             <div class="action home-button" id="log-out" title="Logout of current session"></div>
             <div class="path-section"></div>
-            <circular-loader id="activity-status"></circular-loader>
-            <div class="progress-bars"></div>
+
+            <div class="action action-activities">
+                <circular-loader id="activity-status"></circular-loader>
+                <div class="process-status container" id="processes"></div>
+            </div>
         </div>
     </div>
 </body>

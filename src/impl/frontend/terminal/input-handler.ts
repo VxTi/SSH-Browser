@@ -22,14 +22,14 @@ export let cursorPosition = { x: 0, y: 0, vOffset: 0 };
 /**
  * The maximum size of the buffer of the terminal.
  */
-export const maxBufferLength = 4096;
+export const maxBufferLength = 1 << 16;
 
 /**
  * The dimensions of the terminal in rows and columns.
  * These are arbitrary sizes, and are related to the dimensions of
  * the window of the terminal.
  */
-export let dimensions = { rows: 0, columns: 0 };
+export let dimensions = { rows: 24, columns: 80 };
 
 /**
  * The dimensions of the terminal window in pixels.
@@ -47,7 +47,7 @@ export let windowDimensions = { width: 0, height: 0 };
  */
 export function handleIncoming(incomingMessage: string)
 {
-    putString(incomingMessage);
+    putString( incomingMessage );
 }
 
 /**
@@ -57,24 +57,97 @@ export function handleIncoming(incomingMessage: string)
  */
 export function handleOutgoing(message: string)
 {
-    putString(message);
+    putString( message );
 }
 
 /**
- * Function for appending a string to the content buffer.
- * This appends the string to the content buffer at the
- * current cursor position. The cursor position is not
- * updated in this function. This is handled in the `handleIncoming`
- * and `handleOutgoing` functions.
- * @param message The message to be appended to the content buffer.
+ * Function for appending content to the terminal's `contentBuffer`.
+ * This method appends one char at the time. Everytime one calls this function
+ * with a string longer than 1 character, the function will call itself with
+ * each character in the string.
+ * @param content The message to be appended to the content buffer.
  */
-function putString(message: string)
+export function putString(content: string)
 {
-    if ( contentBuffer.length >= maxBufferLength )
-        contentBuffer.splice(0, contentBuffer.length - maxBufferLength);
+    // If the function argument is longer than one character,
+    // call the function with each character in the string.
+    if ( content.length > 1 )
+    {
+        for ( let i = 0; i < content.length; i++ )
+            putString( content[ i ] );
+        return;
+    }
 
-    let lines = message.split('\n');
+    let currentLine = contentBuffer[ cursorPosition.y ];
 
+    // If the current line has no content,
+    // append the provided parameter and stop.
+    if ( !currentLine )
+    {
+        contentBuffer[ cursorPosition.y ] = content;
+        cursorPosition.x++;
+        return;
+    }
+
+    // If the function parameter is a newline character,
+    // move to the next line.
+    if ( content === '\n' )
+    {
+        cursorPosition.y++;
+        return;
+    }
+
+    // If the function parameter is a carriage return character,
+    // move to the beginning of the line.
+    if ( content === '\r' )
+    {
+        cursorPosition.x = 0;
+        return;
+    }
+
+    // If the horizontal cursor position is outside the current line,
+    // add spaces to the line until the cursor position is reached.
+    // If the cursor position is outside the terminal dimensions,
+    // move to the next line.
+    if ( cursorPosition.x >= currentLine.length )
+    {
+
+        // If the horizontal cursor position is outside the terminal dimensions,
+        // move to the next line.
+        if ( cursorPosition.x >= dimensions.columns )
+        {
+            cursorPosition.x = 1;
+            cursorPosition.y++;
+            // Update the buffer's next line
+            contentBuffer[ cursorPosition.y ] = !contentBuffer[ cursorPosition.y ] ? content :
+                content + contentBuffer[ cursorPosition.y ].substring( 1 );
+        }
+        else
+        {
+            // If the horizontal cursor position is outside the current line,
+            // add spaces to the line until the cursor position is reached.
+            if ( cursorPosition.x - currentLine.length > 0)
+            {
+                contentBuffer[ cursorPosition.y ] = currentLine + ' '.repeat( cursorPosition.x - currentLine.length ) + content;
+                cursorPosition.x += cursorPosition.x - currentLine.length + 1;
+            }
+            else
+            {
+                contentBuffer[ cursorPosition.y ] = currentLine + content;
+                cursorPosition.x++;
+            }
+        }
+        return;
+    }
+
+    // Ensure the content buffer has enough space
+    if ( cursorPosition.y >= contentBuffer.length )
+        contentBuffer.push( ...Array( cursorPosition.y - contentBuffer.length + 1 ).fill( '' ) );
+
+    contentBuffer [ cursorPosition.y ] = currentLine.substring( 0, cursorPosition.x ) + content +
+        currentLine.substring( cursorPosition.x + 1 );
+
+    cursorPosition.x++;
 }
 
 /**
@@ -124,20 +197,49 @@ export function translateVerticalOffset(offset: number): void
 }
 
 /**
- * Default exports ( Everything )
+ * Special keys that can be used in the terminal.
+ * These keys are used for special functionality in the terminal.
+ * The keys are mapped to their respective escape sequences and
+ * functions.
  */
-export default {
-    contentBuffer,
-    scrollingEnabled,
-    cursorPosition,
-    maxBufferLength,
-    dimensions,
-    windowDimensions,
-    translateCursorPosition,
-    handleIncoming,
-    handleOutgoing,
-    setCursorPosition,
-    setVerticalOffset,
+export const specialKeys = {
+    ArrowUp: {
+        sends: '\x1b[A',
+        executes: _ => translateCursorPosition( 0, -1 )
+    },
+    ArrowDown: {
+        sends: '\x1b[B',
+        executes: _ => translateCursorPosition( 0, 1 )
+    },
+    ArrowRight: {
+        sends: '\x1b[C',
+        executes: _ => translateCursorPosition( 1, 0 )
+    },
+    ArrowLeft: {
+        sends: '\x1b[D',
+        executes: _ => translateCursorPosition( -1, 0 )
+    },
+    Backspace: {
+        sends: '\x7f',
+        executes: _ =>
+        {
+            translateCursorPosition( -1, 0 );
+            putString( '' );
+        }
+    },
+    Enter: {
+        sends: '\r\n',
+        executes: _ => translateCursorPosition( 0, 1 )
+    },
+    Tab: {
+        sends: '\t',
+        executes: _ => putString( '    ' )
+    },
+    Escape: {
+        sends: '\x1b',
+    },
+    Control: {
+        sends: '\x1b',
+    }
+
 }
-
-

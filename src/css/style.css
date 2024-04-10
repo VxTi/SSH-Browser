@@ -54,21 +54,6 @@
     --action-element-size: calc(var(--navigator-height) - var(--action-element-margins) * 2);
 }
 
-html[data-theme="light"] {
-    --theme-1: #fff;
-    --theme-2: #ddd;
-    --theme-3: #909090;
-    --theme-4: #2358C9;
-    --theme-5: #b0b0b0;
-
-    --border-2: #ddd;
-    --border-1: #999;
-
-    --text-color: #000;
-    --text-color-2: #222;
-
-}
-
 html, body {
     margin: 0;
     padding: 0;
@@ -79,6 +64,17 @@ body {
     border-radius: 10px;
     background-color: var(--theme-1);
     border: 1px solid var(--theme-5);
+}
+
+/** Flex classes */
+.title-container, .action, .loading-container, .context-menu-item {
+    display: flex;
+    align-items: center;
+}
+
+/** Flex row nowrap */
+.title-container, .action, .context-menu-item {
+    flex-flow: row nowrap;
 }
 
 .scrollbar {
@@ -140,9 +136,6 @@ body {
 
 .title-container {
     width: 100%;
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: center;
     padding-bottom: 10px;
 }
 
@@ -185,22 +178,6 @@ body {
 
 .f-start {
     justify-content: flex-start;
-}
-
-.center-x {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-}
-
-.center-y {
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-}
-
-.grid {
-    display: grid;
 }
 
 .nav-btn {
@@ -334,10 +311,10 @@ body {
     min-width: var(--action-element-size);
     min-height: var(--action-element-size);
     border-radius: 6px;
+    justify-content: center;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    display: block;
     font-family: var(--font);
     font-size: 0.9rem;
     color: var(--text-color);
@@ -406,10 +383,8 @@ body {
     width: 100vw;
     height: 100vh;
     position: absolute;
-    display: flex;
     flex-flow: column nowrap;
     justify-content: center;
-    align-items: center;
     z-index: 999;
     visibility: hidden;
 }
@@ -482,11 +457,8 @@ body {
     box-sizing: border-box;
     width: var(--width);
     height: var(--height);
-    align-items: center;
     font-family: var(--font);
     color: var(--text-color-2);
-    display: flex;
-    flex-flow: row nowrap;
     justify-content: flex-start;
 }
 

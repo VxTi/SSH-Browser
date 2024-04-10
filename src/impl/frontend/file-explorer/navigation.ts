@@ -26,8 +26,9 @@ export let navigationBackwardHistory: string[] = [];
  * Navigates to the specified path on the remote server,
  * and displays the contents on the file explorer.
  * @param path The path to navigate to.
+ * @param storeHistory Whether to store the navigation in the history.
  */
-export function navigateTo(path: string): void
+export function navigateTo(path: string, storeHistory: boolean = true): void
 {
 
     window[ 'ssh' ]
@@ -35,7 +36,8 @@ export function navigateTo(path: string): void
         .then( (result: string[]) =>
         {
             // Add the current path to the navigation history.
-            navigationBackwardHistory.push( currentPath );
+            if ( storeHistory )
+                navigationBackwardHistory.push( currentPath );
             cache.storeFiles( result, path );
             currentPath = path;
             window.dispatchEvent( new CustomEvent( 'file-explorer:navigate', { detail: { path: path } } ) );
@@ -64,7 +66,7 @@ export function navigateBackward(): void
     if ( path )
     {
         navigationForwardHistory.push( currentPath );
-        navigateTo( path );
+        navigateTo( path, false );
     }
 }
 

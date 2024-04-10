@@ -35,6 +35,7 @@ module.exports = {
         /** Terminal page **/
         "terminal": [
             "./src/impl/frontend/core-functionality.ts",
+            "./src/impl/frontend/terminal/input-handler.ts",
             "./src/impl/frontend/terminal/handling-external-terminal.ts",
         ]
     },
